@@ -5,10 +5,15 @@ package com.kaloer.searchlib.index;
  */
 public class Token {
 
-    private String value;
+    private Object value;
     private int position;
 
-    public String getValue() {
+    public Token(Object value, int position) {
+        this.value = value;
+        this.position = position;
+    }
+
+    public Object getValue() {
         return value;
     }
 

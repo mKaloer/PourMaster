@@ -1,5 +1,8 @@
 package com.kaloer.searchlib.index;
 
+import com.kaloer.searchlib.index.pipeline.Pipeline;
+
+import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
@@ -7,35 +10,23 @@ import java.util.Iterator;
  */
 public class TokenStream implements Iterable<Token> {
 
-    public TokenStream(Document doc) {
-        for(Field f : doc.getFields()) {
-            if(f.getIsIndexed()) {
-                // Should be indexed
-            }
+    private Field field;
+    private Pipeline<Object, Token> fieldPipeline;
+    private ArrayList<Token> tokens;
+
+    public TokenStream(Field f) {
+        this.field = f;
+        fieldPipeline = f.getIndexAnalysisPipeline();
+        // Process data
+        try {
+            tokens = fieldPipeline.process(f.getFieldValue());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            tokens = new ArrayList<Token>();
         }
-    }
-
-    protected boolean hasNextToken() {
-        return false;
-    }
-
-    protected Token nextToken() {
-        return null;
     }
 
     public Iterator<Token> iterator() {
-        return new Iterator<Token>() {
-            public boolean hasNext() {
-                return hasNextToken();
-            }
-
-            public Token next() {
-                return nextToken();
-            }
-
-            public void remove() {
-                throw new UnsupportedOperationException("Cannot remove elements from iterator.");
-            }
-        }
+        return tokens.iterator();
     }
 }

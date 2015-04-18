@@ -1,18 +1,23 @@
 package com.kaloer.searchlib.index;
 
+import com.kaloer.searchlib.index.pipeline.Pipeline;
+
 import java.io.DataInput;
 import java.io.IOException;
 
 /**
  * Created by mkaloer on 13/04/15.
  */
-public class Field {
+public class Field<T> {
 
     private int fieldId;
     private FieldType fieldType;
     private boolean isStored;
     private boolean isIndexed;
     private String fieldName;
+    private Object fieldValue;
+    private Pipeline<T, Token> queryAnalysisPipeline;
+    private Pipeline<T, Token> indexAnalysisPipeline;
 
     protected static Field createFromData(DataInput input) throws IOException {
         Field f = new Field();
@@ -51,6 +56,29 @@ public class Field {
         this.fieldId = fieldId;
     }
 
+    public void setIndexAnalysisPipeline(Pipeline<T, Token> indexAnalysisPipeline) {
+        this.indexAnalysisPipeline = indexAnalysisPipeline;
+    }
+
+    public Pipeline<T, Token> getIndexAnalysisPipeline() {
+        return indexAnalysisPipeline;
+    }
+
+    public void setQueryAnalysisPipeline(Pipeline<T, Token> queryAnalysisPipeline) {
+        this.queryAnalysisPipeline = queryAnalysisPipeline;
+    }
+
+    public Pipeline<T, Token> getQueryAnalysisPipeline() {
+        return queryAnalysisPipeline;
+    }
+
+    public Object getFieldValue() {
+        return fieldValue;
+    }
+
+    public void setFieldValue(Object fieldValue) {
+        this.fieldValue = fieldValue;
+    }
 
     public FieldType getFieldType() {
         return fieldType;

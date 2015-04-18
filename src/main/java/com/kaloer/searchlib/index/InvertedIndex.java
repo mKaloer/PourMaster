@@ -36,20 +36,23 @@ public class InvertedIndex {
     }
 
     public void indexDocuments(DocumentStream docStream) {
-
-
+        for(FieldStream fieldStream : docStream) {
+            for(TokenStream tokenStream : fieldStream) {
+                for(Token t : tokenStream) {
+                    // Index document
+                    System.out.println(t.getValue());
+                }
+            }
+        }
     }
 
     public static void main(String[] args) {
         try {
             SequentialPostings p1 = new SequentialPostings("test.db");
-            System.out.println(p1.insertTerm(new PostingsData[] {new PostingsData(1, new long[]{1, 5, 8})}));
-            //System.out.println(p1.insertTerm(new Postings.PostingsData(2, new long[] {1, 5, 8})));
-            System.out.println(p1.getDocumentsForTerm(7680, 1)[0].getDocumentId());
-            System.out.println(p1.getDocumentsForTerm(7712, 1)[0].getDocumentId());
-            if(1==1)return;
             BTreeTermDictionary dic = new BTreeTermDictionary("test.db", 25);
-
+            SequentialDocumentIndex docIndex = new SequentialDocumentIndex("test_doc.db", "test_doc_fields.db");
+            IndexConfig conf = new IndexConfig().setTermDictionary(dic).setDocumentIndex(docIndex).setPostings(p1);
+            InvertedIndex index = new InvertedIndex(conf);
 
             System.out.println(dic.findTerm("Test1"));
             System.out.println(dic.findTerm("Test2"));

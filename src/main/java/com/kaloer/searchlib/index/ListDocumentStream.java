@@ -9,24 +9,17 @@ import java.util.Iterator;
 public class ListDocumentStream extends DocumentStream {
 
     private ArrayList<Document> documents;
+    private int docIndex = 0;
 
     public ListDocumentStream(ArrayList<Document> documents) {
         this.documents = documents;
     }
 
     public boolean hasNextDocument() {
-        return false;
+        return documents.size() >= docIndex;
     }
 
-    public TokenStream nextDocument() {
-        return null;
-    }
-
-    public boolean hasNextToken() {
-        return false;
-    }
-
-    public Token nextToken() {
-        return null;
+    public FieldStream nextDocument() {
+        return new FieldStream(documents.get(docIndex).getFields());
     }
 }
