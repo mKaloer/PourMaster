@@ -8,21 +8,25 @@ import java.util.List;
  */
 public class FieldStream implements Iterable<TokenStream> {
 
-    private List<Field> fields;
+    private Document document;
 
-    public FieldStream(List<Field> fields){
-        this.fields = fields;
+    public FieldStream(Document doc){
+        this.document = doc;
+    }
+
+    public Document getDocument() {
+        return document;
     }
 
     public Iterator<TokenStream> iterator() {
         return new Iterator<TokenStream>() {
             private int currentIndex = 0;
             public boolean hasNext() {
-                return fields.size() > currentIndex;
+                return document.getFields().size() > currentIndex;
             }
 
             public TokenStream next() {
-                return new TokenStream(fields.get(currentIndex++));
+                return new TokenStream(document.getFields().get(currentIndex++));
             }
 
             public void remove() {

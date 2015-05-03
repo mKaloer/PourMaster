@@ -15,6 +15,8 @@ public abstract class DocumentIndex {
 
     public abstract Document getDocument(long docId) throws IOException;
 
+    public abstract void addDocument(Document doc) throws IOException, ReflectiveOperationException;
+
     public FieldDataStore getFieldDataStore() {
         return fieldDataStore;
     }

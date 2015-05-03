@@ -20,6 +20,6 @@ public class ListDocumentStream extends DocumentStream {
     }
 
     public FieldStream nextDocument() {
-        return new FieldStream(documents.get(docIndex).getFields());
+        return new FieldStream(documents.get(docIndex));
     }
 }

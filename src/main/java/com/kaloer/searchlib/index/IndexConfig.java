@@ -1,5 +1,8 @@
 package com.kaloer.searchlib.index;
 
+import com.kaloer.searchlib.index.fields.FieldTypeStore;
+import com.kaloer.searchlib.index.terms.StringTermType;
+
 import javax.print.Doc;
 
 /**
@@ -10,6 +13,7 @@ public class IndexConfig {
     private DocumentIndex docIndex;
     private TermDictionary termDictionary;
     private Postings postings;
+    private String fieldTypeStorePath;
 
     public IndexConfig setDocumentIndex(DocumentIndex docIndex) {
         this.docIndex = docIndex;

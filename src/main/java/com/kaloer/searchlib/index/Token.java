@@ -1,19 +1,23 @@
 package com.kaloer.searchlib.index;
 
+import com.kaloer.searchlib.index.terms.StringTermType;
+import com.kaloer.searchlib.index.terms.Term;
+import com.kaloer.searchlib.index.terms.TermType;
+
 /**
  * Created by mkaloer on 15/04/15.
  */
-public class Token {
+public class Token<T extends Term> {
 
-    private Object value;
+    private T value;
     private int position;
 
-    public Token(Object value, int position) {
+    public Token(T value, int position) {
         this.value = value;
         this.position = position;
     }
 
-    public Object getValue() {
+    public T getValue() {
         return value;
     }
 

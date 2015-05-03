@@ -1,5 +1,8 @@
 package com.kaloer.searchlib.index;
 
+import com.kaloer.searchlib.index.fields.Field;
+import com.kaloer.searchlib.index.fields.FieldTypeStore;
+
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
@@ -11,11 +14,12 @@ import java.util.List;
 public class SequentialFieldDataStore extends FieldDataStore {
 
     private String filePath;
+    private FieldTypeStore fieldTypeStore;
 
-    public SequentialFieldDataStore(String filePath) {
+    public SequentialFieldDataStore(String filePath, String fieldTypeStorePath) throws IOException, ReflectiveOperationException {
         super();
         this.filePath = filePath;
-        // TODO: We need a field info (file?) for storing field name and other info. Should be also be in memory for fast lookup by field id
+        this.fieldTypeStore = new FieldTypeStore(fieldTypeStorePath);
     }
 
     @Override
@@ -30,7 +34,7 @@ public class SequentialFieldDataStore extends FieldDataStore {
             fields = new ArrayList<Field>(numFields);
             // Read fields
             for(int i = 0; i < numFields; i++) {
-                Field f = Field.createFromData(file);
+                Field f = Field.createFromData(file, fieldTypeStore);
                 fields.add(f);
             }
         } finally {
@@ -39,5 +43,27 @@ public class SequentialFieldDataStore extends FieldDataStore {
             }
         }
         return fields;
+    }
+
+    @Override
+    public long appendFields(List<Field> fields) throws IOException, ReflectiveOperationException {
+        RandomAccessFile file = null;
+        try {
+            // Move to end of file
+            file = new RandomAccessFile(filePath, "rw");
+            file.seek(file.length());
+            long pointer = file.getFilePointer();
+            // Write number of fields
+            file.writeByte(fields.size()); // Write as unsigned byte
+            // Write fields
+            for(Field field : fields) {
+                field.writeToOutput(file, fieldTypeStore);
+            }
+            return pointer;
+        } finally {
+            if(file != null) {
+                file.close();
+            }
+        }
     }
 }

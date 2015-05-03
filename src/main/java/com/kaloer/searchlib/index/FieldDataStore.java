@@ -1,5 +1,7 @@
 package com.kaloer.searchlib.index;
 
+import com.kaloer.searchlib.index.fields.Field;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -9,5 +11,7 @@ import java.util.List;
 public abstract class FieldDataStore {
 
     public abstract List<Field> getFields(long index) throws IOException;
+
+    public abstract long appendFields(List<Field> fields) throws IOException, ReflectiveOperationException;
 
 }

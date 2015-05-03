@@ -1,7 +1,11 @@
 package com.kaloer.searchlib.index.test;
 
+import com.kaloer.searchlib.index.fields.StringFieldType;
+import com.kaloer.searchlib.index.terms.StringTerm;
+import com.kaloer.searchlib.index.terms.StringTermType;
+import com.kaloer.searchlib.index.terms.Term;
 import com.kaloer.searchlib.index.*;
-import com.kaloer.searchlib.index.Field;
+import com.kaloer.searchlib.index.fields.Field;
 import com.kaloer.searchlib.index.pipeline.Pipeline;
 import com.kaloer.searchlib.index.pipeline.Stage;
 import org.apache.directory.mavibot.btree.exception.BTreeAlreadyManagedException;
@@ -9,6 +13,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,13 +34,14 @@ public class IndexTest {
 
 
     @Test
-    public void testTest() throws BTreeAlreadyManagedException {
+    public void testTest() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
         IndexConfig conf = null;
         try {
+            new File("idx/").mkdirs();
             conf = new IndexConfig().
-                    setDocumentIndex(new SequentialDocumentIndex("docs.idx", "docs_fields.idx"))
-                    .setPostings(new SequentialPostings("posings.db"))
-                    .setTermDictionary(new BTreeTermDictionary("dict.db"));
+                    setDocumentIndex(new SequentialDocumentIndex("idx/docs.idx", "idx/docs_fields.idx", "idx/fields.db"))
+                    .setPostings(new SequentialPostings("idx/postings.db"))
+                    .setTermDictionary(new BTreeTermDictionary("idx/dict.db", StringTermType.getInstance()));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -43,13 +49,16 @@ public class IndexTest {
 
         Document d1 = new Document();
         Field f1 = new Field();
-        f1.setFieldValue("Hello world");
-        Pipeline<String, Token> pipeline = new Pipeline<String, Token>(new Stage<String, Token>() {
+        f1.setFieldType(new StringFieldType());
+        f1.setFieldId(1);
+        f1.setFieldValue("Hello World");
+        Pipeline<String, Token<StringTerm>> pipeline = new Pipeline<String, Token<StringTerm>>(new Stage<String, Token<StringTerm>>() {
+
             @Override
             protected void produce(String input) throws InterruptedException {
                 int i = 1;
                 for(String s : input.split(" ")) {
-                    Token t = new Token(s, i);
+                    Token t = new Token(new StringTerm(s), i);
                     emit(t);
                     i++;
                 }
@@ -61,21 +70,23 @@ public class IndexTest {
         d1.setFields(fields);
         final ArrayList<Document> docs = new ArrayList<Document>();
         docs.add(d1);
-        index.indexDocuments(new DocumentStream() {
-            int index = 0;
-
-            @Override
-            protected boolean hasNextDocument() {
-                return docs.size() > index;
-            }
-
-            @Override
-            protected FieldStream nextDocument() {
-                return new FieldStream(docs.get(index++).getFields());
-            }
-        });
         try {
-            List<Document> d = index.findDocuments("Hello");
+            File tmpDir = new File("tmp");
+            tmpDir.mkdirs();
+            index.indexDocuments(new DocumentStream() {
+                int index = 0;
+
+                @Override
+                protected boolean hasNextDocument() {
+                    return docs.size() > index;
+                }
+
+                @Override
+                protected FieldStream nextDocument() {
+                    return new FieldStream(docs.get(index++));
+                }
+            }, tmpDir);
+            List<Document> d = index.findDocuments(new StringTerm("Hello"));
             Assert.assertEquals("Expected empty result set", 0, d.size());
         } catch (IOException e) {
             e.printStackTrace();

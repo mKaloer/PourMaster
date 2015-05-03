@@ -1,16 +1,28 @@
 package com.kaloer.searchlib.index;
 
-import com.kaloer.searchlib.Term;
+import com.kaloer.searchlib.index.terms.Term;
+import com.kaloer.searchlib.index.terms.TermType;
 
 import java.io.IOException;
-import java.io.Serializable;
 
 /**
  * Created by mkaloer on 12/04/15.
  */
 public abstract class TermDictionary {
 
-    public abstract TermData findTerm(String term) throws IOException;
+    private TermType termType;
+
+    public TermType getTermType() {
+        return termType;
+    }
+
+    public void setTermType(TermType termType) {
+        this.termType = termType;
+    }
+
+    public abstract TermData findTerm(Term term) throws IOException;
+
+    public abstract void addTerm(Term term, TermData data) throws IOException;
 
     public abstract long getTotalDocCount();
 
@@ -29,12 +41,24 @@ public abstract class TermDictionary {
             this.postingsIndex = postingsIndex;
         }
 
+        public void setDocFrequency(int frequency) {
+            this.docFrequency = frequency;
+        }
+
         public int getDocFrequency() {
             return docFrequency;
         }
 
+        public void setTermFrequency(long termFrequency) {
+            this.termFrequency = termFrequency;
+        }
+
         public long getTermFrequency() {
             return termFrequency;
+        }
+
+        public void setPostingsIndex(long postingsIndex) {
+            this.postingsIndex = postingsIndex;
         }
 
         public long getPostingsIndex() {

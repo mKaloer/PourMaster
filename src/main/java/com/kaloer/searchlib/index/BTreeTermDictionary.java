@@ -1,14 +1,20 @@
 package com.kaloer.searchlib.index;
 
+import com.kaloer.searchlib.index.terms.StringTerm;
+import com.kaloer.searchlib.index.terms.StringTermType;
+import com.kaloer.searchlib.index.terms.Term;
+import com.kaloer.searchlib.index.terms.TermType;
 import org.apache.directory.mavibot.btree.BTree;
 import org.apache.directory.mavibot.btree.RecordManager;
 import org.apache.directory.mavibot.btree.exception.BTreeAlreadyManagedException;
 import org.apache.directory.mavibot.btree.exception.KeyNotFoundException;
 import org.apache.directory.mavibot.btree.serializer.*;
+import sun.plugin.dom.exception.InvalidStateException;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.io.IOException;
+import java.io.*;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Comparator;
 
 /**
@@ -18,19 +24,21 @@ public class BTreeTermDictionary extends TermDictionary {
 
     private final static String B_TREE_NAME = "termDictionary";
 
-    private BTree<String, TermData> dictionary;
+    private BTree<Term, TermData> dictionary;
     private RecordManager recordManager;
 
-    public BTreeTermDictionary(String dictionaryFile) throws IOException, BTreeAlreadyManagedException {
-        this(dictionaryFile, -1);
+    public BTreeTermDictionary(String dictionaryFile, TermType termType) throws IOException, BTreeAlreadyManagedException {
+        this(dictionaryFile, termType, -1);
     }
 
-    public BTreeTermDictionary(String dictionaryFile, int pageSize) throws IOException, BTreeAlreadyManagedException {
+    public BTreeTermDictionary(String dictionaryFile, TermType termType, int pageSize) throws IOException, BTreeAlreadyManagedException {
+        super();
+        setTermType(termType);
         recordManager = new RecordManager(dictionaryFile);
         dictionary = recordManager.getManagedTree(B_TREE_NAME);
         // Create if it does not exist.
         if(dictionary == null) {
-            dictionary = recordManager.addBTree(B_TREE_NAME, StringSerializer.INSTANCE, new TermDataSerializer(), false);
+            dictionary = recordManager.addBTree(B_TREE_NAME, termType.getSerializer(), new TermDataSerializer(), false);
             if(pageSize > 0) {
                 dictionary.setPageSize(pageSize);
             }
@@ -38,7 +46,10 @@ public class BTreeTermDictionary extends TermDictionary {
     }
 
     @Override
-    public TermData findTerm(String term) throws IOException {
+    public TermData findTerm(Term term) throws IOException {
+        if(getTermType() == null) {
+            throw new InvalidStateException("TermType must be set!");
+        }
         try {
             return dictionary.get(term);
         } catch (KeyNotFoundException e) {
@@ -46,8 +57,11 @@ public class BTreeTermDictionary extends TermDictionary {
         }
     }
 
-    public void addTerm(String term) throws IOException {
-        TermData data = new TermData(10, 11, 12);
+    @Override
+    public void addTerm(Term term, TermData data) throws IOException {
+        if(getTermType() == null) {
+            throw new InvalidStateException("TermType must be set!");
+        }
         dictionary.insert(term, data);
     }
 
