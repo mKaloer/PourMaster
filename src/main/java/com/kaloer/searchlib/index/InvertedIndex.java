@@ -1,7 +1,12 @@
 package com.kaloer.searchlib.index;
 
 import com.kaloer.searchlib.index.fields.FieldTypeStore;
+import com.kaloer.searchlib.index.search.DocumentScore;
+import com.kaloer.searchlib.index.search.Query;
+import com.kaloer.searchlib.index.search.RankedDocument;
 import com.kaloer.searchlib.index.terms.Term;
+import com.sun.xml.internal.xsom.impl.scd.Iterators;
+import org.apache.commons.collections.IteratorUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,23 +20,20 @@ public class InvertedIndex {
     private TermDictionary dictionary;
     private DocumentIndex docIndex;
     private Postings postings;
+    private IndexConfig config;
 
     public InvertedIndex(IndexConfig conf) throws IOException, ReflectiveOperationException {
+        this.config = conf;
         this.docIndex = conf.getDocumentIndex();
         this.dictionary = conf.getTermDictionary();
         this.postings = conf.getPostings();
     }
 
-    public List<Document> findDocuments(Term term) throws IOException {
-        TermDictionary.TermData termData = dictionary.findTerm(term);
-        if(termData == null) {
-            // Return empty list
-            return new ArrayList<Document>();
-        }
-        PostingsData[] pResults = postings.getDocumentsForTerm(termData.getPostingsIndex(), termData.getDocFrequency());
-        List<Document> docs = new ArrayList<Document>(pResults.length);
-        for (PostingsData d : pResults) {
-            docs.add(docIndex.getDocument(d.getDocumentId()));
+    public List<RankedDocument> search(Query query, int count) throws IOException {
+        Iterator<RankedDocument> result = query.search(this);
+        ArrayList<RankedDocument> docs = new ArrayList<RankedDocument>();
+        while (result.hasNext() && (count == -1 || docs.size() < count)) {
+            docs.add(result.next());
         }
         return docs;
     }
@@ -44,7 +46,6 @@ public class InvertedIndex {
         long docId = 0;
         for(FieldStream fieldStream : docStream) {
             for(TokenStream<?, ?> tokenStream : fieldStream) {
-                // TODO: Only if field is indexed!
                 for(Token<? extends Term> t : tokenStream) {
                     // Index document
                     HashMap<Long, PostingsData> postings;
@@ -55,9 +56,9 @@ public class InvertedIndex {
                         postings = dictionary.get(t.getValue());
                     }
                     if(!postings.containsKey(docId)) {
-                        postings.put(docId, new PostingsData(docId, t.getPosition()));
+                        postings.put(docId, new PostingsData(docId, t.getPosition(), tokenStream.getField().getFieldId()));
                     } else {
-                        postings.get(docId).addPosition(t.getPosition());
+                        postings.get(docId).addPosition(t.getPosition(), tokenStream.getField().getFieldId());
                     }
                 }
             }
@@ -109,4 +110,15 @@ public class InvertedIndex {
         return termIndices;
     }
 
+    public DocumentIndex getDocIndex() {
+        return docIndex;
+    }
+
+    public Postings getPostings() {
+        return postings;
+    }
+
+    public TermDictionary getDictionary() {
+        return dictionary;
+    }
 }

@@ -1,5 +1,6 @@
 package com.kaloer.searchlib.index;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 /**
@@ -20,4 +21,6 @@ public abstract class DocumentIndex {
     public FieldDataStore getFieldDataStore() {
         return fieldDataStore;
     }
+
+    public abstract long getDocumentCount() throws IOException;
 }

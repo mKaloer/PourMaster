@@ -1,6 +1,7 @@
 package com.kaloer.searchlib.index;
 
 import com.kaloer.searchlib.index.terms.Term;
+import com.kaloer.searchlib.index.terms.TermOccurrence;
 
 import java.io.*;
 import java.util.*;
@@ -17,30 +18,31 @@ public class SequentialPostings extends Postings {
         f.createNewFile();
     }
 
-    public PostingsData[] getDocumentsForTerm(long index, int docCount) throws IOException {
+    public Iterator<PostingsData> getDocumentsForTerm(long index, int docCount) throws IOException {
         RandomAccessFile file = null;
-        PostingsData[] docs;
+        ArrayList<PostingsData> docs;
+        // TODO: Do not read all docs but buffer with iterator
         try {
             file = new RandomAccessFile(filePath, "r");
             file.seek(index);
-            docs = new PostingsData[docCount];
+            docs = new ArrayList<PostingsData>(docCount);
             for(int i = 0; i < docCount; i++) {
-                docs[i] = readPostingsData(file);
+                docs.add(readPostingsData(file));
             }
         } finally {
             if(file != null) {
                 file.close();
             }
         }
-        return docs;
+        return docs.iterator();
     }
 
     private PostingsData readPostingsData(RandomAccessFile file) throws IOException {
         long docId = file.readLong();
         int arrLength = file.readInt();
-        ArrayList<Long> positions = new ArrayList<Long>(arrLength);
+        ArrayList<TermOccurrence> positions = new ArrayList<TermOccurrence>(arrLength);
         for (int j = 0; j < arrLength; j++) {
-            positions.add(file.readLong());
+            positions.add(new TermOccurrence(file.readLong(), file.readInt()));
         }
         return new PostingsData(docId, positions);
     }
@@ -88,8 +90,9 @@ public class SequentialPostings extends Postings {
         for(int i = 0; i < docs.length; i++) {
             output.writeLong(docs[i].getDocumentId());
             output.writeInt(docs[i].getPositions().size());
-            for (long pos : docs[i].getPositions()) {
-                output.writeLong(pos);
+            for (TermOccurrence occurrence : docs[i].getPositions()) {
+                output.writeLong(occurrence.getPosition());
+                output.writeInt(occurrence.getFieldId());
             }
         }
     }

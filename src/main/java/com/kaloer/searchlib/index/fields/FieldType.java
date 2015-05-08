@@ -13,4 +13,5 @@ public interface FieldType<T> {
 
     T readFromInput(DataInput input) throws IOException;
 
+    long getLength(T fieldValue);
 }

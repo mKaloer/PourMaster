@@ -5,6 +5,7 @@ import com.kaloer.searchlib.index.terms.Term;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -12,7 +13,7 @@ import java.util.Map;
  */
 public abstract class Postings {
 
-    public abstract PostingsData[] getDocumentsForTerm(long index, int docCount) throws IOException;
+    public abstract Iterator<PostingsData> getDocumentsForTerm(long index, int docCount) throws IOException;
 
     public abstract long insertTerm(PostingsData[] docs) throws IOException;
 

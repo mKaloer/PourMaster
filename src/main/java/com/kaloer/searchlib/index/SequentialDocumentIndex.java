@@ -11,7 +11,13 @@ import java.util.List;
  */
 public class SequentialDocumentIndex extends DocumentIndex {
 
+    /**
+     * Size of metadata part in bytes.
+     */
+    private static final int METADATA_OFFSET = 8;
+
     private String filePath;
+    private long docCount = -1;
 
     public SequentialDocumentIndex(String fileName, String fieldDataFileName, String fieldInfoFileName) throws IOException, ReflectiveOperationException {
         super(new SequentialFieldDataStore(fieldDataFileName, fieldInfoFileName));
@@ -23,9 +29,13 @@ public class SequentialDocumentIndex extends DocumentIndex {
         RandomAccessFile file = null;
         try {
             long fieldIndex = getFieldDataStore().appendFields(doc.getFields());
-            // Write field index
+
             file = new RandomAccessFile(filePath, "rw");
-            file.seek(doc.getDocumentId() * 8);
+            // Increase doc count
+            docCount = getDocumentCount() + 1;
+            file.writeLong(docCount);
+            // Write field index
+            file.seek(docIdToPointer(doc.getDocumentId()));
             file.writeLong(fieldIndex);
         } finally {
             if(file != null) {
@@ -41,7 +51,7 @@ public class SequentialDocumentIndex extends DocumentIndex {
         try {
             // Read field index
             file = new RandomAccessFile(filePath, "r");
-            file.seek(docId * 8);
+            file.seek(docIdToPointer(docId));
             long fieldIndex = file.readLong();
             // Read fields
             List<Field> fields = getFieldDataStore().getFields(fieldIndex);
@@ -54,5 +64,30 @@ public class SequentialDocumentIndex extends DocumentIndex {
             }
         }
         return doc;
+    }
+
+    private long docIdToPointer(long docId) {
+        return docId * 8 + METADATA_OFFSET;
+    }
+
+    @Override
+    public long getDocumentCount() throws IOException {
+        if(docCount == -1) {
+            RandomAccessFile file = null;
+            try {
+                file = new RandomAccessFile(filePath, "rw");
+                if(file.length() == 0) {
+                    file.writeLong(0);
+                    docCount = 0;
+                } else {
+                    docCount = file.readLong();
+                }
+            } finally {
+                if(file != null) {
+                    file.close();
+                }
+            }
+        }
+        return docCount;
     }
 }

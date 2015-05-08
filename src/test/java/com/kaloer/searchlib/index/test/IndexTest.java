@@ -1,9 +1,11 @@
 package com.kaloer.searchlib.index.test;
 
 import com.kaloer.searchlib.index.fields.StringFieldType;
+import com.kaloer.searchlib.index.search.MultiTermQuery;
+import com.kaloer.searchlib.index.search.RankedDocument;
+import com.kaloer.searchlib.index.search.TermQuery;
 import com.kaloer.searchlib.index.terms.StringTerm;
 import com.kaloer.searchlib.index.terms.StringTermType;
-import com.kaloer.searchlib.index.terms.Term;
 import com.kaloer.searchlib.index.*;
 import com.kaloer.searchlib.index.fields.Field;
 import com.kaloer.searchlib.index.pipeline.Pipeline;
@@ -17,7 +19,6 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,7 +64,7 @@ public class IndexTest {
         final InvertedIndex index = createIndex();
 
         Document d1 = new Document();
-        Field f1 = new Field();
+        final Field f1 = new Field();
         f1.setFieldType(new StringFieldType());
         f1.setFieldId(1);
         f1.setFieldValue("Hello World");
@@ -99,7 +100,9 @@ public class IndexTest {
                     return new FieldStream(docs.get(index++));
                 }
             }, tmpDir);
-            List<Document> d = index.findDocuments(new StringTerm("Hello"));
+            MultiTermQuery query = new MultiTermQuery();
+            query.add(new TermQuery(new StringTerm("Hello"), f1.getFieldId()));
+            List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Expected one result", 1, d.size());
         } catch (IOException e) {
             e.printStackTrace();
@@ -112,7 +115,7 @@ public class IndexTest {
         final InvertedIndex index = createIndex();
 
         Document d1 = new Document();
-        Field f1 = new Field();
+        final Field f1 = new Field();
         f1.setFieldType(new StringFieldType());
         f1.setFieldId(1);
         f1.setFieldValue("Hello World");
@@ -150,7 +153,9 @@ public class IndexTest {
                     return new FieldStream(docs.get(index++));
                 }
             }, tmpDir);
-            List<Document> d = index.findDocuments(new StringTerm("Foo"));
+            MultiTermQuery query = new MultiTermQuery();
+            query.add(new TermQuery(new StringTerm("Foo"), f1.getFieldId()));
+            List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Expected zero results", 0, d.size());
         } catch (IOException e) {
             e.printStackTrace();

@@ -21,6 +21,7 @@ public class Field<T, V extends FieldType<T>> {
     private T fieldValue;
     private Pipeline<T, Token> queryAnalysisPipeline;
     private Pipeline<T, Token> indexAnalysisPipeline;
+    private long length;
 
     public static Field createFromData(DataInput input, FieldTypeStore typeStore) throws IOException {
         Field f = new Field();
@@ -29,7 +30,12 @@ public class Field<T, V extends FieldType<T>> {
         int fieldType = input.readUnsignedByte();
         f.setFieldId(fieldId);
         f.setFieldType(typeStore.findTypeById(fieldType));
-        f.setFieldValue(f.getFieldType().readFromInput(input));
+        f.isIndexed = input.readBoolean();
+        f.isStored = input.readBoolean();
+        f.length = input.readLong();
+        if(f.isStored) {
+            f.setFieldValue(f.getFieldType().readFromInput(input));
+        }
         return f;
     }
 
@@ -79,6 +85,7 @@ public class Field<T, V extends FieldType<T>> {
 
     public void setFieldValue(T fieldValue) {
         this.fieldValue = fieldValue;
+        this.length = fieldType.getLength(fieldValue);
     }
 
     public FieldType getFieldType() {
@@ -93,6 +100,15 @@ public class Field<T, V extends FieldType<T>> {
         output.writeShort(getFieldId());
         int typeId = typeStore.getOrCreateTypeId(getFieldType());
         output.writeByte(typeId);
-        fieldType.writeToOutput(output, getFieldValue());
+        output.writeBoolean(isIndexed);
+        output.writeBoolean(isStored);
+        output.writeLong(length);
+        if(isStored) {
+            fieldType.writeToOutput(output, getFieldValue());
+        }
+    }
+
+    public long getLength() {
+        return length;
     }
 }

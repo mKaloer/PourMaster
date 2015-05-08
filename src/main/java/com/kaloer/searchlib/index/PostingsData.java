@@ -1,5 +1,8 @@
 package com.kaloer.searchlib.index;
 
+import com.kaloer.searchlib.index.terms.Term;
+import com.kaloer.searchlib.index.terms.TermOccurrence;
+
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -10,20 +13,29 @@ import java.util.List;
  */
 public class PostingsData {
     private long documentId;
-    private ArrayList<Long> positions;
+    private ArrayList<TermOccurrence> positions;
 
-    public PostingsData(long docId, Collection<Long> positions) {
+    public PostingsData(long docId, Collection<TermOccurrence> positions) {
         this.documentId = docId;
-        this.positions = new ArrayList<Long>(positions);
+        this.positions = new ArrayList<TermOccurrence>(positions);
     }
 
-    public PostingsData(long docId, long position) {
+    public PostingsData(long docId) {
         this.documentId = docId;
-        this.positions = new ArrayList<Long>();
-        addPosition(position);
+        this.positions = new ArrayList<TermOccurrence>();
     }
 
-    public ArrayList<Long> getPositions() {
+    public PostingsData(long docId, long position, int fieldId) {
+        this(docId, new TermOccurrence(position, fieldId));
+    }
+
+    public PostingsData(long docId, TermOccurrence occurrence) {
+        this.documentId = docId;
+        this.positions = new ArrayList<TermOccurrence>();
+        this.positions.add(occurrence);
+    }
+
+    public ArrayList<TermOccurrence> getPositions() {
         return positions;
     }
 
@@ -31,7 +43,12 @@ public class PostingsData {
         return documentId;
     }
 
-    public void addPosition(long position) {
+    public void addPosition(long position, int fieldId) {
+        addPosition(new TermOccurrence(position, fieldId));
+    }
+
+    public void addPosition(TermOccurrence position) {
         positions.add(position);
     }
+
 }

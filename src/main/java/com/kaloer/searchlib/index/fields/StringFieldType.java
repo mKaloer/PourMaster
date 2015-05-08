@@ -16,4 +16,8 @@ public class StringFieldType implements FieldType<String> {
     public String readFromInput(DataInput input) throws IOException {
         return input.readUTF();
     }
+
+    public long getLength(String fieldValue) {
+        return fieldValue.length();
+    }
 }

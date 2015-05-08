@@ -29,6 +29,10 @@ public class TokenStream<T, V extends FieldType<T>> implements Iterable<Token> {
         }
     }
 
+    public Field<T, V> getField() {
+        return field;
+    }
+
     public Iterator<Token> iterator() {
         return tokens.iterator();
     }

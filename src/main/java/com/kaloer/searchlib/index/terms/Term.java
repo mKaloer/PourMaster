@@ -2,8 +2,10 @@ package com.kaloer.searchlib.index.terms;
 
 import com.kaloer.searchlib.index.fields.Field;
 import com.kaloer.searchlib.index.fields.FieldType;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.lang.reflect.Type;
+import java.nio.ByteBuffer;
 
 /**
  * Created by mkaloer on 12/04/15.
@@ -19,7 +21,7 @@ public class Term<T, V extends TermType<T>> implements Comparable<Term<T, V>> {
     }
 
     public Term(byte[] data) {
-
+        throw new NotImplementedException();
     }
 
     public T getValue() {
@@ -31,15 +33,18 @@ public class Term<T, V extends TermType<T>> implements Comparable<Term<T, V>> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Term term = (Term) o;
+        Term<?, ?> term = (Term<?, ?>) o;
 
-        return !(value != null ? !value.equals(term.value) : term.value != null);
+        if (value != null ? !value.equals(term.value) : term.value != null) return false;
+        return !(termType != null ? !termType.equals(term.termType) : term.termType != null);
 
     }
 
     @Override
     public int hashCode() {
-        return value != null ? value.hashCode() : 0;
+        int result = value != null ? value.hashCode() : 0;
+        result = 31 * result + (termType != null ? termType.hashCode() : 0);
+        return result;
     }
 
     public int compareTo(Term<T, V> o) {
@@ -47,11 +52,16 @@ public class Term<T, V extends TermType<T>> implements Comparable<Term<T, V>> {
     }
 
     public byte[] serialize() {
-        return termType.getBytes(getValue());
+        byte[] value = termType.getBytes(getValue());
+        ByteBuffer data = ByteBuffer.allocate(value.length + 4);
+        data.put(value);
+        return data.array();
     }
 
     public static <T, V extends TermType<T>> Term<T,V> deserialize(byte[] in, V termType) throws IllegalAccessException, InstantiationException {
         T value = termType.readFromBytes(in);
         return new Term<T, V>(value, termType);
     }
+
+
 }
