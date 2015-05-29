@@ -24,6 +24,7 @@ public class TestDoc {
     @Field(
             type = StringFieldType.class,
             indexed = true,
+            stored = true,
             indexAnalyzer = Test.class
 
     )

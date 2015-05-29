@@ -9,6 +9,7 @@ import com.kaloer.searchlib.index.search.Query;
 import com.kaloer.searchlib.index.search.RankedDocument;
 import com.kaloer.searchlib.index.terms.Term;
 
+import javax.print.Doc;
 import java.io.IOException;
 import java.util.*;
 
@@ -26,21 +27,21 @@ public class TermQuery extends Query {
     }
 
     @Override
-    public Iterator<RankedDocument> search(InvertedIndex index) throws IOException {
+    public Iterator<RankedDocument<Document>> search(InvertedIndex index) throws IOException {
         TermDictionary.TermData termData = index.getDictionary().findTerm(term);
         if(termData == null) {
             // No results
             return Collections.emptyIterator();
         }
         final Iterator<PostingsData> postingsData = index.getPostings().getDocumentsForTerm(termData.getPostingsIndex(), termData.getDocFrequency());
-        PriorityQueue<RankedDocument> result = new PriorityQueue<RankedDocument>();
+        PriorityQueue<RankedDocument<Document>> result = new PriorityQueue<RankedDocument<Document>>();
         // Normalize scores and add to result set
         while (postingsData.hasNext()) {
             PostingsData data = postingsData.next();
             long docId = data.getDocumentId();
             Document doc = index.getDocIndex().getDocument(docId);
             // Pure TF score
-            result.add(new RankedDocument(doc, data.getPositions().size()));
+            result.add(new RankedDocument<Document>(doc, data.getPositions().size()));
         }
         return result.iterator();
     }

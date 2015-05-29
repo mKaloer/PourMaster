@@ -5,12 +5,12 @@ import com.kaloer.searchlib.index.Document;
 /**
  * Created by mkaloer on 07/05/15.
  */
-public class RankedDocument implements Comparable<RankedDocument> {
+public class RankedDocument<T extends Object> implements Comparable<RankedDocument> {
 
-    private Document document;
+    private T document;
     private double score;
 
-    public RankedDocument(Document document, double score) {
+    public RankedDocument(T document, double score) {
         this.document = document;
         this.score = score;
     }
@@ -19,7 +19,7 @@ public class RankedDocument implements Comparable<RankedDocument> {
         return score;
     }
 
-    public Document getDocument() {
+    public T getDocument() {
         return document;
     }
 

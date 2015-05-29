@@ -13,7 +13,7 @@ public class IndexConfig {
     private DocumentIndex docIndex;
     private TermDictionary termDictionary;
     private Postings postings;
-    private String fieldTypeStorePath;
+    private String documentTypeFilePath;
 
     public IndexConfig setDocumentIndex(DocumentIndex docIndex) {
         this.docIndex = docIndex;
@@ -40,5 +40,14 @@ public class IndexConfig {
 
     public Postings getPostings() {
         return postings;
+    }
+
+    public String getDocumentTypeFilePath() {
+        return documentTypeFilePath;
+    }
+
+    public IndexConfig setDocumentTypeFilePath(String documentTypeFilePath) {
+        this.documentTypeFilePath = documentTypeFilePath;
+        return this;
     }
 }

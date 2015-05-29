@@ -55,7 +55,8 @@ public class IndexTest {
             conf = new IndexConfig().
                     setDocumentIndex(new SequentialDocumentIndex("idx/docs.idx", "idx/docs_fields.idx", "idx/fields.db", "idx/field_types.db"))
                     .setPostings(new SequentialPostings("idx/postings.db"))
-                    .setTermDictionary(new BTreeTermDictionary("idx/dict.db", StringTermType.getInstance()));
+                    .setTermDictionary(new BTreeTermDictionary("idx/dict.db", StringTermType.getInstance()))
+                    .setDocumentTypeFilePath("idx/te");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -181,9 +182,9 @@ public class IndexTest {
             query.add(new TermQuery(new StringTerm("test"), "content"));
             List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Expected three results", 3, d.size());
-            Assert.assertEquals("Expected doc3 first", d.get(0).getDocument().getDocumentId(), 2);
-            Assert.assertEquals("Expected doc1 second", d.get(1).getDocument().getDocumentId(), 0);
-            Assert.assertEquals("Expected doc2 third", d.get(2).getDocument().getDocumentId(), 1);
+            Assert.assertEquals("Expected doc3 first", ((TestDoc)d.get(0).getDocument()).author, "Alice");
+            Assert.assertEquals("Expected doc1 first", ((TestDoc)d.get(1).getDocument()).author, "Mads");
+            Assert.assertEquals("Expected doc2 first", ((TestDoc)d.get(2).getDocument()).author, "Bob");
         } catch (IOException e) {
             e.printStackTrace();
         }

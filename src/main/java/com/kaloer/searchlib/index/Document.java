@@ -14,6 +14,7 @@ public class Document {
 
     private List<FieldData> fields;
     private long documentId;
+    private int documentType;
 
     public Document() {
 
@@ -38,5 +39,11 @@ public class Document {
         this.documentId = documentId;
     }
 
+    public void setDocumentType(int documentType) {
+        this.documentType = documentType;
+    }
 
+    public int getDocumentType() {
+        return documentType;
+    }
 }

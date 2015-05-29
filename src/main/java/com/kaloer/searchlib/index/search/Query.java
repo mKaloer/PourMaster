@@ -1,5 +1,6 @@
 package com.kaloer.searchlib.index.search;
 
+import com.kaloer.searchlib.index.Document;
 import com.kaloer.searchlib.index.InvertedIndex;
 
 import java.io.IOException;
@@ -12,7 +13,7 @@ public abstract class Query {
 
     private double boost = 1.0;
 
-    public abstract Iterator<RankedDocument> search(InvertedIndex index) throws IOException;
+    public abstract Iterator<RankedDocument<Document>> search(InvertedIndex index) throws IOException;
 
     public void setBoost(double boost) {
         this.boost = boost;

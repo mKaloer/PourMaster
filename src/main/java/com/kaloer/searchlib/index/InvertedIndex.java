@@ -16,6 +16,7 @@ import java.util.*;
  */
 public class InvertedIndex {
 
+    private DocumentTypeStore docTypeStore;
     private TermDictionary dictionary;
     private DocumentIndex docIndex;
     private Postings postings;
@@ -25,14 +26,26 @@ public class InvertedIndex {
         this.config = conf;
         this.docIndex = conf.getDocumentIndex();
         this.dictionary = conf.getTermDictionary();
+        this.docTypeStore = new DocumentTypeStore(conf.getDocumentTypeFilePath());
         this.postings = conf.getPostings();
     }
 
-    public List<RankedDocument> search(Query query, int count) throws IOException {
-        Iterator<RankedDocument> result = query.search(this);
+    public List<RankedDocument> search(Query query, int count) throws IOException, ReflectiveOperationException {
+        Iterator<RankedDocument<Document>> result = query.search(this);
+        // Convert documents to original document format
         ArrayList<RankedDocument> docs = new ArrayList<RankedDocument>();
         while (result.hasNext() && (count == -1 || docs.size() < count)) {
-            docs.add(result.next());
+            RankedDocument<Document> d = result.next();
+            // Create result object
+            Class docType = this.docTypeStore.getDocumentType(d.getDocument().getDocumentType());
+            Object doc = docType.newInstance();
+            // Set object fields
+            for(FieldData fieldData : d.getDocument().getFields()) {
+                if(fieldData.getField().isStored()) {
+                    docType.getField(fieldData.getField().getFieldName()).set(doc, fieldData.getValue());
+                }
+            }
+            docs.add(new RankedDocument(doc, d.getScore()));
         }
         return docs;
     }
@@ -113,6 +126,7 @@ public class InvertedIndex {
             Document doc = new Document();
             doc.setDocumentId(docId);
             doc.setFields(fields);
+            doc.setDocumentType(this.docTypeStore.getOrCreateDocumentType(document.getClass()));
             docIndex.addDocument(doc);
             docId++;
         }

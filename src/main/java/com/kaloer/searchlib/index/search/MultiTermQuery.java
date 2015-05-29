@@ -7,6 +7,7 @@ import com.kaloer.searchlib.index.terms.TermOccurrence;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.naming.OperationNotSupportedException;
+import javax.print.Doc;
 import java.io.IOException;
 import java.util.*;
 
@@ -22,7 +23,7 @@ public class MultiTermQuery extends Query {
     }
 
     @Override
-    public Iterator<RankedDocument> search(InvertedIndex index) throws IOException {
+    public Iterator<RankedDocument<Document>> search(InvertedIndex index) throws IOException {
         HashMap<Long, Double> scores = new HashMap<Long, Double>();
 
         for(TermQuery query : subQueries) {
@@ -50,14 +51,14 @@ public class MultiTermQuery extends Query {
             }
         }
 
-        final PriorityQueue<RankedDocument> result = new PriorityQueue<RankedDocument>();
+        final PriorityQueue<RankedDocument<Document>> result = new PriorityQueue<RankedDocument<Document>>();
         // Normalize scores and add to result set
         for(Long docId : scores.keySet()) {
             Document doc = index.getDocIndex().getDocument(docId);
             for(FieldData f : doc.getFields()) {
                 for(TermQuery query : subQueries) {
                     if(f.getField().getFieldName().equals(query.getFieldName())) {
-                        result.add(new RankedDocument(doc, scores.get(docId) / (double) f.getLength()));
+                        result.add(new RankedDocument<Document>(doc, scores.get(docId) / (double) f.getLength()));
                         break;
                     }
                 }
@@ -65,7 +66,7 @@ public class MultiTermQuery extends Query {
         }
 
         // Return iterator
-        return new Iterator<RankedDocument>() {
+        return new Iterator<RankedDocument<Document>>() {
             public boolean hasNext() {
                 return result.size() > 0;
             }

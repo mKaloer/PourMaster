@@ -1,6 +1,7 @@
 package com.kaloer.searchlib.index;
 
 import com.kaloer.searchlib.index.fields.FieldData;
+import com.kaloer.searchlib.index.fields.FieldList;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,7 +31,7 @@ public class SequentialDocumentIndex extends DocumentIndex {
     public void addDocument(Document doc) throws IOException, ReflectiveOperationException {
         RandomAccessFile file = null;
         try {
-            long fieldIndex = getFieldDataStore().appendFields(doc.getFields());
+            long fieldIndex = getFieldDataStore().appendFields(new FieldList(doc.getFields(), doc.getDocumentType()));
 
             file = new RandomAccessFile(filePath, "rw");
             // Increase doc count
@@ -56,10 +57,11 @@ public class SequentialDocumentIndex extends DocumentIndex {
             file.seek(docIdToPointer(docId));
             long fieldIndex = file.readLong();
             // Read fields
-            List<FieldData> fields = getFieldDataStore().getFields(fieldIndex);
+            FieldList fields = getFieldDataStore().getFields(fieldIndex);
             doc = new Document();
             doc.setDocumentId(docId);
-            doc.setFields(fields);
+            doc.setFields(fields.getFieldData());
+            doc.setDocumentType(fields.getDocTypeId());
         } finally {
             if(file != null) {
                 file.close();

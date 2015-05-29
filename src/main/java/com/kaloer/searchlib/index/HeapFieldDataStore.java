@@ -2,7 +2,7 @@ package com.kaloer.searchlib.index;
 
 import com.kaloer.searchlib.index.fields.Field;
 import com.kaloer.searchlib.index.fields.FieldData;
-import sun.reflect.FieldInfo;
+import com.kaloer.searchlib.index.fields.FieldList;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,13 +26,14 @@ public class HeapFieldDataStore extends FieldDataStore {
     }
 
     @Override
-    public List<FieldData> getFields(long index) throws IOException {
-        List<FieldData> fields = null;
+    public FieldList getFields(long index) throws IOException {
         RandomAccessFile file = null;
         try {
+            ArrayList<FieldData> fields = null;
             // Read field index
             file = new RandomAccessFile(filePath, "r");
             file.seek(index);
+            int docType = file.readUnsignedByte();
             int numFields = file.readUnsignedByte();
             fields = new ArrayList<FieldData>(numFields);
             // Read fields
@@ -40,26 +41,28 @@ public class HeapFieldDataStore extends FieldDataStore {
                 FieldData fieldData = FieldData.createFromData(file, fieldInfoStore);
                 fields.add(fieldData);
             }
+            return new FieldList(fields, docType);
         } finally {
             if(file != null) {
                 file.close();
             }
         }
-        return fields;
     }
 
     @Override
-    public long appendFields(List<FieldData> fields) throws IOException, ReflectiveOperationException {
+    public long appendFields(FieldList fields) throws IOException, ReflectiveOperationException {
         RandomAccessFile file = null;
         try {
             // Move to end of file
             file = new RandomAccessFile(filePath, "rw");
             file.seek(file.length());
             long pointer = file.getFilePointer();
+            // Write doc type id
+            file.writeByte(fields.getDocTypeId());
             // Write number of fields
-            file.writeByte(fields.size()); // Write as unsigned byte
+            file.writeByte(fields.getFieldData().size()); // Write as unsigned byte
             // Write fields
-            for(FieldData data : fields) {
+            for(FieldData data : fields.getFieldData()) {
                 // Make sure field info is stored
                 int fieldId = fieldInfoStore.getOrCreateField(data.getField());
                 data.getField().setFieldId(fieldId);
