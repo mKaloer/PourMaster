@@ -13,12 +13,12 @@ import java.util.List;
 /**
  * Created by mkaloer on 13/04/15.
  */
-public class SequentialFieldDataStore extends FieldDataStore {
+public class HeapFieldDataStore extends FieldDataStore {
 
     private String filePath;
     private FieldInfoStore fieldInfoStore;
 
-    public SequentialFieldDataStore(String filePath, String fieldInfoStorePath, String fieldTypeStorePath) throws IOException, ReflectiveOperationException {
+    public HeapFieldDataStore(String filePath, String fieldInfoStorePath, String fieldTypeStorePath) throws IOException, ReflectiveOperationException {
         super();
         this.filePath = filePath;
         new File(filePath).createNewFile();

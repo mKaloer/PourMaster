@@ -1,6 +1,5 @@
 package com.kaloer.searchlib.index;
 
-import com.kaloer.searchlib.index.fields.Field;
 import com.kaloer.searchlib.index.fields.FieldData;
 
 import java.io.File;
@@ -22,7 +21,7 @@ public class SequentialDocumentIndex extends DocumentIndex {
     private long docCount = -1;
 
     public SequentialDocumentIndex(String fileName, String fieldDataFileName, String fieldInfoFileName, String fieldTypesFileName) throws IOException, ReflectiveOperationException {
-        super(new SequentialFieldDataStore(fieldDataFileName, fieldInfoFileName, fieldTypesFileName));
+        super(new HeapFieldDataStore(fieldDataFileName, fieldInfoFileName, fieldTypesFileName));
         this.filePath = fileName;
         new File(filePath).createNewFile();
     }
