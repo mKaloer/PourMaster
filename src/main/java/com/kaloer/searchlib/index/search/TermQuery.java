@@ -1,8 +1,10 @@
 package com.kaloer.searchlib.index.search;
 
+import com.kaloer.searchlib.index.Document;
 import com.kaloer.searchlib.index.InvertedIndex;
 import com.kaloer.searchlib.index.PostingsData;
 import com.kaloer.searchlib.index.TermDictionary;
+import com.kaloer.searchlib.index.fields.Field;
 import com.kaloer.searchlib.index.search.Query;
 import com.kaloer.searchlib.index.search.RankedDocument;
 import com.kaloer.searchlib.index.terms.Term;
@@ -16,11 +18,11 @@ import java.util.*;
 public class TermQuery extends Query {
 
     private Term term;
-    private int fieldId;
+    private String fieldName;
 
-    public TermQuery(Term term, int fieldId) {
+    public TermQuery(Term term, String fieldName) {
         this.term = term;
-        this.fieldId = fieldId;
+        this.fieldName = fieldName;
     }
 
     @Override
@@ -30,14 +32,21 @@ public class TermQuery extends Query {
             // No results
             return Collections.emptyIterator();
         }
-        final double idf = Math.log((double) index.getDocIndex().getDocumentCount() / (double) (1 + termData.getDocFrequency()));
         final Iterator<PostingsData> postingsData = index.getPostings().getDocumentsForTerm(termData.getPostingsIndex(), termData.getDocFrequency());
-        // TODO: find docs
-        return Collections.emptyIterator();
+        PriorityQueue<RankedDocument> result = new PriorityQueue<RankedDocument>();
+        // Normalize scores and add to result set
+        while (postingsData.hasNext()) {
+            PostingsData data = postingsData.next();
+            long docId = data.getDocumentId();
+            Document doc = index.getDocIndex().getDocument(docId);
+            // Pure TF score
+            result.add(new RankedDocument(doc, data.getPositions().size()));
+        }
+        return result.iterator();
     }
 
-    public int getFieldId() {
-        return fieldId;
+    public String getFieldName() {
+        return fieldName;
     }
 
     @Override

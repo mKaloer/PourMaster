@@ -119,14 +119,22 @@ public class SequentialPostings extends Postings {
     }
 
     @Override
-    public HashMap<Term, Long> mergePartialPostingsFiles(ArrayList<String> partialFiles, ArrayList<ArrayList<Map.Entry<Term, Long>>> termsToPointer) throws IOException {
+    public HashMap<Term, Long> mergePartialPostingsFiles(ArrayList<String> partialFiles,
+                                                         ArrayList<ArrayList<Map.Entry<Term, Long>>> termsToPointer,
+                                                         ArrayList<HashMap<Term, Integer>> docFreqs) throws IOException {
         RandomAccessFile outputFile = null;
+        // List of input files
         ArrayList<RandomAccessFile> inputFiles = new ArrayList<RandomAccessFile>(partialFiles.size());
+        // Map from term to postings index (in merged file)
         HashMap<Term, Long> indices = new HashMap<Term, Long>();
         // Keep index of terms currently merged per partial file
         ArrayList<Integer> termIndices = new ArrayList<Integer>(partialFiles.size());
+        // Buffer containing one postings entry per file
         ArrayList<PostingsData> partialData = new ArrayList<PostingsData>(partialFiles.size());
+        // Whether files have not reached EOF
         ArrayList<Boolean> currentFiles = new ArrayList<Boolean>();
+        // Number of documents written for a specific term (per file)
+        ArrayList<HashMap<Term, Integer>> docsWritten = new ArrayList<HashMap<Term, Integer>>();
 
         try {
             outputFile = new RandomAccessFile(filePath, "rw");
@@ -137,22 +145,29 @@ public class SequentialPostings extends Postings {
                 termIndices.add(0);
                 currentFiles.add(true);
                 partialData.add(null);
+                docsWritten.add(new HashMap<Term, Integer>());
             }
 
+            // While some files contain unread data
             while(currentFiles.contains(true)) {
                 Term minTerm = null;
                 long minDocId = -1;
                 int minIndex = -1;
-                // Merge
-                // Find minimum key
+                // Merge step
+                // Find minimum key in all files at their current position
                 for (int i = 0; i < inputFiles.size(); i++) {
                     if(!currentFiles.get(i) || termsToPointer.get(i).size() == 0) {
                         continue;
                     }
 
+                    Map.Entry<Term, Long> item = termsToPointer.get(i).get(termIndices.get(i));
+                    Term t = item.getKey();
                     if (partialData.get(i) == null) {
+                        // Seek to term location if not already visited
+                        if(inputFiles.get(i).getFilePointer() <= item.getValue()) {
+                            inputFiles.get(i).seek(item.getValue());
+                        }
                         // Read data
-                        inputFiles.get(i).seek(termsToPointer.get(i).get(termIndices.get(i)).getValue());
                         partialData.set(i, readPostingsData(inputFiles.get(i)));
 
                         // Check for end of file and mark for next iteration
@@ -160,7 +175,7 @@ public class SequentialPostings extends Postings {
                             currentFiles.set(i, false);
                         }
                     }
-                    Term t = termsToPointer.get(i).get(termIndices.get(i)).getKey();
+                    // Check if this is the smallest key (and update if so)
                     if (minTerm == null || t.compareTo(minTerm) > 0) {
                         if (minDocId == -1 || minDocId > partialData.get(i).getDocumentId()) {
                             minTerm = t;
@@ -169,13 +184,25 @@ public class SequentialPostings extends Postings {
                         }
                     }
                 }
+                // If first occurrence of term, store pointer to postings index
                 if(!indices.containsKey(minTerm)) {
                     indices.put(minTerm, outputFile.getFilePointer());
                 }
-                // Write postings to output file
-                writeDocsToFile(outputFile, new PostingsData[]{partialData.get(minIndex)});
-                partialData.set(minIndex, null);
-                termIndices.set(minIndex, termIndices.get(minIndex) + 1);
+                if(minIndex >= 0) {
+                    // Write postings to output file
+                    writeDocsToFile(outputFile, new PostingsData[]{partialData.get(minIndex)});
+                    // Mark buffer for this file as empty
+                    partialData.set(minIndex, null);
+                    // Update number of docs written with this term
+                    if(!docsWritten.get(minIndex).containsKey(minTerm)) {
+                        docsWritten.get(minIndex).put(minTerm, 0);
+                    }
+                    docsWritten.get(minIndex).put(minTerm, docsWritten.get(minIndex).get(minTerm) + 1);
+                    // If all docs written, increment  term index
+                    if(docsWritten.get(minIndex).get(minTerm) == docFreqs.get(minIndex).get(minTerm)) {
+                        termIndices.set(minIndex, termIndices.get(minIndex) + 1);
+                    }
+                }
             }
 
             return indices;

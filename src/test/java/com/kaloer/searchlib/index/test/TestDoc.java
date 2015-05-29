@@ -1,5 +1,6 @@
 package com.kaloer.searchlib.index.test;
 
+import com.kaloer.searchlib.index.Analyzer;
 import com.kaloer.searchlib.index.Token;
 import com.kaloer.searchlib.index.annotations.Document;
 import com.kaloer.searchlib.index.annotations.Field;
@@ -7,8 +8,11 @@ import com.kaloer.searchlib.index.fields.StringFieldType;
 import com.kaloer.searchlib.index.pipeline.Pipeline;
 import com.kaloer.searchlib.index.pipeline.Stage;
 import com.kaloer.searchlib.index.terms.StringTerm;
+import com.kaloer.searchlib.index.terms.StringTermType;
+import com.sun.xml.internal.xsom.impl.scd.Iterators;
 
 import java.nio.channels.Pipe;
+import java.util.Iterator;
 import java.util.StringTokenizer;
 
 /**
@@ -19,26 +23,38 @@ public class TestDoc {
 
     @Field(
             type = StringFieldType.class,
-            name = "author",
             indexed = true,
-            indexAnalyzer = {Test.class}
+            indexAnalyzer = Test.class
 
     )
     public String author;
 
     @Field(
             type = StringFieldType.class,
-            name = "hello",
-            indexAnalyzer = {Test.class, Test1.class}
+            indexAnalyzer = Test.class
     )
     public String content;
 
 
-    private class Test extends Stage<String, Token<StringTerm>> {
+    public static class Test extends Analyzer<String> {
 
         @Override
-        protected void produce(String input) throws InterruptedException {
-            emit(new Token<StringTerm>(new StringTerm("hello"), 0));
+        public Iterator<Token> analyze(String value) {
+            final String[] words = value.split(" ");
+            return new Iterator<Token>() {
+                int index = 0;
+                public boolean hasNext() {
+                    return index < words.length;
+                }
+
+                public Token next() {
+                    return new Token(new StringTerm(words[index]), index++);
+                }
+
+                public void remove() {
+
+                }
+            };
         }
     }
 

@@ -31,8 +31,11 @@ public abstract class Postings {
      * Merges partial postings files into one (and replaces existing if exists).
      * @param partialFiles The list of partial postings files to merge.
      * @param termsToPointer A mapping from terms to pointer in each partial file.
+     * @param docFreqs A mapping from terms to their document frequencies in each partial file.
      *
      * @return A map of {@code <term, postings_index>} pairs.
      */
-    public abstract HashMap<Term, Long> mergePartialPostingsFiles(ArrayList<String> partialFiles, ArrayList<ArrayList<Map.Entry<Term, Long>>> termsToPointer) throws IOException;
+    public abstract HashMap<Term, Long> mergePartialPostingsFiles(ArrayList<String> partialFiles,
+                                                                  ArrayList<ArrayList<Map.Entry<Term, Long>>> termsToPointer,
+                                                                  ArrayList<HashMap<Term, Integer>> docFreqs) throws IOException;
 }

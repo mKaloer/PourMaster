@@ -1,5 +1,6 @@
 package com.kaloer.searchlib.index;
 
+import com.kaloer.searchlib.index.fields.FieldData;
 import com.kaloer.searchlib.index.fields.FieldType;
 import com.kaloer.searchlib.index.terms.Term;
 import com.kaloer.searchlib.index.fields.Field;
@@ -11,25 +12,25 @@ import java.util.Iterator;
 /**
  * Created by mkaloer on 15/04/15.
  */
-public class TokenStream<T, V extends FieldType<T>> implements Iterable<Token> {
+public class TokenStream implements Iterable<Token> {
 
-    private Field<T, V> field;
-    private Pipeline<T, Token> fieldPipeline;
+    private FieldData field;
+    private Pipeline fieldPipeline;
     private ArrayList<Token> tokens;
 
-    public TokenStream(Field<T, V> f) {
+    public TokenStream(FieldData f) {
         this.field = f;
-        fieldPipeline = f.getIndexAnalysisPipeline();
+        fieldPipeline = f.getField().getIndexAnalysisPipeline();
         // Process data
         try {
-            tokens = fieldPipeline.process(f.getFieldValue());
+            tokens = fieldPipeline.process(f.getValue());
         } catch (InterruptedException e) {
             e.printStackTrace();
             tokens = new ArrayList<Token>();
         }
     }
 
-    public Field<T, V> getField() {
+    public FieldData getFieldData() {
         return field;
     }
 

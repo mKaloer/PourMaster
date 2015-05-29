@@ -1,6 +1,7 @@
 package com.kaloer.searchlib.index;
 
 import com.kaloer.searchlib.index.fields.Field;
+import com.kaloer.searchlib.index.fields.FieldData;
 
 import java.util.List;
 
@@ -11,14 +12,14 @@ public class Document {
 
     private static final int MAX_NUM_FIELDS = 255;
 
-    private List fields;
+    private List<FieldData> fields;
     private long documentId;
 
     public Document() {
 
     }
 
-    public List<Field> getFields() {
+    public List<FieldData> getFields() {
         return fields;
     }
 
@@ -26,7 +27,7 @@ public class Document {
         return documentId;
     }
 
-    public void setFields(List<Field> fields) {
+    public void setFields(List<FieldData> fields) {
         if(fields.size() > 255) {
             throw new IllegalArgumentException(String.format("Too many fields in document. Maximum number of fields: %d", MAX_NUM_FIELDS));
         }
@@ -36,4 +37,6 @@ public class Document {
     public void setDocumentId(long documentId) {
         this.documentId = documentId;
     }
+
+
 }

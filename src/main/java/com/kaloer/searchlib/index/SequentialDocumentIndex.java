@@ -1,7 +1,9 @@
 package com.kaloer.searchlib.index;
 
 import com.kaloer.searchlib.index.fields.Field;
+import com.kaloer.searchlib.index.fields.FieldData;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.List;
@@ -19,9 +21,10 @@ public class SequentialDocumentIndex extends DocumentIndex {
     private String filePath;
     private long docCount = -1;
 
-    public SequentialDocumentIndex(String fileName, String fieldDataFileName, String fieldInfoFileName) throws IOException, ReflectiveOperationException {
-        super(new SequentialFieldDataStore(fieldDataFileName, fieldInfoFileName));
+    public SequentialDocumentIndex(String fileName, String fieldDataFileName, String fieldInfoFileName, String fieldTypesFileName) throws IOException, ReflectiveOperationException {
+        super(new SequentialFieldDataStore(fieldDataFileName, fieldInfoFileName, fieldTypesFileName));
         this.filePath = fileName;
+        new File(filePath).createNewFile();
     }
 
     @Override
@@ -54,7 +57,7 @@ public class SequentialDocumentIndex extends DocumentIndex {
             file.seek(docIdToPointer(docId));
             long fieldIndex = file.readLong();
             // Read fields
-            List<Field> fields = getFieldDataStore().getFields(fieldIndex);
+            List<FieldData> fields = getFieldDataStore().getFields(fieldIndex);
             doc = new Document();
             doc.setDocumentId(docId);
             doc.setFields(fields);

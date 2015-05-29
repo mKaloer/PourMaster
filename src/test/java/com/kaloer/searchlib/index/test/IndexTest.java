@@ -1,5 +1,6 @@
 package com.kaloer.searchlib.index.test;
 
+import com.kaloer.searchlib.index.fields.FieldData;
 import com.kaloer.searchlib.index.fields.StringFieldType;
 import com.kaloer.searchlib.index.search.MultiTermQuery;
 import com.kaloer.searchlib.index.search.RankedDocument;
@@ -20,7 +21,9 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Created by mkaloer on 13/04/15.
@@ -50,7 +53,7 @@ public class IndexTest {
         IndexConfig conf = null;
         try {
             conf = new IndexConfig().
-                    setDocumentIndex(new SequentialDocumentIndex("idx/docs.idx", "idx/docs_fields.idx", "idx/fields.db"))
+                    setDocumentIndex(new SequentialDocumentIndex("idx/docs.idx", "idx/docs_fields.idx", "idx/fields.db", "idx/field_types.db"))
                     .setPostings(new SequentialPostings("idx/postings.db"))
                     .setTermDictionary(new BTreeTermDictionary("idx/dict.db", StringTermType.getInstance()));
         } catch (IOException e) {
@@ -63,45 +66,29 @@ public class IndexTest {
     public void testOneResult() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
         final InvertedIndex index = createIndex();
 
-        Document d1 = new Document();
-        final Field f1 = new Field();
-        f1.setFieldType(new StringFieldType());
-        f1.setFieldId(1);
-        f1.setFieldValue("Hello World");
-        Pipeline<String, Token<StringTerm>> pipeline = new Pipeline<String, Token<StringTerm>>(new Stage<String, Token<StringTerm>>() {
-
-            @Override
-            protected void produce(String input) throws InterruptedException {
-                int i = 1;
-                for(String s : input.split(" ")) {
-                    Token t = new Token(new StringTerm(s), i);
-                    emit(t);
-                    i++;
-                }
-            }
-        });
-        f1.setIndexAnalysisPipeline(pipeline);
-        ArrayList<Field> fields = new ArrayList<Field>();
-        fields.add(f1);
-        d1.setFields(fields);
-        final ArrayList<Document> docs = new ArrayList<Document>();
+        TestDoc d1 = new TestDoc();
+        d1.author = "Mads";
+        d1.content = "This is a test";
+        final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d1);
         try {
-            index.indexDocuments(new DocumentStream() {
+            index.indexDocuments(new Iterator<Object>() {
                 int index = 0;
 
-                @Override
-                protected boolean hasNextDocument() {
+                public Object next() {
+                    return docs.get(index++);
+                }
+
+                public boolean hasNext() {
                     return docs.size() > index;
                 }
 
-                @Override
-                protected FieldStream nextDocument() {
-                    return new FieldStream(docs.get(index++));
+                public void remove() {
+
                 }
             }, tmpDir);
             MultiTermQuery query = new MultiTermQuery();
-            query.add(new TermQuery(new StringTerm("Hello"), f1.getFieldId()));
+            query.add(new TermQuery(new StringTerm("test"), "content"));
             List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Expected one result", 1, d.size());
         } catch (IOException e) {
@@ -114,49 +101,89 @@ public class IndexTest {
 
         final InvertedIndex index = createIndex();
 
-        Document d1 = new Document();
-        final Field f1 = new Field();
-        f1.setFieldType(new StringFieldType());
-        f1.setFieldId(1);
-        f1.setFieldValue("Hello World");
-        Pipeline<String, Token<StringTerm>> pipeline = new Pipeline<String, Token<StringTerm>>(new Stage<String, Token<StringTerm>>() {
-
-            @Override
-            protected void produce(String input) throws InterruptedException {
-                int i = 1;
-                for(String s : input.split(" ")) {
-                    Token t = new Token(new StringTerm(s), i);
-                    emit(t);
-                    i++;
-                }
-            }
-        });
-        f1.setIndexAnalysisPipeline(pipeline);
-        ArrayList<Field> fields = new ArrayList<Field>();
-        fields.add(f1);
-        d1.setFields(fields);
-        final ArrayList<Document> docs = new ArrayList<Document>();
+        TestDoc d1 = new TestDoc();
+        d1.author = "Mads";
+        d1.content = "This is a test";
+        final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d1);
         try {
-            File tmpDir = new File("tmp");
-            tmpDir.mkdirs();
-            index.indexDocuments(new DocumentStream() {
+            index.indexDocuments(new Iterator<Object>() {
                 int index = 0;
 
-                @Override
-                protected boolean hasNextDocument() {
+                public Object next() {
+                    return docs.get(index++);
+                }
+
+                public boolean hasNext() {
                     return docs.size() > index;
                 }
 
-                @Override
-                protected FieldStream nextDocument() {
-                    return new FieldStream(docs.get(index++));
+                public void remove() {
+
                 }
             }, tmpDir);
             MultiTermQuery query = new MultiTermQuery();
-            query.add(new TermQuery(new StringTerm("Foo"), f1.getFieldId()));
+            query.add(new TermQuery(new StringTerm("Foo"), "content"));
             List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Expected zero results", 0, d.size());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testMultipleResults() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+
+        final InvertedIndex index = createIndex();
+
+        TestDoc d1 = new TestDoc();
+        d1.author = "Mads";
+        d1.content = "This is a test";
+        TestDoc d2 = new TestDoc();
+        d2.author = "Bob";
+        d2.content = "This is a very long test text with lots of words";
+        TestDoc d3 = new TestDoc();
+        d3.author = "Alice";
+        d3.content = "test";
+        TestDoc d4 = new TestDoc();
+        d4.author = "Frank";
+        d4.content = "This should not match anything";
+        TestDoc d5 = new TestDoc();
+        d5.author = "Lars";
+        d5.content = "This should also not match anything";
+        TestDoc d6 = new TestDoc();
+        d6.author = "Peter";
+        d6.content = "This should also not match anything";
+        final ArrayList<Object> docs = new ArrayList<Object>();
+        docs.add(d1);
+        docs.add(d2);
+        docs.add(d3);
+        docs.add(d4);
+        docs.add(d5);
+        docs.add(d6);
+        try {
+            index.indexDocuments(new Iterator<Object>() {
+                int index = 0;
+
+                public Object next() {
+                    return docs.get(index++);
+                }
+
+                public boolean hasNext() {
+                    return docs.size() > index;
+                }
+
+                public void remove() {
+
+                }
+            }, tmpDir);
+            MultiTermQuery query = new MultiTermQuery();
+            query.add(new TermQuery(new StringTerm("test"), "content"));
+            List<RankedDocument> d = index.search(query, -1);
+            Assert.assertEquals("Expected three results", 3, d.size());
+            Assert.assertEquals("Expected doc3 first", d.get(0).getDocument().getDocumentId(), 2);
+            Assert.assertEquals("Expected doc1 second", d.get(1).getDocument().getDocumentId(), 0);
+            Assert.assertEquals("Expected doc2 third", d.get(2).getDocument().getDocumentId(), 1);
         } catch (IOException e) {
             e.printStackTrace();
         }
