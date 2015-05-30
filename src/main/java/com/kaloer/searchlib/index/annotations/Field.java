@@ -15,9 +15,9 @@ import java.util.ArrayList;
 @Target(ElementType.FIELD)
 public @interface Field {
 
-    public Class<? extends FieldType> type();
-    public boolean indexed() default true;
-    public boolean stored() default false;
-    public Class<? extends Analyzer> indexAnalyzer();
+    Class<? extends FieldType> type();
+    boolean indexed() default true;
+    boolean stored() default false;
+    Class<? extends Analyzer> indexAnalyzer();
 
 }

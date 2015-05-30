@@ -78,32 +78,34 @@ public class InvertedIndex {
                         fieldIds.put(f.getName(), fieldInfo);
                     }
                     com.kaloer.searchlib.index.fields.Field fieldInfo = fieldIds.get(f.getName());
-                    Iterator<Token> tokens =  field.indexAnalyzer().newInstance().analyze(f.get(document));
-                    while (tokens.hasNext()) {
-                        // Index document
-                        HashMap<Long, PostingsData> postings;
-                        Token t = tokens.next();
-                        if(!dictionary.containsKey(t.getValue())) {
-                            postings = new HashMap<Long, PostingsData>();
-                            dictionary.put(t.getValue(), postings);
-                        } else {
-                            postings = dictionary.get(t.getValue());
-                        }
+                    if(field.indexed()) {
+                        Iterator<Token> tokens = field.indexAnalyzer().newInstance().analyze(f.get(document));
+                        while (tokens.hasNext()) {
+                            // Index document
+                            HashMap<Long, PostingsData> postings;
+                            Token t = tokens.next();
+                            if (!dictionary.containsKey(t.getValue())) {
+                                postings = new HashMap<Long, PostingsData>();
+                                dictionary.put(t.getValue(), postings);
+                            } else {
+                                postings = dictionary.get(t.getValue());
+                            }
 
-                        if(!postings.containsKey(docId)) {
-                            postings.put(docId, new PostingsData(docId, t.getPosition(), fieldInfo.getFieldId()));
-                        } else {
-                            postings.get(docId).addPosition(t.getPosition(), fieldInfo.getFieldId());
-                        }
+                            if (!postings.containsKey(docId)) {
+                                postings.put(docId, new PostingsData(docId, t.getPosition(), fieldInfo.getFieldId()));
+                            } else {
+                                postings.get(docId).addPosition(t.getPosition(), fieldInfo.getFieldId());
+                            }
 
-                        // Update document frequency mapping
-                        if(!docFrequencies.get(partialFiles.size()).containsKey(t.getValue())) {
-                            // New term in this file. Add doc freq 0
-                            docFrequencies.get(partialFiles.size()).put(t.getValue(), 0);
+                            // Update document frequency mapping
+                            if (!docFrequencies.get(partialFiles.size()).containsKey(t.getValue())) {
+                                // New term in this file. Add doc freq 0
+                                docFrequencies.get(partialFiles.size()).put(t.getValue(), 0);
+                            }
+                            // Add new doc frequency
+                            int oldFreq = docFrequencies.get(partialFiles.size()).get(t.getValue());
+                            docFrequencies.get(partialFiles.size()).put(t.getValue(), oldFreq + 1);
                         }
-                        // Add new doc frequency
-                        int oldFreq = docFrequencies.get(partialFiles.size()).get(t.getValue());
-                        docFrequencies.get(partialFiles.size()).put(t.getValue(), oldFreq + 1);
                     }
 
                     FieldData fieldData = new FieldData();

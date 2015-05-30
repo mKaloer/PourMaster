@@ -119,7 +119,7 @@ public class BTreeTermDictionary extends TermDictionary {
 
     public static class TermDataComparator implements Comparator<TermData> {
         public int compare(TermData o1, TermData o2) {
-            return (int) (o1.getDocFrequency() - o2.getDocFrequency());
+            return o1.getDocFrequency() - o2.getDocFrequency();
         }
     }
 }
