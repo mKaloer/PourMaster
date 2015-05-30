@@ -1,12 +1,9 @@
 package com.kaloer.searchlib.index;
 
-import com.kaloer.searchlib.index.terms.Term;
 import com.kaloer.searchlib.index.terms.TermOccurrence;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Created by mkaloer on 12/04/15.

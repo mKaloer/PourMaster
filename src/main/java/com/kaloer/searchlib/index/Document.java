@@ -1,6 +1,5 @@
 package com.kaloer.searchlib.index;
 
-import com.kaloer.searchlib.index.fields.Field;
 import com.kaloer.searchlib.index.fields.FieldData;
 
 import java.util.List;

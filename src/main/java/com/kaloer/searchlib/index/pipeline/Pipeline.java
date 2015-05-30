@@ -1,9 +1,6 @@
 package com.kaloer.searchlib.index.pipeline;
 
-import java.lang.reflect.Array;
-import java.nio.channels.Pipe;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 

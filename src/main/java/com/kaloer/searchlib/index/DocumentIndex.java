@@ -1,6 +1,5 @@
 package com.kaloer.searchlib.index;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 /**

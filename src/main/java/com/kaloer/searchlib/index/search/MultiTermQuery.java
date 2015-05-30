@@ -1,13 +1,14 @@
 package com.kaloer.searchlib.index.search;
 
-import com.kaloer.searchlib.index.*;
+import com.kaloer.searchlib.index.Document;
+import com.kaloer.searchlib.index.InvertedIndex;
+import com.kaloer.searchlib.index.PostingsData;
+import com.kaloer.searchlib.index.TermDictionary;
 import com.kaloer.searchlib.index.fields.Field;
 import com.kaloer.searchlib.index.fields.FieldData;
 import com.kaloer.searchlib.index.terms.TermOccurrence;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import javax.naming.OperationNotSupportedException;
-import javax.print.Doc;
 import java.io.IOException;
 import java.util.*;
 

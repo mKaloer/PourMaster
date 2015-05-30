@@ -1,10 +1,7 @@
 package com.kaloer.searchlib.index.terms;
 
-import com.kaloer.searchlib.index.fields.Field;
-import com.kaloer.searchlib.index.fields.FieldType;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 
 /**

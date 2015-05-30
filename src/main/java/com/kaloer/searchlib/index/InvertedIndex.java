@@ -5,7 +5,6 @@ import com.kaloer.searchlib.index.fields.FieldData;
 import com.kaloer.searchlib.index.search.Query;
 import com.kaloer.searchlib.index.search.RankedDocument;
 import com.kaloer.searchlib.index.terms.Term;
-import sun.reflect.FieldInfo;
 
 import java.io.File;
 import java.io.IOException;

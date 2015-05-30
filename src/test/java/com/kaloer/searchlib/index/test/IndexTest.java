@@ -1,16 +1,12 @@
 package com.kaloer.searchlib.index.test;
 
-import com.kaloer.searchlib.index.fields.FieldData;
-import com.kaloer.searchlib.index.fields.StringFieldType;
+import com.kaloer.searchlib.index.*;
 import com.kaloer.searchlib.index.search.MultiTermQuery;
 import com.kaloer.searchlib.index.search.RankedDocument;
 import com.kaloer.searchlib.index.search.TermQuery;
+import com.kaloer.searchlib.index.terms.IntegerTerm;
 import com.kaloer.searchlib.index.terms.StringTerm;
 import com.kaloer.searchlib.index.terms.StringTermType;
-import com.kaloer.searchlib.index.*;
-import com.kaloer.searchlib.index.fields.Field;
-import com.kaloer.searchlib.index.pipeline.Pipeline;
-import com.kaloer.searchlib.index.pipeline.Stage;
 import org.apache.commons.io.FileUtils;
 import org.apache.directory.mavibot.btree.exception.BTreeAlreadyManagedException;
 import org.junit.After;
@@ -23,7 +19,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Created by mkaloer on 13/04/15.
@@ -189,13 +184,94 @@ public class IndexTest {
             Assert.assertEquals("Expected three results", 3, d.size());
             Assert.assertTrue("Expected doc3 first", d.get(0).getDocument() instanceof TestDoc2);
             Assert.assertEquals("Expected doc3 first", ((TestDoc2) d.get(0).getDocument()).author2, "Alice");
-            Assert.assertEquals("Expected doc3 content to be correct", ((TestDoc2) d.get(0).getDocument()).content2, d3.content2);
             Assert.assertTrue("Expected doc1 second", d.get(1).getDocument() instanceof TestDoc);
             Assert.assertEquals("Expected doc1 second", ((TestDoc) d.get(1).getDocument()).author, "Mads");
-            Assert.assertTrue("Expected doc1 content to be null", ((TestDoc) d.get(1).getDocument()).content == null);
             Assert.assertTrue("Expected doc2 third", d.get(2).getDocument() instanceof TestDoc2);
             Assert.assertEquals("Expected doc2 third", ((TestDoc2) d.get(2).getDocument()).author2, "Bob");
-            Assert.assertEquals("Expected doc2 content to be correct", ((TestDoc2) d.get(2).getDocument()).content2, d2.content2);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testStored() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+
+        final InvertedIndex index = createIndex();
+
+        TestDoc d1 = new TestDoc();
+        d1.author = "Alice";
+        d1.content = "test"; // Not stored
+        d1.id = 42;
+        TestDoc2 d2 = new TestDoc2();
+        d2.author2 = "Bob";
+        d2.content2 = "test";
+        final ArrayList<Object> docs = new ArrayList<Object>();
+        docs.add(d1);
+        docs.add(d2);
+        try {
+            index.indexDocuments(new Iterator<Object>() {
+                int index = 0;
+
+                public Object next() {
+                    return docs.get(index++);
+                }
+
+                public boolean hasNext() {
+                    return docs.size() > index;
+                }
+
+                public void remove() {
+
+                }
+            }, tmpDir);
+            MultiTermQuery query = new MultiTermQuery();
+            query.add(new TermQuery(new StringTerm("test"), "content"));
+            query.add(new TermQuery(new StringTerm("test"), "content2"));
+            List<RankedDocument> results = index.search(query, -1);
+            Assert.assertEquals("Expected two results", 2, results.size());
+            for(RankedDocument doc : results) {
+                if(doc.getDocument() instanceof TestDoc) {
+                    Assert.assertTrue("Expected content to be null", ((TestDoc) doc.getDocument()).content == null);
+                } else if(doc.getDocument() instanceof TestDoc2) {
+                    Assert.assertFalse("Expected content to be set", ((TestDoc2) doc.getDocument()).content2 == null);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testIndexed() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+
+        final InvertedIndex index = createIndex();
+
+        TestDoc d1 = new TestDoc();
+        d1.author = "Alice";
+        d1.content = "test"; // Not stored
+        d1.id = 42;
+        final ArrayList<Object> docs = new ArrayList<Object>();
+        docs.add(d1);
+        try {
+            index.indexDocuments(new Iterator<Object>() {
+                int index = 0;
+
+                public Object next() {
+                    return docs.get(index++);
+                }
+
+                public boolean hasNext() {
+                    return docs.size() > index;
+                }
+
+                public void remove() {
+
+                }
+            }, tmpDir);
+            MultiTermQuery query = new MultiTermQuery();
+            query.add(new TermQuery(new IntegerTerm(42), "id"));
+            List<RankedDocument> results = index.search(query, -1);
+            Assert.assertEquals("Expected zero results", 0, results.size());
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -1,10 +1,5 @@
 package com.kaloer.searchlib.index;
 
-import com.kaloer.searchlib.index.fields.FieldTypeStore;
-import com.kaloer.searchlib.index.terms.StringTermType;
-
-import javax.print.Doc;
-
 /**
  * Created by mkaloer on 13/04/15.
  */

@@ -1,12 +1,9 @@
 package com.kaloer.searchlib.index;
 
 import com.kaloer.searchlib.index.fields.Field;
-import com.kaloer.searchlib.index.fields.FieldData;
 import com.kaloer.searchlib.index.fields.FieldList;
-import sun.reflect.FieldInfo;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
  * Created by mkaloer on 13/04/15.

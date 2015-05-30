@@ -1,20 +1,20 @@
 package com.kaloer.searchlib.index;
 
-import com.kaloer.searchlib.index.terms.StringTerm;
-import com.kaloer.searchlib.index.terms.StringTermType;
 import com.kaloer.searchlib.index.terms.Term;
 import com.kaloer.searchlib.index.terms.TermType;
 import org.apache.directory.mavibot.btree.BTree;
 import org.apache.directory.mavibot.btree.RecordManager;
 import org.apache.directory.mavibot.btree.exception.BTreeAlreadyManagedException;
 import org.apache.directory.mavibot.btree.exception.KeyNotFoundException;
-import org.apache.directory.mavibot.btree.serializer.*;
+import org.apache.directory.mavibot.btree.serializer.AbstractElementSerializer;
+import org.apache.directory.mavibot.btree.serializer.BufferHandler;
+import org.apache.directory.mavibot.btree.serializer.IntSerializer;
+import org.apache.directory.mavibot.btree.serializer.LongSerializer;
 import sun.plugin.dom.exception.InvalidStateException;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.io.*;
+import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Comparator;
 
 /**

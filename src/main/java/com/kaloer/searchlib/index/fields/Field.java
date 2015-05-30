@@ -1,14 +1,7 @@
 package com.kaloer.searchlib.index.fields;
 
-import com.kaloer.searchlib.index.FieldInfoStore;
-import com.kaloer.searchlib.index.terms.Term;
 import com.kaloer.searchlib.index.Token;
 import com.kaloer.searchlib.index.pipeline.Pipeline;
-import sun.reflect.FieldInfo;
-
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 
 /**
  * Created by mkaloer on 13/04/15.

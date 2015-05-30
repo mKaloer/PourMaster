@@ -1,8 +1,5 @@
 package com.kaloer.searchlib.index.fields;
 
-import com.kaloer.searchlib.index.fields.FieldType;
-import com.kaloer.searchlib.index.terms.TermType;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;

@@ -1,8 +1,6 @@
 package com.kaloer.searchlib.index;
 
-import com.kaloer.searchlib.index.terms.StringTermType;
 import com.kaloer.searchlib.index.terms.Term;
-import com.kaloer.searchlib.index.terms.TermType;
 
 /**
  * Created by mkaloer on 15/04/15.

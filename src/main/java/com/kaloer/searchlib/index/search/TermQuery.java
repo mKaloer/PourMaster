@@ -4,14 +4,12 @@ import com.kaloer.searchlib.index.Document;
 import com.kaloer.searchlib.index.InvertedIndex;
 import com.kaloer.searchlib.index.PostingsData;
 import com.kaloer.searchlib.index.TermDictionary;
-import com.kaloer.searchlib.index.fields.Field;
-import com.kaloer.searchlib.index.search.Query;
-import com.kaloer.searchlib.index.search.RankedDocument;
 import com.kaloer.searchlib.index.terms.Term;
 
-import javax.print.Doc;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.PriorityQueue;
 
 /**
  * Created by mkaloer on 05/05/15.

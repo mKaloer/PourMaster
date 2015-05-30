@@ -1,9 +1,6 @@
 package com.kaloer.searchlib.index.pipeline;
 
-import com.kaloer.searchlib.index.Token;
-
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by mkaloer on 15/04/15.

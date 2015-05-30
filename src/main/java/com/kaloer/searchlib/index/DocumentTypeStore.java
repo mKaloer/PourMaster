@@ -1,15 +1,9 @@
 package com.kaloer.searchlib.index;
 
-import com.sun.javaws.exceptions.InvalidArgumentException;
-import com.sun.tools.corba.se.idl.InvalidArgument;
-import org.apache.commons.collections.bidimap.DualHashBidiMap;
-
-import javax.naming.SizeLimitExceededException;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
 

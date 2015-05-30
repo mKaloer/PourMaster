@@ -1,7 +1,6 @@
 package com.kaloer.searchlib.index;
 
 import java.util.Iterator;
-import java.util.List;
 
 /**
  * Created by mkaloer on 15/04/15.

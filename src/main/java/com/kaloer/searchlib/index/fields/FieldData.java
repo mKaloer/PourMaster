@@ -5,7 +5,6 @@ import com.kaloer.searchlib.index.FieldInfoStore;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 
 /**
  * Created by mkaloer on 16/05/15.

@@ -1,6 +1,5 @@
 package com.kaloer.searchlib.index.fields;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**

@@ -1,9 +1,6 @@
 package com.kaloer.searchlib.index;
 
 import com.kaloer.searchlib.index.fields.FieldData;
-import com.kaloer.searchlib.index.fields.FieldType;
-import com.kaloer.searchlib.index.terms.Term;
-import com.kaloer.searchlib.index.fields.Field;
 import com.kaloer.searchlib.index.pipeline.Pipeline;
 
 import java.util.ArrayList;

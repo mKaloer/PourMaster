@@ -3,7 +3,10 @@ package com.kaloer.searchlib.index;
 import com.kaloer.searchlib.index.terms.Term;
 import com.kaloer.searchlib.index.terms.TermOccurrence;
 
-import java.io.*;
+import java.io.DataOutput;
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.*;
 
 /**
