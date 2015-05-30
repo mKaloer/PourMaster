@@ -4,7 +4,9 @@ import com.kaloer.searchlib.index.annotations.Field;
 import com.kaloer.searchlib.index.fields.FieldData;
 import com.kaloer.searchlib.index.search.Query;
 import com.kaloer.searchlib.index.search.RankedDocument;
+import com.kaloer.searchlib.index.terms.IntegerTerm;
 import com.kaloer.searchlib.index.terms.Term;
+import com.kaloer.searchlib.index.terms.TermOccurrence;
 
 import java.io.File;
 import java.io.IOException;
@@ -154,20 +156,35 @@ public class InvertedIndex {
         for(Map.Entry<Term, Long> term : termIndices) {
             // Aggregate document frequency and term frequency
             int docFreq = 0;
-            long termFreq = 0;
+            HashMap<Integer, Integer> fieldDocFreq = new HashMap<Integer, Integer>();
             for(Long docId : dictionary.get(term.getKey()).keySet()) {
                 docFreq += 1;
-                termFreq += dictionary.get(term.getKey()).get(docId).getPositions().size();
+                // Update per-field doc frequency
+                for (TermOccurrence occurrence : dictionary.get(term.getKey()).get(docId).getPositions()) {
+                    if(!fieldDocFreq.containsKey(occurrence.getFieldId())) {
+                        fieldDocFreq.put(occurrence.getFieldId(), 1);
+                    } else {
+                        int newFreq = fieldDocFreq.get(occurrence.getFieldId()) + 1;
+                        fieldDocFreq.put(occurrence.getFieldId(), newFreq);
+                    }
+                }
             }
             // Update dictionary
             if(this.dictionary.findTerm(term.getKey()) == null) {
                 // First occurrence of this term
-                this.dictionary.addTerm(term.getKey(), new TermDictionary.TermData(docFreq, termFreq, term.getValue()));
+                this.dictionary.addTerm(term.getKey(), new TermDictionary.TermData(docFreq, fieldDocFreq, term.getValue()));
             } else {
-                // Term already exists: Increase existing docFreq and termFreq
+                // Term already exists: Increase existing docFreq and fieldDocFreq
                 TermDictionary.TermData existingData = this.dictionary.findTerm(term.getKey());
                 existingData.setDocFrequency(existingData.getDocFrequency() + docFreq);
-                existingData.setTermFrequency(existingData.getTermFrequency() + termFreq);
+                for(Map.Entry<Integer, Integer> entry : fieldDocFreq.entrySet()) {
+                    if(!existingData.getFieldDocFrequency().containsKey(entry.getKey())) {
+                        existingData.getFieldDocFrequency().put(entry.getKey(), entry.getValue());
+                    } else {
+                        int newVal = existingData.getFieldDocFrequency().get(entry.getKey()) + entry.getValue();
+                        existingData.getFieldDocFrequency().put(entry.getKey(), newVal);
+                    }
+                }
             }
         }
 

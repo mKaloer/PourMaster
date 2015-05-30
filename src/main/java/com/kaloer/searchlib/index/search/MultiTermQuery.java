@@ -28,6 +28,7 @@ public class MultiTermQuery extends Query {
         HashMap<Long, Double> scores = new HashMap<Long, Double>();
 
         for(TermQuery query : subQueries) {
+            Field queryField = index.getDocIndex().getFieldDataStore().getField(query.getFieldName());
             TermDictionary.TermData termData = index.getDictionary().findTerm(query.getTerm());
             if(termData == null) {
                 // No results
@@ -39,7 +40,7 @@ public class MultiTermQuery extends Query {
                 int tf = 0;
                 for(TermOccurrence occurrence : postingsData.getPositions()) {
                     Field field = index.getDocIndex().getFieldDataStore().getField(occurrence.getFieldId());
-                    if(field.getFieldName().equals(query.getFieldName())) {
+                    if(field.getFieldId() == queryField.getFieldId()) {
                         tf++;
                     }
                 }
@@ -47,7 +48,7 @@ public class MultiTermQuery extends Query {
                     scores.put(postingsData.getDocumentId(), 0.0);
                 }
                 double prevScore = scores.get(postingsData.getDocumentId());
-                double idf = Math.log((double) index.getDocIndex().getDocumentCount() / (double) (1 + termData.getDocFrequency()));
+                double idf = Math.log((double) index.getDocIndex().getDocumentCount() / (double) (1 + termData.getFieldDocFrequency(queryField.getFieldId())));
                 scores.put(postingsData.getDocumentId(), prevScore + tf * idf);
             }
         }

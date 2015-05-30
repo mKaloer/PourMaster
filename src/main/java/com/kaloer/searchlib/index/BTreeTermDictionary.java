@@ -1,21 +1,21 @@
 package com.kaloer.searchlib.index;
 
+import com.kaloer.searchlib.index.terms.IntegerTerm;
 import com.kaloer.searchlib.index.terms.Term;
 import com.kaloer.searchlib.index.terms.TermType;
 import org.apache.directory.mavibot.btree.BTree;
 import org.apache.directory.mavibot.btree.RecordManager;
 import org.apache.directory.mavibot.btree.exception.BTreeAlreadyManagedException;
 import org.apache.directory.mavibot.btree.exception.KeyNotFoundException;
-import org.apache.directory.mavibot.btree.serializer.AbstractElementSerializer;
-import org.apache.directory.mavibot.btree.serializer.BufferHandler;
-import org.apache.directory.mavibot.btree.serializer.IntSerializer;
-import org.apache.directory.mavibot.btree.serializer.LongSerializer;
+import org.apache.directory.mavibot.btree.serializer.*;
 import sun.plugin.dom.exception.InvalidStateException;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by mkaloer on 12/04/15.
@@ -77,43 +77,54 @@ public class BTreeTermDictionary extends TermDictionary {
         }
 
         public byte[] serialize(TermData termData) {
-            byte[] data = ByteBuffer.allocate(8 * 4)
-                    .putInt(termData.getDocFrequency())
-                    .putLong(termData.getTermFrequency())
-                    .putLong(termData.getPostingsIndex()).array();
-            return data;
+            // Store fieldId:docFreq per field the term occurs in
+            int numFields = termData.getFieldDocFrequency().size();
+            ByteBuffer buffer = ByteBuffer.allocate(4 + 1 + numFields * (1 + 4) + 8);
+            buffer.putInt(termData.getDocFrequency());
+
+            buffer.put((byte) numFields);
+            for(Map.Entry<Integer, Integer> field : termData.getFieldDocFrequency().entrySet()) {
+                buffer.put(field.getKey().byteValue());
+                buffer.putInt(field.getValue());
+            }
+            buffer.putLong(termData.getPostingsIndex());
+            return buffer.array();
         }
 
         public TermData deserialize(BufferHandler bufferHandler) throws IOException {
             int docFrequency = IntSerializer.deserialize(bufferHandler.read(4));
-            long termFrequency = LongSerializer.deserialize(bufferHandler.read(8));
+            int numFields = bufferHandler.read(1)[0];
+            HashMap<Integer, Integer> fieldDocFrequency = new HashMap<Integer, Integer>();
+            for(int i = 0; i < numFields; i++) {
+                int fieldId = bufferHandler.read(1)[0];
+                int freq = IntSerializer.deserialize(bufferHandler.read(4));
+                fieldDocFrequency.put(fieldId, freq);
+            }
             long postingsIndex = LongSerializer.deserialize(bufferHandler.read(8));
 
-            return new TermData(docFrequency, termFrequency, postingsIndex);
+            return new TermData(docFrequency, fieldDocFrequency, postingsIndex);
         }
 
         public TermData deserialize(ByteBuffer byteBuffer) throws IOException {
             int docFrequency = byteBuffer.getInt();
-            long termFrequency = byteBuffer.getLong();
+            int numFields = byteBuffer.get();
+            HashMap<Integer, Integer> fieldDocFrequency  = new HashMap<Integer, Integer>();
+            for(int i = 0; i < numFields; i++) {
+                int fieldId = byteBuffer.get();
+                int freq = byteBuffer.getInt();
+                fieldDocFrequency .put(fieldId, freq);
+            }
             long postingsIndex = byteBuffer.getLong();
 
-            return new TermData(docFrequency, termFrequency, postingsIndex);
+            return new TermData(docFrequency, fieldDocFrequency, postingsIndex);
         }
 
         public TermData fromBytes(byte[] bytes) throws IOException {
-            int docFrequency = IntSerializer.deserialize(bytes, 0);
-            long termFrequency = LongSerializer.deserialize(bytes, 8);
-            long postingsIndex = LongSerializer.deserialize(bytes, 16);
-
-            return new TermData(docFrequency, termFrequency, postingsIndex);
+            return deserialize(ByteBuffer.wrap(bytes));
         }
 
         public TermData fromBytes(byte[] bytes, int i) throws IOException {
-            int docFrequency = IntSerializer.deserialize(bytes, i);
-            long termFrequency = LongSerializer.deserialize(bytes, i+8);
-            long postingsIndex = LongSerializer.deserialize(bytes, i+16);
-
-            return new TermData(docFrequency, termFrequency, postingsIndex);
+            return deserialize(ByteBuffer.wrap(bytes, i, bytes.length - i));
         }
     }
 
