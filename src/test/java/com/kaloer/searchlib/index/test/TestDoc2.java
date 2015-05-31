@@ -3,6 +3,7 @@ package com.kaloer.searchlib.index.test;
 import com.kaloer.searchlib.index.Analyzer;
 import com.kaloer.searchlib.index.Token;
 import com.kaloer.searchlib.index.annotations.Field;
+import com.kaloer.searchlib.index.fields.IntegerFieldType;
 import com.kaloer.searchlib.index.fields.StringFieldType;
 import com.kaloer.searchlib.index.pipeline.Pipeline;
 import com.kaloer.searchlib.index.pipeline.Stage;
@@ -30,6 +31,14 @@ public class TestDoc2 {
             indexAnalyzer = Test.class
     )
     public String content2;
+
+    @Field(
+            type = IntegerFieldType.class,
+            stored = true,
+            indexed = true,
+            indexAnalyzer = TestDoc.SimpleIntAnalyzer.class
+    )
+    public int id2;
 
 
     public static class Test extends Analyzer<String> {

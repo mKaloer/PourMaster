@@ -7,12 +7,12 @@ import java.nio.ByteBuffer;
 /**
  * Created by mkaloer on 12/04/15.
  */
-public class Term<T, V extends TermType<T>> implements Comparable<Term<T, V>> {
+public class Term implements Comparable<Term> {
 
-    private T value;
-    private V termType;
+    private Object value;
+    private TermType termType;
 
-    public Term(T value, V termType) {
+    public Term(Object value, TermType termType) {
         this.value = value;
         this.termType = termType;
     }
@@ -21,7 +21,7 @@ public class Term<T, V extends TermType<T>> implements Comparable<Term<T, V>> {
         throw new NotImplementedException();
     }
 
-    public T getValue() {
+    public Object getValue() {
         return value;
     }
 
@@ -30,7 +30,7 @@ public class Term<T, V extends TermType<T>> implements Comparable<Term<T, V>> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Term<?, ?> term = (Term<?, ?>) o;
+        Term term = (Term) o;
 
         if (value != null ? !value.equals(term.value) : term.value != null) return false;
         return !(termType != null ? !termType.equals(term.termType) : term.termType != null);
@@ -44,7 +44,7 @@ public class Term<T, V extends TermType<T>> implements Comparable<Term<T, V>> {
         return result;
     }
 
-    public int compareTo(Term<T, V> o) {
+    public int compareTo(Term o) {
         return termType.compare(getValue(), o.getValue());
     }
 
@@ -55,10 +55,12 @@ public class Term<T, V extends TermType<T>> implements Comparable<Term<T, V>> {
         return data.array();
     }
 
-    public static <T, V extends TermType<T>> Term<T,V> deserialize(byte[] in, V termType) throws IllegalAccessException, InstantiationException {
-        T value = termType.readFromBytes(in);
-        return new Term<T, V>(value, termType);
+    public static Term deserialize(byte[] in, TermType termType) throws IllegalAccessException, InstantiationException {
+        Object value = termType.readFromBytes(in);
+        return new Term(value, termType);
     }
 
-
+    public TermType getTermType() {
+        return termType;
+    }
 }

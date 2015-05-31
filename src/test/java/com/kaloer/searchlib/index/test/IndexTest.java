@@ -50,7 +50,7 @@ public class IndexTest {
             conf = new IndexConfig().
                     setDocumentIndex(new SequentialDocumentIndex("idx/docs.idx", "idx/docs_fields.idx", "idx/fields.db", "idx/field_types.db"))
                     .setPostings(new SequentialPostings("idx/postings.db"))
-                    .setTermDictionary(new BTreeTermDictionary("idx/dict.db", StringTermType.getInstance()))
+                    .setTermDictionary(new BTreeTermDictionary("idx/dict.db"))
                     .setDocumentTypeFilePath("idx/te");
         } catch (IOException e) {
             e.printStackTrace();
@@ -272,6 +272,42 @@ public class IndexTest {
             query.add(new TermQuery(new IntegerTerm(42), "id"));
             List<RankedDocument> results = index.search(query, -1);
             Assert.assertEquals("Expected zero results", 0, results.size());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testIntegerField() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+
+        final InvertedIndex index = createIndex();
+
+        TestDoc2 d1 = new TestDoc2();
+        d1.author2 = "Alice";
+        d1.content2 = "test"; // Not stored
+        d1.id2 = 42;
+        final ArrayList<Object> docs = new ArrayList<Object>();
+        docs.add(d1);
+        try {
+            index.indexDocuments(new Iterator<Object>() {
+                int index = 0;
+
+                public Object next() {
+                    return docs.get(index++);
+                }
+
+                public boolean hasNext() {
+                    return docs.size() > index;
+                }
+
+                public void remove() {
+
+                }
+            }, tmpDir);
+            MultiTermQuery query = new MultiTermQuery();
+            query.add(new TermQuery(new IntegerTerm(42), "id2"));
+            List<RankedDocument> results = index.search(query, -1);
+            Assert.assertEquals("Expected one result", 1, results.size());
         } catch (IOException e) {
             e.printStackTrace();
         }

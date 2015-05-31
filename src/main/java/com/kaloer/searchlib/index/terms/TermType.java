@@ -1,16 +1,19 @@
 package com.kaloer.searchlib.index.terms;
 
+import com.kaloer.searchlib.index.AtomicTerm;
+
 /**
  * Created by mkaloer on 03/05/15.
  */
-public interface TermType<T> {
+public interface TermType {
 
     TermSerializer getSerializer();
 
-    byte[] getBytes(T value);
+    byte[] getBytes(Object value);
 
-    T readFromBytes(byte[] input);
+    Object readFromBytes(byte[] input);
 
-    int compare(T a, T b);
+    int compare(Object a, Object b);
 
+    AtomicTerm toAtomic(Term term);
 }

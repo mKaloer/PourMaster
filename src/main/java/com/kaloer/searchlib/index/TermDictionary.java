@@ -12,16 +12,6 @@ import java.util.Map;
  */
 public abstract class TermDictionary {
 
-    private TermType termType;
-
-    public TermType getTermType() {
-        return termType;
-    }
-
-    public void setTermType(TermType termType) {
-        this.termType = termType;
-    }
-
     public abstract TermData findTerm(Term term) throws IOException;
 
     public abstract void addTerm(Term term, TermData data) throws IOException;

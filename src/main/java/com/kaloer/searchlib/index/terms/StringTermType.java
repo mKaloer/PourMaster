@@ -1,9 +1,11 @@
 package com.kaloer.searchlib.index.terms;
 
+import com.kaloer.searchlib.index.AtomicTerm;
+
 /**
  * Created by mkaloer on 03/05/15.
  */
-public class StringTermType implements TermType<String> {
+public class StringTermType implements TermType {
 
     private static StringTermType instance;
     private StringTermSerializer stringTermSerializer = new StringTermSerializer();
@@ -21,16 +23,26 @@ public class StringTermType implements TermType<String> {
         return stringTermSerializer;
     }
 
-    public byte[] getBytes(String value) {
-        return value.getBytes();
+    public byte[] getBytes(Object value) {
+        return ((String)value).getBytes();
     }
 
-    public String readFromBytes(byte[] input) {
+    public Object readFromBytes(byte[] input) {
         return new String(input);
     }
 
-    public int compare(String a, String b) {
-        return a.compareTo(b);
+    public AtomicTerm toAtomic(Term term) {
+        return new AtomicTerm(term.getValue(), AtomicTerm.DataType.DATA_TYPE_STRING);
+    }
+
+    public int compare(Object a, Object b) {
+        if(b instanceof String) {
+            return ((String) a).compareTo((String) b);
+        } else if(b instanceof Integer) {
+            return ((String) a).compareTo(Integer.toString((Integer) b));
+        } else {
+            return -1;
+        }
     }
 
     public static class StringTermSerializer extends TermSerializer<StringTerm> {
