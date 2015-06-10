@@ -1,5 +1,7 @@
 package com.kaloer.searchlib.index;
 
+import com.kaloer.searchlib.index.postings.Postings;
+
 /**
  * Created by mkaloer on 13/04/15.
  */

@@ -1,4 +1,4 @@
-package com.kaloer.searchlib.index;
+package com.kaloer.searchlib.index.postings;
 
 import com.kaloer.searchlib.index.terms.TermOccurrence;
 

@@ -2,9 +2,10 @@ package com.kaloer.searchlib.index.search;
 
 import com.kaloer.searchlib.index.Document;
 import com.kaloer.searchlib.index.InvertedIndex;
-import com.kaloer.searchlib.index.PostingsData;
+import com.kaloer.searchlib.index.postings.PostingsData;
 import com.kaloer.searchlib.index.TermDictionary;
 import com.kaloer.searchlib.index.terms.Term;
+import com.kaloer.searchlib.index.util.IOIterator;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -31,7 +32,7 @@ public class TermQuery extends Query {
             // No results
             return Collections.emptyIterator();
         }
-        final Iterator<PostingsData> postingsData = index.getPostings().getDocumentsForTerm(termData.getPostingsIndex(), termData.getDocFrequency());
+        final IOIterator<PostingsData> postingsData = index.getPostings().getDocumentsForTerm(termData.getPostingsIndex(), termData.getDocFrequency());
         PriorityQueue<RankedDocument<Document>> result = new PriorityQueue<RankedDocument<Document>>();
         // Normalize scores and add to result set
         while (postingsData.hasNext()) {

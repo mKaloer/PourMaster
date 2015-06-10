@@ -2,6 +2,7 @@ package com.kaloer.searchlib.index.test;
 
 import com.kaloer.searchlib.index.*;
 import com.kaloer.searchlib.index.exceptions.ConflictingFieldTypesException;
+import com.kaloer.searchlib.index.postings.SequentialPostings;
 import com.kaloer.searchlib.index.search.MultiTermQuery;
 import com.kaloer.searchlib.index.search.RankedDocument;
 import com.kaloer.searchlib.index.search.TermQuery;

@@ -1,4 +1,4 @@
-package com.kaloer.searchlib.index;
+package com.kaloer.searchlib.index.postings;
 
 import java.util.Iterator;
 

@@ -2,11 +2,12 @@ package com.kaloer.searchlib.index.search;
 
 import com.kaloer.searchlib.index.Document;
 import com.kaloer.searchlib.index.InvertedIndex;
-import com.kaloer.searchlib.index.PostingsData;
+import com.kaloer.searchlib.index.postings.PostingsData;
 import com.kaloer.searchlib.index.TermDictionary;
 import com.kaloer.searchlib.index.fields.Field;
 import com.kaloer.searchlib.index.fields.FieldData;
 import com.kaloer.searchlib.index.terms.TermOccurrence;
+import com.kaloer.searchlib.index.util.IOIterator;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.IOException;
@@ -34,7 +35,7 @@ public class MultiTermQuery extends Query {
                 // No results
                 return Collections.emptyIterator();
             }
-            final Iterator<PostingsData> docs = index.getPostings().getDocumentsForTerm(termData.getPostingsIndex(), termData.getDocFrequency());
+            final IOIterator<PostingsData> docs = index.getPostings().getDocumentsForTerm(termData.getPostingsIndex(), termData.getDocFrequency());
             while(docs.hasNext()) {
                 PostingsData postingsData = docs.next();
                 int tf = 0;

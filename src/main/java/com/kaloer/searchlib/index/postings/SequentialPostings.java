@@ -1,7 +1,8 @@
-package com.kaloer.searchlib.index;
+package com.kaloer.searchlib.index.postings;
 
 import com.kaloer.searchlib.index.terms.Term;
 import com.kaloer.searchlib.index.terms.TermOccurrence;
+import com.kaloer.searchlib.index.util.IOIterator;
 
 import java.io.DataOutput;
 import java.io.File;
@@ -21,26 +22,13 @@ public class SequentialPostings extends Postings {
         f.createNewFile();
     }
 
-    public Iterator<PostingsData> getDocumentsForTerm(long index, int docCount) throws IOException {
-        RandomAccessFile file = null;
-        ArrayList<PostingsData> docs;
-        // TODO: Do not read all docs but buffer with iterator
-        try {
-            file = new RandomAccessFile(filePath, "r");
-            file.seek(index);
-            docs = new ArrayList<PostingsData>(docCount);
-            for(int i = 0; i < docCount; i++) {
-                docs.add(readPostingsData(file));
-            }
-        } finally {
-            if(file != null) {
-                file.close();
-            }
-        }
-        return docs.iterator();
+    public IOIterator<PostingsData> getDocumentsForTerm(long index, int docCount) throws IOException {
+        RandomAccessFile file = new RandomAccessFile(filePath, "r");
+        file.seek(index);
+        return new BufferedPostingsIterator(file, docCount, this);
     }
 
-    private PostingsData readPostingsData(RandomAccessFile file) throws IOException {
+    protected PostingsData readPostingsData(RandomAccessFile file) throws IOException {
         long docId = file.readLong();
         int arrLength = file.readInt();
         ArrayList<TermOccurrence> positions = new ArrayList<TermOccurrence>(arrLength);

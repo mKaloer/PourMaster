@@ -3,6 +3,8 @@ package com.kaloer.searchlib.index;
 import com.kaloer.searchlib.index.annotations.Field;
 import com.kaloer.searchlib.index.exceptions.ConflictingFieldTypesException;
 import com.kaloer.searchlib.index.fields.FieldData;
+import com.kaloer.searchlib.index.postings.Postings;
+import com.kaloer.searchlib.index.postings.PostingsData;
 import com.kaloer.searchlib.index.search.Query;
 import com.kaloer.searchlib.index.search.RankedDocument;
 import com.kaloer.searchlib.index.terms.Term;
