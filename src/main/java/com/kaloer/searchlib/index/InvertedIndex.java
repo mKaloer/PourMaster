@@ -1,10 +1,10 @@
 package com.kaloer.searchlib.index;
 
 import com.kaloer.searchlib.index.annotations.Field;
+import com.kaloer.searchlib.index.exceptions.ConflictingFieldTypesException;
 import com.kaloer.searchlib.index.fields.FieldData;
 import com.kaloer.searchlib.index.search.Query;
 import com.kaloer.searchlib.index.search.RankedDocument;
-import com.kaloer.searchlib.index.terms.IntegerTerm;
 import com.kaloer.searchlib.index.terms.Term;
 import com.kaloer.searchlib.index.terms.TermOccurrence;
 
@@ -81,6 +81,13 @@ public class InvertedIndex {
                         fieldInfo.setIsIndexed(field.indexed());
                         fieldInfo.setIsStored(field.stored());
                         fieldIds.put(f.getName(), fieldInfo);
+                    } else {
+                        com.kaloer.searchlib.index.fields.Field fieldInfo = fieldIds.get(f.getName());
+                        if(!field.type().equals(fieldInfo.getFieldType().getClass())) {
+                            throw new ConflictingFieldTypesException(
+                                    String.format("Conflicting field types for %s: %s and %s",
+                                            fieldInfo.getFieldName(), field.type(), fieldInfo.getFieldType().getClass()));
+                        }
                     }
                     com.kaloer.searchlib.index.fields.Field fieldInfo = fieldIds.get(f.getName());
                     if(field.indexed()) {

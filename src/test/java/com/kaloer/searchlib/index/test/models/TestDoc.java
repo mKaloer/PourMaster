@@ -1,4 +1,4 @@
-package com.kaloer.searchlib.index.test;
+package com.kaloer.searchlib.index.test.models;
 
 import com.kaloer.searchlib.index.Analyzer;
 import com.kaloer.searchlib.index.Token;

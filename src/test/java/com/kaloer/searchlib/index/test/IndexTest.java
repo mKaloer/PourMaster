@@ -1,13 +1,13 @@
 package com.kaloer.searchlib.index.test;
 
 import com.kaloer.searchlib.index.*;
+import com.kaloer.searchlib.index.exceptions.ConflictingFieldTypesException;
 import com.kaloer.searchlib.index.search.MultiTermQuery;
 import com.kaloer.searchlib.index.search.RankedDocument;
 import com.kaloer.searchlib.index.search.TermQuery;
 import com.kaloer.searchlib.index.terms.IntegerTerm;
 import com.kaloer.searchlib.index.terms.StringTerm;
-import com.kaloer.searchlib.index.terms.StringTermType;
-import org.apache.commons.collections.iterators.ArrayIterator;
+import com.kaloer.searchlib.index.test.models.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.directory.mavibot.btree.exception.BTreeAlreadyManagedException;
 import org.junit.After;
@@ -18,8 +18,6 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -226,6 +224,68 @@ public class IndexTest {
             query.add(new TermQuery(new IntegerTerm(42), "id2"));
             List<RankedDocument> results = index.search(query, -1);
             Assert.assertEquals("Expected one result", 1, results.size());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test(expected=ConflictingFieldTypesException.class)
+    public void testDifferentFieldTypes() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+
+        final InvertedIndex index = createIndex();
+
+        TestDoc d1 = new TestDoc();
+        d1.author = "Alice";
+        d1.content = "test"; // Not stored
+        d1.id = 42;
+
+        TestDocIntAuthor d2 = new TestDocIntAuthor();
+        d2.author = 42;
+        final ArrayList<Object> docs = new ArrayList<Object>();
+        docs.add(d1);
+        docs.add(d2);
+        try {
+            index.indexDocuments(docs, tmpDir);
+            MultiTermQuery query = new MultiTermQuery();
+            query.add(new TermQuery(new IntegerTerm(42), "id2"));
+            List<RankedDocument> results = index.search(query, -1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test(expected=ClassCastException.class)
+    public void testFieldTypeDataTypeMismatch() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+
+        final InvertedIndex index = createIndex();
+
+        TestDocTypeMismatch d = new TestDocTypeMismatch();
+        d.author = 42;
+        final ArrayList<Object> docs = new ArrayList<Object>();
+        docs.add(d);
+        try {
+            index.indexDocuments(docs, tmpDir);
+            MultiTermQuery query = new MultiTermQuery();
+            query.add(new TermQuery(new IntegerTerm(42), "id2"));
+            List<RankedDocument> results = index.search(query, -1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test(expected=ClassCastException.class)
+    public void testFieldIncompatibleAnalyzer() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+        final InvertedIndex index = createIndex();
+
+        TestDocInvalidAnalyzer d = new TestDocInvalidAnalyzer();
+        d.author = 42;
+        final ArrayList<Object> docs = new ArrayList<Object>();
+        docs.add(d);
+        try {
+            index.indexDocuments(docs, tmpDir);
+            MultiTermQuery query = new MultiTermQuery();
+            query.add(new TermQuery(new IntegerTerm(42), "id2"));
+            List<RankedDocument> results = index.search(query, -1);
         } catch (IOException e) {
             e.printStackTrace();
         }
