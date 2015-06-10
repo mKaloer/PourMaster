@@ -7,6 +7,7 @@ import com.kaloer.searchlib.index.search.TermQuery;
 import com.kaloer.searchlib.index.terms.IntegerTerm;
 import com.kaloer.searchlib.index.terms.StringTerm;
 import com.kaloer.searchlib.index.terms.StringTermType;
+import org.apache.commons.collections.iterators.ArrayIterator;
 import org.apache.commons.io.FileUtils;
 import org.apache.directory.mavibot.btree.exception.BTreeAlreadyManagedException;
 import org.junit.After;
@@ -17,6 +18,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -68,21 +70,7 @@ public class IndexTest {
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d1);
         try {
-            index.indexDocuments(new Iterator<Object>() {
-                int index = 0;
-
-                public Object next() {
-                    return docs.get(index++);
-                }
-
-                public boolean hasNext() {
-                    return docs.size() > index;
-                }
-
-                public void remove() {
-
-                }
-            }, tmpDir);
+            index.indexDocuments(docs, tmpDir);
             MultiTermQuery query = new MultiTermQuery();
             query.add(new TermQuery(new StringTerm("test"), "content"));
             List<RankedDocument> d = index.search(query, -1);
@@ -103,21 +91,7 @@ public class IndexTest {
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d1);
         try {
-            index.indexDocuments(new Iterator<Object>() {
-                int index = 0;
-
-                public Object next() {
-                    return docs.get(index++);
-                }
-
-                public boolean hasNext() {
-                    return docs.size() > index;
-                }
-
-                public void remove() {
-
-                }
-            }, tmpDir);
+            index.indexDocuments(docs, tmpDir);
             MultiTermQuery query = new MultiTermQuery();
             query.add(new TermQuery(new StringTerm("Foo"), "content"));
             List<RankedDocument> d = index.search(query, -1);
@@ -162,21 +136,7 @@ public class IndexTest {
         docs.add(d5);
         docs.add(d6);
         try {
-            index.indexDocuments(new Iterator<Object>() {
-                int index = 0;
-
-                public Object next() {
-                    return docs.get(index++);
-                }
-
-                public boolean hasNext() {
-                    return docs.size() > index;
-                }
-
-                public void remove() {
-
-                }
-            }, tmpDir);
+            index.indexDocuments(docs, tmpDir);
             MultiTermQuery query = new MultiTermQuery();
             query.add(new TermQuery(new StringTerm("test"), "content"));
             query.add(new TermQuery(new StringTerm("test"), "content2"));
@@ -209,21 +169,7 @@ public class IndexTest {
         docs.add(d1);
         docs.add(d2);
         try {
-            index.indexDocuments(new Iterator<Object>() {
-                int index = 0;
-
-                public Object next() {
-                    return docs.get(index++);
-                }
-
-                public boolean hasNext() {
-                    return docs.size() > index;
-                }
-
-                public void remove() {
-
-                }
-            }, tmpDir);
+            index.indexDocuments(docs, tmpDir);
             MultiTermQuery query = new MultiTermQuery();
             query.add(new TermQuery(new StringTerm("test"), "content"));
             query.add(new TermQuery(new StringTerm("test"), "content2"));
@@ -253,21 +199,7 @@ public class IndexTest {
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d1);
         try {
-            index.indexDocuments(new Iterator<Object>() {
-                int index = 0;
-
-                public Object next() {
-                    return docs.get(index++);
-                }
-
-                public boolean hasNext() {
-                    return docs.size() > index;
-                }
-
-                public void remove() {
-
-                }
-            }, tmpDir);
+            index.indexDocuments(docs, tmpDir);
             MultiTermQuery query = new MultiTermQuery();
             query.add(new TermQuery(new IntegerTerm(42), "id"));
             List<RankedDocument> results = index.search(query, -1);
@@ -289,21 +221,7 @@ public class IndexTest {
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d1);
         try {
-            index.indexDocuments(new Iterator<Object>() {
-                int index = 0;
-
-                public Object next() {
-                    return docs.get(index++);
-                }
-
-                public boolean hasNext() {
-                    return docs.size() > index;
-                }
-
-                public void remove() {
-
-                }
-            }, tmpDir);
+            index.indexDocuments(docs, tmpDir);
             MultiTermQuery query = new MultiTermQuery();
             query.add(new TermQuery(new IntegerTerm(42), "id2"));
             List<RankedDocument> results = index.search(query, -1);

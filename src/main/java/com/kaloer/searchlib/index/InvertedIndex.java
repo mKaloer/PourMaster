@@ -51,6 +51,10 @@ public class InvertedIndex {
         return docs;
     }
 
+    public void indexDocuments(Iterable<Object> docStream, File tmpDir) throws IOException, ReflectiveOperationException {
+        this.indexDocuments(docStream.iterator(), tmpDir);
+    }
+
     public void indexDocuments(Iterator<Object> docStream, File tmpDir) throws IOException, ReflectiveOperationException {
         // Dictionary mapping terms to <docId, postingsData>
         HashMap<Term, HashMap<Long, PostingsData>> dictionary = new HashMap<Term, HashMap<Long, PostingsData>>();
