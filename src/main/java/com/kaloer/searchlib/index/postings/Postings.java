@@ -1,5 +1,6 @@
 package com.kaloer.searchlib.index.postings;
 
+import com.kaloer.searchlib.index.PartialIndexData;
 import com.kaloer.searchlib.index.terms.Term;
 import com.kaloer.searchlib.index.util.IOIterator;
 import com.kaloer.searchlib.index.util.Tuple;
@@ -22,11 +23,11 @@ public abstract class Postings {
      * Wrties a partial postings list to a file which is later merged with other similar files. Please note that this
      * may be called on any postings instance and thus it should not access the state of the object.
      * @param file The output file.
-     * @param postings A mapping from term to a {@code <doc_id, postings_data>} object.
+     * @param partialIndex The partial postings to write.
      *
      * @return A list of {@code <term, postings_index>} pairs.
      */
-    public abstract ArrayList<Tuple<Term, Long>> writePartialPostingsToFile(String file, Map<Term, HashMap<Long, PostingsData>> postings) throws IOException;
+    public abstract ArrayList<Tuple<Term, Long>> writePartialPostingsToFile(String file, PartialIndexData partialIndex) throws IOException;
 
     /**
      * Merges partial postings files into one (and replaces existing if exists).

@@ -1,5 +1,6 @@
 package com.kaloer.searchlib.index.postings;
 
+import com.kaloer.searchlib.index.PartialIndexData;
 import com.kaloer.searchlib.index.terms.Term;
 import com.kaloer.searchlib.index.terms.TermOccurrence;
 import com.kaloer.searchlib.index.util.IOIterator;
@@ -90,21 +91,20 @@ public class SequentialPostings extends Postings {
     }
 
     @Override
-    public ArrayList<Tuple<Term, Long>> writePartialPostingsToFile(String file, Map<Term, HashMap<Long, PostingsData>> postings) throws IOException {
+    public ArrayList<Tuple<Term, Long>> writePartialPostingsToFile(String file, PartialIndexData partialIndex) throws IOException {
+        Map<Term, HashMap<Long, PostingsData>> postings;
         SequentialPostings partialPostings = new SequentialPostings(file);
         // Sort by term
-        TreeMap<Term, HashMap<Long, PostingsData>> sortedDict = new TreeMap<Term, HashMap<Long, PostingsData>>();
-        sortedDict.putAll(postings);
-        ArrayList<Tuple<Term, PostingsData[]>> termDataList = new ArrayList<Tuple<Term, PostingsData[]>>(sortedDict.size());
-        for(Map.Entry<Term, HashMap<Long, PostingsData>> term : sortedDict.entrySet()) {
+        ArrayList<Tuple<Term, PostingsData[]>> termDataList = new ArrayList<Tuple<Term, PostingsData[]>>();
+        for(Tuple<Term, HashMap<Long, PostingsData>> term : partialIndex.getSortedPostings()) {
             TreeMap<Long, PostingsData> sortedDocs = new TreeMap<Long, PostingsData>();
-            sortedDocs.putAll(term.getValue());
+            sortedDocs.putAll(term.getSecond());
             PostingsData[] termData = new PostingsData[sortedDocs.size()];
             int j = 0;
             for(Map.Entry<Long, PostingsData> doc : sortedDocs.entrySet()) {
                 termData[j++] = doc.getValue();
             }
-            termDataList.add(new Tuple<Term, PostingsData[]>(term.getKey(), termData));
+            termDataList.add(new Tuple<Term, PostingsData[]>(term.getFirst(), termData));
         }
         // Insert term data in file
         return partialPostings.batchInsertTerm(termDataList, file);

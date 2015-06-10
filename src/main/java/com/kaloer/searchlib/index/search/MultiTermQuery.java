@@ -31,6 +31,7 @@ public class MultiTermQuery extends Query {
         for(TermQuery query : subQueries) {
             Field queryField = index.getDocIndex().getFieldDataStore().getField(query.getFieldName());
             TermDictionary.TermData termData = index.getDictionary().findTerm(query.getTerm());
+            //FIXME: Allow queries not matching everything
             if(termData == null) {
                 // No results
                 return Collections.emptyIterator();
@@ -45,12 +46,15 @@ public class MultiTermQuery extends Query {
                         tf++;
                     }
                 }
-                if(!scores.containsKey(postingsData.getDocumentId())) {
-                    scores.put(postingsData.getDocumentId(), 0.0);
+                // Only add if exists in searched field.
+                if(tf > 0) {
+                    if(!scores.containsKey(postingsData.getDocumentId())) {
+                        scores.put(postingsData.getDocumentId(), 0.0);
+                    }
+                    double prevScore = scores.get(postingsData.getDocumentId());
+                    double idf = Math.log((double) index.getDocIndex().getDocumentCount() / (double) (1 + termData.getFieldDocFrequency(queryField.getFieldId())));
+                    scores.put(postingsData.getDocumentId(), prevScore + tf * idf);
                 }
-                double prevScore = scores.get(postingsData.getDocumentId());
-                double idf = Math.log((double) index.getDocIndex().getDocumentCount() / (double) (1 + termData.getFieldDocFrequency(queryField.getFieldId())));
-                scores.put(postingsData.getDocumentId(), prevScore + tf * idf);
             }
         }
 

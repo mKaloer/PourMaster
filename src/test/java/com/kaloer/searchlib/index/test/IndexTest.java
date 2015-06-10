@@ -209,6 +209,28 @@ public class IndexTest {
     }
 
     @Test
+    public void testInDifferentField() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+
+        final InvertedIndex index = createIndex();
+
+        TestDoc d1 = new TestDoc();
+        d1.author = "Alice";
+        d1.content = "test";
+        d1.id = 42;
+        final ArrayList<Object> docs = new ArrayList<Object>();
+        docs.add(d1);
+        try {
+            index.indexDocuments(docs, tmpDir);
+            MultiTermQuery query = new MultiTermQuery();
+            query.add(new TermQuery(new StringTerm("test"), "author"));
+            List<RankedDocument> results = index.search(query, -1);
+            Assert.assertEquals("Expected zero results", 0, results.size());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
     public void testIntegerField() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
 
         final InvertedIndex index = createIndex();
