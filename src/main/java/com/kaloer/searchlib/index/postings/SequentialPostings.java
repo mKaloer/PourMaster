@@ -3,6 +3,7 @@ package com.kaloer.searchlib.index.postings;
 import com.kaloer.searchlib.index.terms.Term;
 import com.kaloer.searchlib.index.terms.TermOccurrence;
 import com.kaloer.searchlib.index.util.IOIterator;
+import com.kaloer.searchlib.index.util.Tuple;
 
 import java.io.DataOutput;
 import java.io.File;
@@ -38,21 +39,21 @@ public class SequentialPostings extends Postings {
         return new PostingsData(docId, positions);
     }
 
-    public ArrayList<Map.Entry<Term, Long>> batchInsertTerm(ArrayList<Map.Entry<Term, PostingsData[]>> docs) throws IOException {
+    public ArrayList<Tuple<Term, Long>> batchInsertTerm(ArrayList<Tuple<Term, PostingsData[]>> docs) throws IOException {
         return this.batchInsertTerm(docs, filePath);
     }
 
-    public ArrayList<Map.Entry<Term, Long>> batchInsertTerm(ArrayList<Map.Entry<Term, PostingsData[]>> docs, String outputFile) throws IOException {
-        ArrayList<Map.Entry<Term, Long>> indices = new ArrayList<Map.Entry<Term, Long>>(docs.size());
+    public ArrayList<Tuple<Term, Long>> batchInsertTerm(ArrayList<Tuple<Term, PostingsData[]>> docs, String outputFile) throws IOException {
+        ArrayList<Tuple<Term, Long>> indices = new ArrayList<Tuple<Term, Long>>(docs.size());
         RandomAccessFile file = null;
         try {
             file = new RandomAccessFile(outputFile, "rw");
             long pointer = file.length();
             file.seek(pointer);
             int i = 0;
-            for(Map.Entry<Term, PostingsData[]> termData : docs) {
-                indices.add(new AbstractMap.SimpleEntry<Term, Long>(termData.getKey(), file.getFilePointer()));
-                writeDocsToFile(file, termData.getValue());
+            for(Tuple<Term, PostingsData[]> termData : docs) {
+                indices.add(new Tuple<Term, Long>(termData.getFirst(), file.getFilePointer()));
+                writeDocsToFile(file, termData.getSecond());
             }
         } finally {
             if(file != null) {
@@ -89,12 +90,12 @@ public class SequentialPostings extends Postings {
     }
 
     @Override
-    public ArrayList<Map.Entry<Term, Long>> writePartialPostingsToFile(String file, Map<Term, HashMap<Long, PostingsData>> postings) throws IOException {
+    public ArrayList<Tuple<Term, Long>> writePartialPostingsToFile(String file, Map<Term, HashMap<Long, PostingsData>> postings) throws IOException {
         SequentialPostings partialPostings = new SequentialPostings(file);
         // Sort by term
         TreeMap<Term, HashMap<Long, PostingsData>> sortedDict = new TreeMap<Term, HashMap<Long, PostingsData>>();
         sortedDict.putAll(postings);
-        ArrayList<Map.Entry<Term, PostingsData[]>> termDataList = new ArrayList<Map.Entry<Term, PostingsData[]>>(sortedDict.size());
+        ArrayList<Tuple<Term, PostingsData[]>> termDataList = new ArrayList<Tuple<Term, PostingsData[]>>(sortedDict.size());
         for(Map.Entry<Term, HashMap<Long, PostingsData>> term : sortedDict.entrySet()) {
             TreeMap<Long, PostingsData> sortedDocs = new TreeMap<Long, PostingsData>();
             sortedDocs.putAll(term.getValue());
@@ -103,7 +104,7 @@ public class SequentialPostings extends Postings {
             for(Map.Entry<Long, PostingsData> doc : sortedDocs.entrySet()) {
                 termData[j++] = doc.getValue();
             }
-            termDataList.add(new AbstractMap.SimpleEntry<Term, PostingsData[]>(term.getKey(), termData));
+            termDataList.add(new Tuple<Term, PostingsData[]>(term.getKey(), termData));
         }
         // Insert term data in file
         return partialPostings.batchInsertTerm(termDataList, file);
@@ -111,7 +112,7 @@ public class SequentialPostings extends Postings {
 
     @Override
     public HashMap<Term, Long> mergePartialPostingsFiles(ArrayList<String> partialFiles,
-                                                         ArrayList<ArrayList<Map.Entry<Term, Long>>> termsToPointer,
+                                                         ArrayList<ArrayList<Tuple<Term, Long>>> termsToPointer,
                                                          ArrayList<HashMap<Term, Integer>> docFreqs) throws IOException {
         RandomAccessFile outputFile = null;
         // List of input files
@@ -151,12 +152,12 @@ public class SequentialPostings extends Postings {
                         continue;
                     }
 
-                    Map.Entry<Term, Long> item = termsToPointer.get(i).get(termIndices.get(i));
-                    Term t = item.getKey();
+                    Tuple<Term, Long> item = termsToPointer.get(i).get(termIndices.get(i));
+                    Term t = item.getFirst();
                     if (partialData.get(i) == null) {
                         // Seek to term location if not already visited
-                        if(inputFiles.get(i).getFilePointer() <= item.getValue()) {
-                            inputFiles.get(i).seek(item.getValue());
+                        if(inputFiles.get(i).getFilePointer() <= item.getSecond()) {
+                            inputFiles.get(i).seek(item.getSecond());
                         }
                         // Read data
                         partialData.set(i, readPostingsData(inputFiles.get(i)));

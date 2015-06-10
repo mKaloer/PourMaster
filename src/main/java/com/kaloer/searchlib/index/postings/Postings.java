@@ -2,6 +2,7 @@ package com.kaloer.searchlib.index.postings;
 
 import com.kaloer.searchlib.index.terms.Term;
 import com.kaloer.searchlib.index.util.IOIterator;
+import com.kaloer.searchlib.index.util.Tuple;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,7 +26,7 @@ public abstract class Postings {
      *
      * @return A list of {@code <term, postings_index>} pairs.
      */
-    public abstract ArrayList<Map.Entry<Term, Long>> writePartialPostingsToFile(String file, Map<Term, HashMap<Long, PostingsData>> postings) throws IOException;
+    public abstract ArrayList<Tuple<Term, Long>> writePartialPostingsToFile(String file, Map<Term, HashMap<Long, PostingsData>> postings) throws IOException;
 
     /**
      * Merges partial postings files into one (and replaces existing if exists).
@@ -36,6 +37,6 @@ public abstract class Postings {
      * @return A map of {@code <term, postings_index>} pairs.
      */
     public abstract HashMap<Term, Long> mergePartialPostingsFiles(ArrayList<String> partialFiles,
-                                                                  ArrayList<ArrayList<Map.Entry<Term, Long>>> termsToPointer,
+                                                                  ArrayList<ArrayList<Tuple<Term, Long>>> termsToPointer,
                                                                   ArrayList<HashMap<Term, Integer>> docFreqs) throws IOException;
 }

@@ -9,6 +9,7 @@ import com.kaloer.searchlib.index.search.Query;
 import com.kaloer.searchlib.index.search.RankedDocument;
 import com.kaloer.searchlib.index.terms.Term;
 import com.kaloer.searchlib.index.terms.TermOccurrence;
+import com.kaloer.searchlib.index.util.Tuple;
 
 import java.io.File;
 import java.io.IOException;
@@ -61,7 +62,7 @@ public class InvertedIndex {
         // Dictionary mapping terms to <docId, postingsData>
         HashMap<Term, HashMap<Long, PostingsData>> dictionary = new HashMap<Term, HashMap<Long, PostingsData>>();
         ArrayList<String> partialFiles = new ArrayList<String>();
-        ArrayList<ArrayList<Map.Entry<Term, Long>>> termIndices = new ArrayList<ArrayList<Map.Entry<Term, Long>>>();
+        ArrayList<ArrayList<Tuple<Term, Long>>> termIndices = new ArrayList<ArrayList<Tuple<Term, Long>>>();
         // Mapping from term to document frequencies (per partial file)
         ArrayList<HashMap<Term, Integer>> docFrequencies = new ArrayList<HashMap<Term, Integer>>();
         docFrequencies.add(new HashMap<Term, Integer>());
@@ -159,21 +160,21 @@ public class InvertedIndex {
         }
     }
 
-    private ArrayList<Map.Entry<Term, Long>> writePartialPostings(String outputFile, HashMap<Term, HashMap<Long, PostingsData>> dictionary) throws IOException {
-        ArrayList<Map.Entry<Term, Long>> termIndices = this.postings.writePartialPostingsToFile(outputFile, dictionary);
-        Collections.sort(termIndices, new Comparator<Map.Entry<Term, Long>>() {
-            public int compare(Map.Entry<Term, Long> o1, Map.Entry<Term, Long> o2) {
-                return o1.getKey().compareTo(o2.getKey());
+    private ArrayList<Tuple<Term, Long>> writePartialPostings(String outputFile, HashMap<Term, HashMap<Long, PostingsData>> dictionary) throws IOException {
+        ArrayList<Tuple<Term, Long>> termIndices = this.postings.writePartialPostingsToFile(outputFile, dictionary);
+        Collections.sort(termIndices, new Comparator<Tuple<Term, Long>>() {
+            public int compare(Tuple<Term, Long> o1, Tuple<Term, Long> o2) {
+                return o1.getFirst().compareTo(o2.getFirst());
             }
         });
-        for(Map.Entry<Term, Long> term : termIndices) {
+        for(Tuple<Term, Long> term : termIndices) {
             // Aggregate document frequency and term frequency
             int docFreq = 0;
             HashMap<Integer, Integer> fieldDocFreq = new HashMap<Integer, Integer>();
-            for(Long docId : dictionary.get(term.getKey()).keySet()) {
+            for(Long docId : dictionary.get(term.getFirst()).keySet()) {
                 docFreq += 1;
                 // Update per-field doc frequency
-                for (TermOccurrence occurrence : dictionary.get(term.getKey()).get(docId).getPositions()) {
+                for (TermOccurrence occurrence : dictionary.get(term.getFirst()).get(docId).getPositions()) {
                     if(!fieldDocFreq.containsKey(occurrence.getFieldId())) {
                         fieldDocFreq.put(occurrence.getFieldId(), 1);
                     } else {
@@ -183,12 +184,12 @@ public class InvertedIndex {
                 }
             }
             // Update dictionary
-            if(this.dictionary.findTerm(term.getKey()) == null) {
+            if(this.dictionary.findTerm(term.getFirst()) == null) {
                 // First occurrence of this term
-                this.dictionary.addTerm(term.getKey(), new TermDictionary.TermData(docFreq, fieldDocFreq, term.getValue()));
+                this.dictionary.addTerm(term.getFirst(), new TermDictionary.TermData(docFreq, fieldDocFreq, term.getSecond()));
             } else {
                 // Term already exists: Increase existing docFreq and fieldDocFreq
-                TermDictionary.TermData existingData = this.dictionary.findTerm(term.getKey());
+                TermDictionary.TermData existingData = this.dictionary.findTerm(term.getFirst());
                 existingData.setDocFrequency(existingData.getDocFrequency() + docFreq);
                 for(Map.Entry<Integer, Integer> entry : fieldDocFreq.entrySet()) {
                     if(!existingData.getFieldDocFrequency().containsKey(entry.getKey())) {
