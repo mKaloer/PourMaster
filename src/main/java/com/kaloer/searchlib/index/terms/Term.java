@@ -1,5 +1,6 @@
 package com.kaloer.searchlib.index.terms;
 
+import com.kaloer.searchlib.index.AtomicTerm;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.nio.ByteBuffer;
@@ -58,6 +59,10 @@ public class Term implements Comparable<Term> {
     public static Term deserialize(byte[] in, TermType termType) throws IllegalAccessException, InstantiationException {
         Object value = termType.readFromBytes(in);
         return new Term(value, termType);
+    }
+
+    public AtomicTerm toAtomic() {
+        return getTermType().toAtomic(this);
     }
 
     public TermType getTermType() {

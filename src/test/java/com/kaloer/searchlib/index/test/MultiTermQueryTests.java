@@ -222,6 +222,11 @@ public class MultiTermQueryTests {
         }
     }
 
+    /**
+     * Asserts that the document is part of the result set.
+     * @param results The result set.
+     * @param d The document to check.
+     */
     private static void assertDocumentInResultSet(List<RankedDocument> results, TestDoc d) {
         boolean contained = false;
         for(RankedDocument r : results) {

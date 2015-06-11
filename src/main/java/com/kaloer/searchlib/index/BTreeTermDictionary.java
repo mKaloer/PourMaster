@@ -45,7 +45,7 @@ public class BTreeTermDictionary extends TermDictionary {
     @Override
     public TermData findTerm(Term term) throws IOException {
         try {
-            return dictionary.get(term.getTermType().toAtomic(term));
+            return dictionary.get(term.toAtomic());
         } catch (KeyNotFoundException e) {
             return null;
         }
@@ -53,7 +53,7 @@ public class BTreeTermDictionary extends TermDictionary {
 
     @Override
     public void addTerm(Term term, TermData data) throws IOException {
-        dictionary.insert(term.getTermType().toAtomic(term), data);
+        dictionary.insert(term.toAtomic(), data);
     }
 
     @Override
