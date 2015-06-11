@@ -17,6 +17,10 @@ public class RankedDocument<T extends Object> implements Comparable<RankedDocume
         return score;
     }
 
+    public void setScore(double score) {
+        this.score = score;
+    }
+
     public T getDocument() {
         return document;
     }
