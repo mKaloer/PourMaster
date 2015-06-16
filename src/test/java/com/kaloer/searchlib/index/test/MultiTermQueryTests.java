@@ -222,6 +222,27 @@ public class MultiTermQueryTests {
         }
     }
 
+    @Test
+    public void testPartialMatchResult() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+        final InvertedIndex index = IndexTest.createIndex(false);
+
+        TestDoc d1 = new TestDoc();
+        d1.author = "Mads";
+        d1.content = "This is a test";
+        final ArrayList<Object> docs = new ArrayList<Object>();
+        docs.add(d1);
+        try {
+            index.indexDocuments(docs, tmpDir);
+            MultiTermQuery query = new MultiTermQuery();
+            query.add(new TermQuery(new StringTerm("test"), "content"));
+            query.add(new TermQuery(new StringTerm("ThisShouldNotBeFoundAnywhere"), "content"));
+            List<RankedDocument> d = index.search(query, -1);
+            Assert.assertEquals("Expected one result", 1, d.size());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * Asserts that the document is part of the result set.
      * @param results The result set.

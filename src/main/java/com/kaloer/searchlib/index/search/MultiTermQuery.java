@@ -32,10 +32,9 @@ public class MultiTermQuery extends Query {
         for(TermQuery query : subQueries) {
             Field queryField = index.getDocIndex().getFieldDataStore().getField(query.getFieldName());
             TermDictionary.TermData termData = index.getDictionary().findTerm(query.getTerm());
-            //FIXME: Allow queries not matching everything
             if(termData == null) {
                 // No results
-                return Collections.emptyIterator();
+                continue;
             }
             final IOIterator<PostingsData> docs = index.getPostings().getDocumentsForTerm(termData.getPostingsIndex(), termData.getDocFrequency());
             while(docs.hasNext()) {
