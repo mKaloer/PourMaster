@@ -66,7 +66,6 @@ public class MultiTermQuery extends Query {
 
         final PriorityQueue<RankedDocument<Document>> result = new PriorityQueue<RankedDocument<Document>>();
         // Normalize scores and add to result set
-        // FIXME: Adds documents multiple times!
         for(Long docId : scores.keySet()) {
             Document doc = index.getDocIndex().getDocument(docId);
             RankedDocument<Document> rankedDoc = new RankedDocument<Document>(doc, 0.0);

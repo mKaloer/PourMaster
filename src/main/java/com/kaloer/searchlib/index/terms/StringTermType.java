@@ -45,6 +45,26 @@ public class StringTermType implements TermType {
         }
     }
 
+    public boolean isPrefix(Object prefix, Object value) {
+        if (prefix instanceof String && value instanceof String) {
+            return ((String) value).startsWith((String) prefix);
+        } else {
+            return false;
+        }
+    }
+
+    public boolean isSuffix(Object suffix, Object value) {
+        if (suffix instanceof String && value instanceof String) {
+            return ((String) value).endsWith((String) suffix);
+        } else {
+            return false;
+        }
+    }
+
+    public Object reverse(Object value) {
+        return new StringBuilder((String) value).reverse().toString();
+    }
+
     public static class StringTermSerializer extends TermSerializer<StringTerm> {
 
         @Override

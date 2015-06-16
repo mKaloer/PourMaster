@@ -43,7 +43,7 @@ public class MultiTermQueryTests {
 
     @Test
     public void testOneResult() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
-        final InvertedIndex index = IndexTest.createIndex();
+        final InvertedIndex index = IndexTest.createIndex(false);
 
         TestDoc d1 = new TestDoc();
         d1.author = "Mads";
@@ -64,7 +64,7 @@ public class MultiTermQueryTests {
     @Test
     public void testEmptyResult() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
 
-        final InvertedIndex index = IndexTest.createIndex();
+        final InvertedIndex index = IndexTest.createIndex(false);
 
         TestDoc d1 = new TestDoc();
         d1.author = "Mads";
@@ -85,7 +85,7 @@ public class MultiTermQueryTests {
     @Test
     public void testMultipleResults() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
 
-        final InvertedIndex index = IndexTest.createIndex();
+        final InvertedIndex index = IndexTest.createIndex(false);
 
         TestDoc d1 = new TestDoc();
         d1.author = "Mads";
@@ -137,7 +137,7 @@ public class MultiTermQueryTests {
     @Test
     public void testBoosting() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
 
-        final InvertedIndex index = IndexTest.createIndex();
+        final InvertedIndex index = IndexTest.createIndex(false);
 
         TestDoc d1 = new TestDoc();
         d1.author = "Mads";
@@ -183,7 +183,7 @@ public class MultiTermQueryTests {
     @Test
     public void testTwoFieldMatch() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
 
-        final InvertedIndex index = IndexTest.createIndex();
+        final InvertedIndex index = IndexTest.createIndex(false);
 
         TestDoc d1 = new TestDoc();
         d1.author = "test";

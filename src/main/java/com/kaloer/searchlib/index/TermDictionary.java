@@ -5,6 +5,7 @@ import com.kaloer.searchlib.index.terms.TermType;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -13,6 +14,8 @@ import java.util.Map;
 public abstract class TermDictionary {
 
     public abstract TermData findTerm(Term term) throws IOException;
+
+    public abstract List<TermData> findTerm(Term prefix, Term suffix) throws IOException;
 
     public abstract void addTerm(Term term, TermData data) throws IOException;
 

@@ -5,6 +5,7 @@ import com.kaloer.searchlib.index.InvertedIndex;
 import com.kaloer.searchlib.index.postings.PostingsData;
 import com.kaloer.searchlib.index.TermDictionary;
 import com.kaloer.searchlib.index.terms.Term;
+import com.kaloer.searchlib.index.terms.TermOccurrence;
 import com.kaloer.searchlib.index.util.IOIterator;
 
 import java.io.IOException;
@@ -13,7 +14,8 @@ import java.util.Iterator;
 import java.util.PriorityQueue;
 
 /**
- * Created by mkaloer on 05/05/15.
+ * Query for a single term in a specific field. Typically used with a
+ * {@link MultiTermQuery}.
  */
 public class TermQuery extends Query {
 
@@ -33,14 +35,23 @@ public class TermQuery extends Query {
             return Collections.emptyIterator();
         }
         final IOIterator<PostingsData> postingsData = index.getPostings().getDocumentsForTerm(termData.getPostingsIndex(), termData.getDocFrequency());
+        int fieldId = index.getDocIndex().getFieldDataStore().getField(fieldName).getFieldId();
         PriorityQueue<RankedDocument<Document>> result = new PriorityQueue<RankedDocument<Document>>();
         // Normalize scores and add to result set
         while (postingsData.hasNext()) {
             PostingsData data = postingsData.next();
             long docId = data.getDocumentId();
             Document doc = index.getDocIndex().getDocument(docId);
-            // Pure TF score
-            result.add(new RankedDocument<Document>(doc, data.getPositions().size()));
+            int tf = 0;
+            for(TermOccurrence occurrence : data.getPositions()) {
+                if(occurrence.getFieldId() == fieldId) {
+                    tf++;
+                }
+            }
+            if(tf > 0) {
+                // Return pure TF score
+                result.add(new RankedDocument<Document>(doc, tf));
+            }
         }
         return result.iterator();
     }

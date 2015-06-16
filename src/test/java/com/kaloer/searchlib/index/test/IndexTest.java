@@ -45,13 +45,13 @@ public class IndexTest {
         }
     }
 
-    protected static InvertedIndex createIndex() throws IOException, ReflectiveOperationException, BTreeAlreadyManagedException {
+    protected static InvertedIndex createIndex(boolean wildcards) throws IOException, ReflectiveOperationException, BTreeAlreadyManagedException {
         IndexConfig conf = null;
         try {
             conf = new IndexConfig().
                     setDocumentIndex(new SequentialDocumentIndex("idx/docs.idx", "idx/docs_fields.idx", "idx/fields.db", "idx/field_types.db"))
                     .setPostings(new SequentialPostings("idx/postings.db"))
-                    .setTermDictionary(new BTreeTermDictionary("idx/dict.db"))
+                    .setTermDictionary(new BTreeTermDictionary("idx/dict.db", wildcards))
                     .setDocumentTypeFilePath("idx/te");
         } catch (IOException e) {
             e.printStackTrace();
@@ -62,7 +62,7 @@ public class IndexTest {
     @Test
     public void testStored() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
 
-        final InvertedIndex index = createIndex();
+        final InvertedIndex index = createIndex(false);
 
         TestDoc d1 = new TestDoc();
         d1.author = "Alice";
@@ -96,7 +96,7 @@ public class IndexTest {
     @Test
     public void testIndexed() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
 
-        final InvertedIndex index = createIndex();
+        final InvertedIndex index = createIndex(false);
 
         TestDoc d1 = new TestDoc();
         d1.author = "Alice";
@@ -118,7 +118,7 @@ public class IndexTest {
     @Test
     public void testInDifferentFieldNoMatches() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
 
-        final InvertedIndex index = createIndex();
+        final InvertedIndex index = createIndex(false);
 
         TestDoc d1 = new TestDoc();
         d1.author = "Alice";
@@ -145,7 +145,7 @@ public class IndexTest {
     @Test
     public void testInDifferentFieldOneMatch() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
 
-        final InvertedIndex index = createIndex();
+        final InvertedIndex index = createIndex(false);
 
         TestDoc d1 = new TestDoc();
         d1.author = "Alice";
@@ -172,7 +172,7 @@ public class IndexTest {
     @Test
     public void testIntegerField() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
 
-        final InvertedIndex index = createIndex();
+        final InvertedIndex index = createIndex(false);
 
         TestDoc2 d1 = new TestDoc2();
         d1.author2 = "Alice";
@@ -194,7 +194,7 @@ public class IndexTest {
     @Test(expected=ConflictingFieldTypesException.class)
     public void testDifferentFieldTypes() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
 
-        final InvertedIndex index = createIndex();
+        final InvertedIndex index = createIndex(false);
 
         TestDoc d1 = new TestDoc();
         d1.author = "Alice";
@@ -219,7 +219,7 @@ public class IndexTest {
     @Test(expected=ClassCastException.class)
     public void testFieldTypeDataTypeMismatch() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
 
-        final InvertedIndex index = createIndex();
+        final InvertedIndex index = createIndex(false);
 
         TestDocTypeMismatch d = new TestDocTypeMismatch();
         d.author = 42;
@@ -237,7 +237,7 @@ public class IndexTest {
 
     @Test(expected=ClassCastException.class)
     public void testFieldIncompatibleAnalyzer() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
-        final InvertedIndex index = createIndex();
+        final InvertedIndex index = createIndex(false);
 
         TestDocInvalidAnalyzer d = new TestDocInvalidAnalyzer();
         d.author = 42;

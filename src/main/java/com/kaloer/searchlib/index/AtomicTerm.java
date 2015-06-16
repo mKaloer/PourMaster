@@ -116,7 +116,7 @@ public final class AtomicTerm implements Comparable<AtomicTerm> {
         DATA_TYPE_BYTE,
         DATA_TYPE_INT,
         DATA_TYPE_LONG,
-        DATA_TYPE_DOUBLE
+        DATA_TYPE_DOUBLE;
     }
 
 }

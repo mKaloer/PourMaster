@@ -47,6 +47,36 @@ public class IntegerTermType implements TermType {
         }
     }
 
+    public boolean isPrefix(Object prefix, Object value) {
+        if(prefix instanceof Integer && value instanceof Integer) {
+            String prefixString = String.valueOf(prefix.toString());
+            String valueString = String.valueOf(value.toString());
+            return valueString.startsWith(prefixString);
+        } else {
+            return false;
+        }
+    }
+
+    public boolean isSuffix(Object suffix, Object value) {
+        if(suffix instanceof Integer && value instanceof Integer) {
+            String suffixString = String.valueOf(suffix.toString());
+            String valueString = String.valueOf(value.toString());
+            return valueString.startsWith(suffixString);
+        } else {
+            return false;
+        }
+    }
+
+    public Object reverse(Object value) {
+        int val = (Integer) value;
+        int reversed = 0;
+        while (val > 0) {
+            reversed = reversed * 10 + (val % 10);
+            val = val / 10;
+        }
+        return reversed;
+    }
+
     public static class IntegerTermSerializer extends TermSerializer<IntegerTerm> {
 
         @Override

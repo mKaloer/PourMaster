@@ -3,6 +3,8 @@ package com.kaloer.searchlib.index;
 import com.kaloer.searchlib.index.terms.*;
 import org.apache.directory.mavibot.btree.BTree;
 import org.apache.directory.mavibot.btree.RecordManager;
+import org.apache.directory.mavibot.btree.Tuple;
+import org.apache.directory.mavibot.btree.TupleCursor;
 import org.apache.directory.mavibot.btree.exception.BTreeAlreadyManagedException;
 import org.apache.directory.mavibot.btree.exception.KeyNotFoundException;
 import org.apache.directory.mavibot.btree.serializer.*;
@@ -11,9 +13,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by mkaloer on 12/04/15.
@@ -21,16 +21,24 @@ import java.util.Map;
 public class BTreeTermDictionary extends TermDictionary {
 
     private final static String B_TREE_NAME = "termDictionary";
+    private final static String SUFFIX_B_TREE_NAME = "termDictionary_suffix";
 
     private BTree<AtomicTerm, TermData> dictionary;
+    private BTree<AtomicTerm, TermData> suffixDictionary = null;
     private RecordManager recordManager;
+    private boolean supportWildcardQuery;
 
     public BTreeTermDictionary(String dictionaryFile) throws IOException, BTreeAlreadyManagedException {
-        this(dictionaryFile, -1);
+        this(dictionaryFile, -1, false);
     }
 
-    public BTreeTermDictionary(String dictionaryFile, int pageSize) throws IOException, BTreeAlreadyManagedException {
+    public BTreeTermDictionary(String dictionaryFile, boolean supportWildcardQuery) throws IOException, BTreeAlreadyManagedException {
+        this(dictionaryFile, -1, supportWildcardQuery);
+    }
+
+    public BTreeTermDictionary(String dictionaryFile, int pageSize, boolean supportWildcardQuery) throws IOException, BTreeAlreadyManagedException {
         super();
+        this.supportWildcardQuery = supportWildcardQuery;
         recordManager = new RecordManager(dictionaryFile);
         dictionary = recordManager.getManagedTree(B_TREE_NAME);
         // Create if it does not exist.
@@ -38,6 +46,16 @@ public class BTreeTermDictionary extends TermDictionary {
             dictionary = recordManager.addBTree(B_TREE_NAME, new AtomicTermSerializer(), new TermDataSerializer(), false);
             if(pageSize > 0) {
                 dictionary.setPageSize(pageSize);
+            }
+        }
+        // Create suffix dictionary
+        if (supportWildcardQuery) {
+            suffixDictionary = recordManager.getManagedTree(SUFFIX_B_TREE_NAME);
+            if(suffixDictionary == null) {
+                suffixDictionary = recordManager.addBTree(SUFFIX_B_TREE_NAME, new AtomicTermSerializer(), new TermDataSerializer(), false);
+                if(pageSize > 0) {
+                    suffixDictionary.setPageSize(pageSize);
+                }
             }
         }
     }
@@ -52,8 +70,92 @@ public class BTreeTermDictionary extends TermDictionary {
     }
 
     @Override
+    public List<TermData> findTerm(Term prefix, Term suffix) throws IOException {
+        Term reverseSuffix = null;
+        if (suffix != null) {
+            reverseSuffix = new Term(suffix.getTermType().reverse(suffix.getValue()), suffix.getTermType());
+        }
+        TupleCursor<AtomicTerm, TermData> cursor = null;
+        try {
+            // Hash table mapping postings pointers to term and data
+            HashMap<Long, Tuple<AtomicTerm, TermData>> prefixMatches = null;
+            if(prefix != null) {
+                // Add all prefix matches to set
+                prefixMatches = new HashMap<Long, Tuple<AtomicTerm, TermData>>();
+                cursor = dictionary.browseFrom(prefix.toAtomic());
+                // Cursor starts at matching node, but we have to look at this node as well.
+                // So step back once if we can.
+                if(cursor.hasPrevKey()) {
+                    cursor.prevKey();
+                }
+                while (cursor.hasNextKey()) {
+                    Tuple<AtomicTerm, TermData> termItem = cursor.nextKey();
+                    // Check if actually a prefix
+                    if(!prefix.isPrefix(termItem.getKey().getValue())) {
+                        break;
+                    }
+                    prefixMatches.put(termItem.getValue().getPostingsIndex(), termItem);
+                }
+                cursor.close();
+            }
+
+            ArrayList<TermData> resultMatches = new ArrayList<TermData>();
+
+            // If prefixMatches != null and its size == 0, there is no need to find suffixes (none will match)
+            if(suffix != null && (prefixMatches == null || prefixMatches.size() > 0)) {
+                cursor = suffixDictionary.browseFrom(reverseSuffix.toAtomic());
+                // Cursor starts at matching node, but we have to look at this node as well.
+                // So step back once if we can.
+                if(cursor.hasPrevKey()) {
+                    cursor.prevKey();
+                }
+                while (cursor.hasNextKey() && (prefixMatches == null || prefixMatches.size() > 0)) {
+                    Tuple<AtomicTerm, TermData> termItem = cursor.nextKey();
+
+                    // Check if actually a suffix
+                    if(!reverseSuffix.isPrefix(termItem.getKey().getValue())) {
+                        break;
+                    }
+
+                    // Add to results
+                    if(prefix == null) {
+                        resultMatches.add(termItem.getValue());
+                    } else if(prefixMatches.containsKey(termItem.getValue().getPostingsIndex())) {
+                        // If prefix not null and suffix not null, we must check that the term
+                        // does not fully match either the prefix or suffix, e.g. "abba" should not
+                        // match query with prefix = "abba", suffix = "ba".
+                        if(!termItem.getKey().getValue().equals(prefix.getValue()) &&
+                                !termItem.getKey().getValue().equals(suffix.getValue())) {
+                            resultMatches.add(termItem.getValue());
+                            // Remove from prefixMatches for faster containsKey() in next iterations.
+                            prefixMatches.remove(termItem.getValue().getPostingsIndex());
+                        }
+                    }
+                }
+            } else {
+                // Handle prefix-query (suffix is null, so add all with matching prefix)
+                for (Tuple<AtomicTerm, TermData> match : prefixMatches.values()) {
+                    resultMatches.add(match.getValue());
+                }
+            }
+
+            return resultMatches;
+
+        } finally {
+            if(cursor != null) {
+                cursor.close();
+            }
+        }
+    }
+
+    @Override
     public void addTerm(Term term, TermData data) throws IOException {
-        dictionary.insert(term.toAtomic(), data);
+        AtomicTerm atomicTerm = term.toAtomic();
+        dictionary.insert(atomicTerm, data);
+        if (supportWildcardQuery) {
+            AtomicTerm reversedTerm = new AtomicTerm(term.getTermType().reverse(term.getValue()), atomicTerm.getDataType());
+            suffixDictionary.insert(reversedTerm, data);
+        }
     }
 
     @Override

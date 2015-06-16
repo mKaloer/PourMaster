@@ -16,4 +16,10 @@ public interface TermType {
     int compare(Object a, Object b);
 
     AtomicTerm toAtomic(Term term);
+
+    boolean isPrefix(Object prefix, Object value);
+
+    boolean isSuffix(Object suffix, Object value);
+
+    Object reverse(Object value);
 }

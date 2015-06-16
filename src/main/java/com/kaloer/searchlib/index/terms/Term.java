@@ -68,4 +68,12 @@ public class Term implements Comparable<Term> {
     public TermType getTermType() {
         return termType;
     }
+
+    public boolean isPrefix(Object value) {
+        if (getValue().getClass().equals(value.getClass())) {
+            return getTermType().isPrefix(getValue(), value);
+        } else {
+            return false;
+        }
+    }
 }
