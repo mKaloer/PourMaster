@@ -2,13 +2,16 @@ package com.kaloer.searchlib.index.test;
 
 import com.kaloer.searchlib.index.*;
 import com.kaloer.searchlib.index.exceptions.ConflictingFieldTypesException;
+import com.kaloer.searchlib.index.postings.PostingsData;
 import com.kaloer.searchlib.index.postings.SequentialPostings;
 import com.kaloer.searchlib.index.search.MultiTermQuery;
 import com.kaloer.searchlib.index.search.RankedDocument;
 import com.kaloer.searchlib.index.search.TermQuery;
 import com.kaloer.searchlib.index.terms.IntegerTerm;
 import com.kaloer.searchlib.index.terms.StringTerm;
+import com.kaloer.searchlib.index.terms.Term;
 import com.kaloer.searchlib.index.test.models.*;
+import com.kaloer.searchlib.index.util.IOIterator;
 import org.apache.commons.io.FileUtils;
 import org.apache.directory.mavibot.btree.exception.BTreeAlreadyManagedException;
 import org.junit.After;
@@ -19,6 +22,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -248,6 +252,154 @@ public class IndexTest {
             MultiTermQuery query = new MultiTermQuery();
             query.add(new TermQuery(new IntegerTerm(42), "id2"));
             List<RankedDocument> results = index.search(query, -1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testDocIndexSingleDoc() throws BTreeAlreadyManagedException, ReflectiveOperationException, IOException {
+        final InvertedIndex index = createIndex(false);
+
+        TestDoc d = new TestDoc();
+        d.content = "This is a test";
+        d.author = "Alice and Bob";
+        final ArrayList<Object> docs = new ArrayList<Object>();
+        docs.add(d);
+        try {
+            index.indexDocuments(docs, tmpDir);
+            TestDoc.SimpleStringAnalyzer analyzer = new TestDoc.SimpleStringAnalyzer();
+            Iterator<Token> tokens = analyzer.analyze(d.content);
+            int tokenIndex = 0;
+            while (tokens.hasNext()) {
+                Term term = tokens.next().getValue();
+                TermDictionary.TermData data = index.getDictionary().findTerm(term);
+                IOIterator<PostingsData> postingsIterator = index.getPostings().getDocumentsForTerm(data.getPostingsIndex(), data.getDocFrequency());
+                PostingsData postingsData = postingsIterator.next();
+                Assert.assertEquals(0, postingsData.getDocumentId());
+                Assert.assertEquals(String.format("Expected %s to be found in %d places", term, postingsData.getPositions().size()),
+                        1, postingsData.getPositions().size());
+                Assert.assertEquals(String.format("Expected %s to be found at index %d", term, tokenIndex),
+                        tokenIndex, postingsData.getPositions().get(0).getPosition());
+                tokenIndex++;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testDocIndexMultipleDocs() throws BTreeAlreadyManagedException, ReflectiveOperationException, IOException {
+        final InvertedIndex index = createIndex(false);
+
+        TestDoc d1 = new TestDoc();
+        d1.content = "This is a test";
+        d1.author = "Alice and Bob";
+        TestDoc d2 = new TestDoc();
+        d2.content = "Hello This is a test";
+        d2.author = "Alice and Bob";
+        TestDoc d3 = new TestDoc();
+        d3.content = "Hello hello This is a test";
+        d3.author = "Alice and Bob";
+        final ArrayList<Object> docs = new ArrayList<Object>();
+        docs.add(d1);
+        docs.add(d2);
+        docs.add(d3);
+        try {
+            index.indexDocuments(docs, tmpDir);
+            TestDoc.SimpleStringAnalyzer analyzer = new TestDoc.SimpleStringAnalyzer();
+            Iterator<Token> tokens = analyzer.analyze(d1.content);
+            int tokenIndex = 0;
+            while (tokens.hasNext()) {
+                Term term = tokens.next().getValue();
+                TermDictionary.TermData data = index.getDictionary().findTerm(term);
+                IOIterator<PostingsData> postingsIterator = index.getPostings().getDocumentsForTerm(data.getPostingsIndex(), data.getDocFrequency());
+                Assert.assertEquals(3, data.getDocFrequency());
+                for(int i = 0; i < 3; i++) {
+                    PostingsData postingsData = postingsIterator.next();
+                    Assert.assertEquals(i, postingsData.getDocumentId());
+                    Assert.assertEquals(String.format("Expected %s to be found in %d places", term, postingsData.getPositions().size()),
+                            1, postingsData.getPositions().size());
+                    Assert.assertEquals(String.format("Expected %s to be found at index %d", term, tokenIndex),
+                            tokenIndex + i, postingsData.getPositions().get(0).getPosition());
+                }
+                tokenIndex++;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testSameTermInTwoFields() throws BTreeAlreadyManagedException, ReflectiveOperationException, IOException {
+        final InvertedIndex index = createIndex(false);
+
+        TestDoc d1 = new TestDoc();
+        d1.content = "This is a test and this is a test";
+        d1.author = "test and test";
+        final ArrayList<Object> docs = new ArrayList<Object>();
+        docs.add(d1);
+        try {
+            index.indexDocuments(docs, tmpDir);
+            TermDictionary.TermData data = index.getDictionary().findTerm(new StringTerm("test"));
+            Assert.assertEquals("Expected 'test' to be found in one document", 1, data.getDocFrequency());
+            IOIterator<PostingsData> postingsIterator = index.getPostings().getDocumentsForTerm(data.getPostingsIndex(), data.getDocFrequency());
+            PostingsData postingsData = postingsIterator.next();
+            Assert.assertEquals(4, postingsData.getPositions().size());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testDocIndexDuplicatesInOneDoc() throws BTreeAlreadyManagedException, ReflectiveOperationException, IOException {
+        final InvertedIndex index = createIndex(false);
+
+        TestDoc d1 = new TestDoc();
+        d1.content = "This is a test and This is should work";
+        d1.author = "Alice Bob";
+        final ArrayList<Object> docs = new ArrayList<Object>();
+        docs.add(d1);
+        try {
+            index.indexDocuments(docs, tmpDir);
+
+            // 'This'
+            String term = "This";
+            TermDictionary.TermData data = index.getDictionary().findTerm(new StringTerm(term));
+            IOIterator<PostingsData> postingsIterator = index.getPostings().getDocumentsForTerm(data.getPostingsIndex(), data.getDocFrequency());
+            Assert.assertEquals(1, data.getDocFrequency());
+            PostingsData postingsData = postingsIterator.next();
+            Assert.assertEquals(0, postingsData.getDocumentId());
+            Assert.assertEquals(String.format("Expected '%s' to be found in %d places", term, 2),
+                    2, postingsData.getPositions().size());
+            Assert.assertEquals(String.format("Expected '%s' to be found at index %d", term, 0),
+                    0, postingsData.getPositions().get(0).getPosition());
+            Assert.assertEquals(String.format("Expected '%s' to be found at index %d", term, 5),
+                    5, postingsData.getPositions().get(1).getPosition());
+            // 'is'
+            term = "is";
+            data = index.getDictionary().findTerm(new StringTerm(term));
+            postingsIterator = index.getPostings().getDocumentsForTerm(data.getPostingsIndex(), data.getDocFrequency());
+            Assert.assertEquals(1, data.getDocFrequency());
+            postingsData = postingsIterator.next();
+            Assert.assertEquals(0, postingsData.getDocumentId());
+            Assert.assertEquals(String.format("Expected '%s' to be found in %d places", term, 2),
+                    2, postingsData.getPositions().size());
+            Assert.assertEquals(String.format("Expected '%s' to be found at index %d", term, 1),
+                    1, postingsData.getPositions().get(0).getPosition());
+            Assert.assertEquals(String.format("Expected '%s' to be found at index %d", term, 6),
+                    6, postingsData.getPositions().get(1).getPosition());
+            // 'a'
+            term = "a";
+            data = index.getDictionary().findTerm(new StringTerm(term));
+            postingsIterator = index.getPostings().getDocumentsForTerm(data.getPostingsIndex(), data.getDocFrequency());
+            Assert.assertEquals(1, data.getDocFrequency());
+            postingsData = postingsIterator.next();
+            Assert.assertEquals(0, postingsData.getDocumentId());
+            Assert.assertEquals(String.format("Expected '%s' to be found in %d places", term, 1),
+                    1, postingsData.getPositions().size());
+            Assert.assertEquals(String.format("Expected '%s' to be found at index %d", term, 2),
+                    2, postingsData.getPositions().get(0).getPosition());
         } catch (IOException e) {
             e.printStackTrace();
         }

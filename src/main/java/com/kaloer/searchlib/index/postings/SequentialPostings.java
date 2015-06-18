@@ -156,7 +156,7 @@ public class SequentialPostings extends Postings {
                     Term t = item.getFirst();
                     if (partialData.get(i) == null) {
                         // Seek to term location if not already visited
-                        if(inputFiles.get(i).getFilePointer() <= item.getSecond()) {
+                        if(inputFiles.get(i).getFilePointer() < item.getSecond()) {
                             inputFiles.get(i).seek(item.getSecond());
                         }
                         // Read data
@@ -176,6 +176,7 @@ public class SequentialPostings extends Postings {
                         }
                     }
                 }
+
                 // If first occurrence of term, store pointer to postings index
                 if(!indices.containsKey(minTerm)) {
                     indices.put(minTerm, outputFile.getFilePointer());

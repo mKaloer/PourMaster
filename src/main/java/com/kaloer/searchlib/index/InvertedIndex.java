@@ -71,6 +71,7 @@ public class InvertedIndex {
         while (docStream.hasNext()) {
             Object document = docStream.next();
             ArrayList<FieldData> fields = new ArrayList<FieldData>();
+            HashSet<Term> termsInDoc = new HashSet<Term>();
             for(java.lang.reflect.Field f : document.getClass().getFields()) {
                 Field field = f.getAnnotation(Field.class);
                 if(field != null) {
@@ -99,14 +100,17 @@ public class InvertedIndex {
                             Token t = tokens.next();
                             partialIndex.addPositionForTerm(t, docId, fieldInfo.getFieldId());
 
-                            // Update document frequency mapping
-                            if (!docFrequencies.get(partialFiles.size()).containsKey(t.getValue())) {
-                                // New term in this file. Add doc freq 0
-                                docFrequencies.get(partialFiles.size()).put(t.getValue(), 0);
+                            // Update document frequency mapping if not already added (only add once per unique term)
+                            if (!termsInDoc.contains(t.getValue())) {
+                                termsInDoc.add(t.getValue());
+                                if (!docFrequencies.get(partialFiles.size()).containsKey(t.getValue())) {
+                                    // New term in this file. Add doc freq 0
+                                    docFrequencies.get(partialFiles.size()).put(t.getValue(), 0);
+                                }
+                                // Add new doc frequency
+                                int oldFreq = docFrequencies.get(partialFiles.size()).get(t.getValue());
+                                docFrequencies.get(partialFiles.size()).put(t.getValue(), oldFreq + 1);
                             }
-                            // Add new doc frequency
-                            int oldFreq = docFrequencies.get(partialFiles.size()).get(t.getValue());
-                            docFrequencies.get(partialFiles.size()).put(t.getValue(), oldFreq + 1);
                         }
                     }
 
