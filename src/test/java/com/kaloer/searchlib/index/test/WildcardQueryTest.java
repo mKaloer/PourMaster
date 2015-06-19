@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class WildcardQueryTests {
+public class WildcardQueryTest {
 
     private final File tmpDir = new File("tmp");
     private final File indexDir = new File("idx");

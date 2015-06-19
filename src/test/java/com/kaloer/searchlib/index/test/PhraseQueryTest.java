@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PhraseQueryTests {
+public class PhraseQueryTest {
 
     private final File tmpDir = new File("tmp");
     private final File indexDir = new File("idx");
