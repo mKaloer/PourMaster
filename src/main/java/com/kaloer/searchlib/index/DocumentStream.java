@@ -8,6 +8,7 @@ import java.util.Iterator;
 public abstract class DocumentStream implements Iterable<FieldStream> {
 
     protected abstract boolean hasNextDocument();
+
     protected abstract FieldStream nextDocument();
 
     public Iterator<FieldStream> iterator() {

@@ -7,7 +7,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 /**
  * Created by mkaloer on 18/04/15.
  */
-public class Pipeline<U,V> {
+public class Pipeline<U, V> {
 
     private ArrayList<Stage<?, ?>> stages = new ArrayList<Stage<?, ?>>();
     private BlockingQueue<U> sourceQueue = new LinkedBlockingQueue<U>();
@@ -27,7 +27,7 @@ public class Pipeline<U,V> {
     public <T> Pipeline<U, T> append(Stage<V, T> stage) {
         // Create new pipeline from U to T based on current instance.
         Pipeline<U, T> newPipeline = new Pipeline<U, T>();
-        for(Stage s : stages) {
+        for (Stage s : stages) {
             newPipeline.stages.add(s);
         }
         stage.setInputQueue(getDestination().getOutputQueue());
@@ -38,7 +38,7 @@ public class Pipeline<U,V> {
 
     public ArrayList<V> process(U input) throws InterruptedException {
         sourceQueue.offer(input);
-        for(Stage s : stages) {
+        for (Stage s : stages) {
             s.poll();
         }
         ArrayList<V> output = new ArrayList<V>(destinationQueue.size());
@@ -47,7 +47,7 @@ public class Pipeline<U,V> {
     }
 
     public Stage<?, V> getDestination() {
-        return (Stage<?, V>) stages.get(stages.size()-1);
+        return (Stage<?, V>) stages.get(stages.size() - 1);
     }
 
     public Stage<U, ?> getSource() {

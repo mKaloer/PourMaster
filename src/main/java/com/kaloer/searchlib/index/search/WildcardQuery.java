@@ -32,7 +32,7 @@ public class WildcardQuery extends Query {
     @Override
     public Iterator<RankedDocument<Document>> search(InvertedIndex index) throws IOException {
         List<TermDictionary.TermData> matches = index.getDictionary().findTerm(prefix, suffix);
-        if(matches.size() == 0) {
+        if (matches.size() == 0) {
             // No results
             return Collections.emptyIterator();
         }
@@ -47,12 +47,12 @@ public class WildcardQuery extends Query {
                 Document doc = index.getDocIndex().getDocument(docId);
                 // Calculate tf
                 int tf = 0;
-                for(TermOccurrence occurrence : data.getPositions()) {
-                    if(occurrence.getFieldId() == fieldId) {
+                for (TermOccurrence occurrence : data.getPositions()) {
+                    if (occurrence.getFieldId() == fieldId) {
                         tf++;
                     }
                 }
-                if(tf > 0) {
+                if (tf > 0) {
                     // Return pure TF score
                     result.add(new RankedDocument<Document>(doc, tf));
                 }

@@ -8,7 +8,7 @@ import java.util.Iterator;
 public class PostingsIterator implements Iterator<PostingsData> {
 
     public PostingsIterator() {
-        
+
     }
 
     public boolean hasNext() {

@@ -13,8 +13,11 @@ import java.lang.annotation.Target;
 public @interface Field {
 
     Class<? extends FieldType> type();
+
     boolean indexed() default true;
+
     boolean stored() default false;
+
     Class<? extends Analyzer> indexAnalyzer();
 
 }

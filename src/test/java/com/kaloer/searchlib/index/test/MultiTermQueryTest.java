@@ -1,6 +1,5 @@
 package com.kaloer.searchlib.index.test;
 
-import com.kaloer.searchlib.index.Document;
 import com.kaloer.searchlib.index.InvertedIndex;
 import com.kaloer.searchlib.index.search.MultiTermQuery;
 import com.kaloer.searchlib.index.search.RankedDocument;
@@ -245,14 +244,15 @@ public class MultiTermQueryTest {
 
     /**
      * Asserts that the document is part of the result set.
+     *
      * @param results The result set.
-     * @param d The document to check.
+     * @param d       The document to check.
      */
     private static void assertDocumentInResultSet(List<RankedDocument> results, TestDoc d) {
         boolean contained = false;
-        for(RankedDocument r : results) {
+        for (RankedDocument r : results) {
             TestDoc doc = (TestDoc) r.getDocument();
-            if(d.author.equals(doc.author) && d.id == doc.id) {
+            if (d.author.equals(doc.author) && d.id == doc.id) {
                 contained = true;
                 break;
             }

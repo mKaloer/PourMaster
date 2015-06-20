@@ -28,7 +28,7 @@ public abstract class Stage<U, V> {
 
     public void poll() throws InterruptedException {
         U item;
-        while((item = source.poll()) != null) {
+        while ((item = source.poll()) != null) {
             produce(item);
         }
     }

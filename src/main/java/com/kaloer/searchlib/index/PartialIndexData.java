@@ -21,6 +21,7 @@ public class PartialIndexData {
 
     /**
      * Gets the postings data for the given term.
+     *
      * @param t The term
      * @return A mapping docId -> postingsData
      */
@@ -37,8 +38,9 @@ public class PartialIndexData {
 
     /**
      * Adds a position for a given term in a document.
-     * @param t The term to add an occurrence of.
-     * @param docId The document id containing the term.
+     *
+     * @param t       The term to add an occurrence of.
+     * @param docId   The document id containing the term.
      * @param fieldId The field in the document containing the term.
      */
     public void addPositionForTerm(Token t, long docId, int fieldId) {
@@ -52,6 +54,7 @@ public class PartialIndexData {
 
     /**
      * Gets the documents containing the given term.
+     *
      * @param term The term.
      * @return Document ids of all documents containing the term.
      */
@@ -61,7 +64,8 @@ public class PartialIndexData {
 
     /**
      * Gets the positions of specific term in a given document.
-     * @param term The term.
+     *
+     * @param term  The term.
      * @param docId The document id.
      * @return A list of all occurrences of the term in the document.
      */
@@ -71,6 +75,7 @@ public class PartialIndexData {
 
     /**
      * Gets the postings data sorted by term.
+     *
      * @return
      */
     public Iterable<Tuple<Term, HashMap<Long, PostingsData>>> getSortedPostings() {

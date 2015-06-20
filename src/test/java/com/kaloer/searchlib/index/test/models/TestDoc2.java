@@ -48,6 +48,7 @@ public class TestDoc2 {
             final String[] words = value.split(" ");
             return new Iterator<Token>() {
                 int index = 0;
+
                 public boolean hasNext() {
                     return index < words.length;
                 }

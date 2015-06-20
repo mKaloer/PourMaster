@@ -11,20 +11,21 @@ public class StringTermType implements TermType {
     private StringTermSerializer stringTermSerializer = new StringTermSerializer();
 
     public static StringTermType getInstance() {
-        if(instance == null) {
+        if (instance == null) {
             instance = new StringTermType();
         }
         return instance;
     }
 
-    private StringTermType() { }
+    private StringTermType() {
+    }
 
     public TermSerializer getSerializer() {
         return stringTermSerializer;
     }
 
     public byte[] getBytes(Object value) {
-        return ((String)value).getBytes();
+        return ((String) value).getBytes();
     }
 
     public Object readFromBytes(byte[] input) {
@@ -36,9 +37,9 @@ public class StringTermType implements TermType {
     }
 
     public int compare(Object a, Object b) {
-        if(b instanceof String) {
+        if (b instanceof String) {
             return ((String) a).compareTo((String) b);
-        } else if(b instanceof Integer) {
+        } else if (b instanceof Integer) {
             return ((String) a).compareTo(Integer.toString((Integer) b));
         } else {
             return -1;

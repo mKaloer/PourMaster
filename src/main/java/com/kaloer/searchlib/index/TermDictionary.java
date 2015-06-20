@@ -1,12 +1,10 @@
 package com.kaloer.searchlib.index;
 
 import com.kaloer.searchlib.index.terms.Term;
-import com.kaloer.searchlib.index.terms.TermType;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by mkaloer on 12/04/15.

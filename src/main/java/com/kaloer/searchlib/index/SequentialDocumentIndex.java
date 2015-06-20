@@ -39,7 +39,7 @@ public class SequentialDocumentIndex extends DocumentIndex {
             file.seek(docIdToPointer(doc.getDocumentId()));
             file.writeLong(fieldIndex);
         } finally {
-            if(file != null) {
+            if (file != null) {
                 file.close();
             }
         }
@@ -61,7 +61,7 @@ public class SequentialDocumentIndex extends DocumentIndex {
             doc.setFields(fields.getFieldData());
             doc.setDocumentType(fields.getDocTypeId());
         } finally {
-            if(file != null) {
+            if (file != null) {
                 file.close();
             }
         }
@@ -74,18 +74,18 @@ public class SequentialDocumentIndex extends DocumentIndex {
 
     @Override
     public long getDocumentCount() throws IOException {
-        if(docCount == -1) {
+        if (docCount == -1) {
             RandomAccessFile file = null;
             try {
                 file = new RandomAccessFile(filePath, "rw");
-                if(file.length() == 0) {
+                if (file.length() == 0) {
                     file.writeLong(0);
                     docCount = 0;
                 } else {
                     docCount = file.readLong();
                 }
             } finally {
-                if(file != null) {
+                if (file != null) {
                     file.close();
                 }
             }

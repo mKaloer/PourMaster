@@ -36,13 +36,13 @@ public class HeapFieldDataStore extends FieldDataStore {
             int numFields = file.readUnsignedByte();
             fields = new ArrayList<FieldData>(numFields);
             // Read fields
-            for(int i = 0; i < numFields; i++) {
+            for (int i = 0; i < numFields; i++) {
                 FieldData fieldData = FieldData.createFromData(file, fieldInfoStore);
                 fields.add(fieldData);
             }
             return new FieldList(fields, docType);
         } finally {
-            if(file != null) {
+            if (file != null) {
                 file.close();
             }
         }
@@ -61,7 +61,7 @@ public class HeapFieldDataStore extends FieldDataStore {
             // Write number of fields
             file.writeByte(fields.getFieldData().size()); // Write as unsigned byte
             // Write fields
-            for(FieldData data : fields.getFieldData()) {
+            for (FieldData data : fields.getFieldData()) {
                 // Make sure field info is stored
                 int fieldId = fieldInfoStore.getOrCreateField(data.getField());
                 data.getField().setFieldId(fieldId);
@@ -70,7 +70,7 @@ public class HeapFieldDataStore extends FieldDataStore {
             }
             return pointer;
         } finally {
-            if(file != null) {
+            if (file != null) {
                 file.close();
             }
         }

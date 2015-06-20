@@ -36,9 +36,9 @@ public class FieldTypeStore {
             file.write(className);
             // Create new object and add to mapping
             fieldTypeMapping.add(type.getClass().newInstance());
-            return fieldTypeMapping.size()-1;
+            return fieldTypeMapping.size() - 1;
         } finally {
-            if(file != null) {
+            if (file != null) {
                 file.close();
             }
         }
@@ -46,7 +46,7 @@ public class FieldTypeStore {
 
     public int getOrCreateTypeId(FieldType fieldType) throws IOException, ReflectiveOperationException {
         int index = fieldTypeMapping.indexOf(fieldType);
-        if(index == -1) {
+        if (index == -1) {
             index = addType(fieldType);
         }
         return index;
@@ -57,7 +57,7 @@ public class FieldTypeStore {
         RandomAccessFile file = null;
         try {
             file = new RandomAccessFile(filePath, "r");
-            while(file.getFilePointer() < file.length()) {
+            while (file.getFilePointer() < file.length()) {
                 int classNameLength = file.readUnsignedShort();
                 byte[] buffer = new byte[classNameLength];
                 file.read(buffer);
@@ -65,7 +65,7 @@ public class FieldTypeStore {
                 fieldTypeMapping.add((FieldType) Class.forName(className).newInstance());
             }
         } finally {
-            if(file != null) {
+            if (file != null) {
                 file.close();
             }
         }

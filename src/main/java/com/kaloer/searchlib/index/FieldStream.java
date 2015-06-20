@@ -9,7 +9,7 @@ public class FieldStream implements Iterable<TokenStream> {
 
     private Document document;
 
-    public FieldStream(Document doc){
+    public FieldStream(Document doc) {
         this.document = doc;
     }
 
@@ -20,6 +20,7 @@ public class FieldStream implements Iterable<TokenStream> {
     public Iterator<TokenStream> iterator() {
         return new Iterator<TokenStream>() {
             private int currentIndex = 0;
+
             public boolean hasNext() {
                 return document.getFields().size() > currentIndex;
             }

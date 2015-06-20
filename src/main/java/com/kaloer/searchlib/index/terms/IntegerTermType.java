@@ -13,13 +13,14 @@ public class IntegerTermType implements TermType {
     private IntegerTermSerializer integerTermSerializer = new IntegerTermSerializer();
 
     public static IntegerTermType getInstance() {
-        if(instance == null) {
+        if (instance == null) {
             instance = new IntegerTermType();
         }
         return instance;
     }
 
-    private IntegerTermType() { }
+    private IntegerTermType() {
+    }
 
     public TermSerializer getSerializer() {
         return integerTermSerializer;
@@ -38,9 +39,9 @@ public class IntegerTermType implements TermType {
     }
 
     public int compare(Object a, Object b) {
-        if(b instanceof Integer) {
+        if (b instanceof Integer) {
             return ((Integer) a).compareTo((Integer) b);
-        } else if(b instanceof String) {
+        } else if (b instanceof String) {
             return Integer.toString((Integer) a).compareTo((String) b);
         } else {
             return -1;
@@ -48,7 +49,7 @@ public class IntegerTermType implements TermType {
     }
 
     public boolean isPrefix(Object prefix, Object value) {
-        if(prefix instanceof Integer && value instanceof Integer) {
+        if (prefix instanceof Integer && value instanceof Integer) {
             String prefixString = String.valueOf(prefix.toString());
             String valueString = String.valueOf(value.toString());
             return valueString.startsWith(prefixString);
@@ -58,7 +59,7 @@ public class IntegerTermType implements TermType {
     }
 
     public boolean isSuffix(Object suffix, Object value) {
-        if(suffix instanceof Integer && value instanceof Integer) {
+        if (suffix instanceof Integer && value instanceof Integer) {
             String suffixString = String.valueOf(suffix.toString());
             String valueString = String.valueOf(value.toString());
             return valueString.startsWith(suffixString);

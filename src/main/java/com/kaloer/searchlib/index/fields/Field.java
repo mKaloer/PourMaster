@@ -24,7 +24,7 @@ public class Field<T, V extends FieldType<T>> {
         return fieldName;
     }
 
-        public boolean isStored() {
+    public boolean isStored() {
         return isStored;
     }
 

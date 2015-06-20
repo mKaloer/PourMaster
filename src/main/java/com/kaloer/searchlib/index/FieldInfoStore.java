@@ -36,7 +36,7 @@ public class FieldInfoStore {
     }
 
     public int getOrCreateField(Field f) throws IOException, ReflectiveOperationException {
-        if(fieldIdMapping.size() > f.getFieldId()) {
+        if (fieldIdMapping.size() > f.getFieldId()) {
             return fieldIdMapping.get(f.getFieldId()).getFieldId();
         }
         RandomAccessFile file = null;
@@ -57,7 +57,7 @@ public class FieldInfoStore {
 
             return f.getFieldId();
         } finally {
-            if(file != null) {
+            if (file != null) {
                 file.close();
             }
         }
@@ -68,7 +68,7 @@ public class FieldInfoStore {
         try {
             int fieldId = 0;
             file = new RandomAccessFile(filePath, "r");
-            while(file.getFilePointer() < file.length()) {
+            while (file.getFilePointer() < file.length()) {
                 String fieldName = file.readUTF();
                 int fieldType = file.readUnsignedByte();
                 BitSet bitSet = BitSet.valueOf(new byte[]{file.readByte()});
@@ -85,7 +85,7 @@ public class FieldInfoStore {
                 fieldId++;
             }
         } finally {
-            if(file != null) {
+            if (file != null) {
                 file.close();
             }
         }

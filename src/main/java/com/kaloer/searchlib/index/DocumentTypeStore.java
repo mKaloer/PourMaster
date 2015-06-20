@@ -27,7 +27,7 @@ public class DocumentTypeStore {
     }
 
     public int getOrCreateDocumentType(Class docType) throws IOException {
-        if(type2DocIdMapping.containsKey(docType)) {
+        if (type2DocIdMapping.containsKey(docType)) {
             return type2DocIdMapping.get(docType);
         }
         RandomAccessFile file = null;
@@ -36,7 +36,7 @@ public class DocumentTypeStore {
             file.seek(file.length());
             // Insert new type
             int index = docId2TypeMapping.size();
-            if(index > 255) {
+            if (index > 255) {
                 throw new IndexOutOfBoundsException("Too many document types!");
             }
             file.writeByte(index);
@@ -44,14 +44,14 @@ public class DocumentTypeStore {
             docId2TypeMapping.add(docType);
             return index;
         } finally {
-            if(file != null) {
+            if (file != null) {
                 file.close();
             }
         }
     }
 
     public Class getDocumentType(int docTypeId) {
-        if(docTypeId >= docId2TypeMapping.size()) {
+        if (docTypeId >= docId2TypeMapping.size()) {
             throw new NoSuchElementException(String.format("No document with id %i found.", docTypeId));
         }
         return docId2TypeMapping.get(docTypeId);
@@ -61,13 +61,13 @@ public class DocumentTypeStore {
         RandomAccessFile file = null;
         try {
             file = new RandomAccessFile(filePath, "r");
-            while(file.getFilePointer() < file.length()) {
+            while (file.getFilePointer() < file.length()) {
                 Class classType = Class.forName(file.readUTF());
                 docId2TypeMapping.add(classType);
                 type2DocIdMapping.put(classType, docId2TypeMapping.size() - 1);
             }
         } finally {
-            if(file != null) {
+            if (file != null) {
                 file.close();
             }
         }

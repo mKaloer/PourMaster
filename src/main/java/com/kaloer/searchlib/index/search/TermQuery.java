@@ -2,8 +2,8 @@ package com.kaloer.searchlib.index.search;
 
 import com.kaloer.searchlib.index.Document;
 import com.kaloer.searchlib.index.InvertedIndex;
-import com.kaloer.searchlib.index.postings.PostingsData;
 import com.kaloer.searchlib.index.TermDictionary;
+import com.kaloer.searchlib.index.postings.PostingsData;
 import com.kaloer.searchlib.index.terms.Term;
 import com.kaloer.searchlib.index.terms.TermOccurrence;
 import com.kaloer.searchlib.index.util.IOIterator;
@@ -30,7 +30,7 @@ public class TermQuery extends Query {
     @Override
     public Iterator<RankedDocument<Document>> search(InvertedIndex index) throws IOException {
         TermDictionary.TermData termData = index.getDictionary().findTerm(term);
-        if(termData == null) {
+        if (termData == null) {
             // No results
             return Collections.emptyIterator();
         }
@@ -43,12 +43,12 @@ public class TermQuery extends Query {
             long docId = data.getDocumentId();
             Document doc = index.getDocIndex().getDocument(docId);
             int tf = 0;
-            for(TermOccurrence occurrence : data.getPositions()) {
-                if(occurrence.getFieldId() == fieldId) {
+            for (TermOccurrence occurrence : data.getPositions()) {
+                if (occurrence.getFieldId() == fieldId) {
                     tf++;
                 }
             }
-            if(tf > 0) {
+            if (tf > 0) {
                 // Return pure TF score
                 result.add(new RankedDocument<Document>(doc, tf));
             }

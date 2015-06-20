@@ -3,21 +3,15 @@ package com.kaloer.searchlib.index.search;
 import com.kaloer.searchlib.index.Document;
 import com.kaloer.searchlib.index.InvertedIndex;
 import com.kaloer.searchlib.index.TermDictionary;
-import com.kaloer.searchlib.index.fields.Field;
-import com.kaloer.searchlib.index.fields.FieldData;
-import com.kaloer.searchlib.index.fields.IntegerFieldType;
 import com.kaloer.searchlib.index.postings.PostingsData;
 import com.kaloer.searchlib.index.terms.Term;
 import com.kaloer.searchlib.index.terms.TermOccurrence;
-import com.kaloer.searchlib.index.terms.TermSerializer;
 import com.kaloer.searchlib.index.util.IOIterator;
 import com.kaloer.searchlib.index.util.Tuple;
-import com.sun.javaws.exceptions.InvalidArgumentException;
 import org.apache.commons.collections.map.MultiValueMap;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.IOException;
-import java.sql.ResultSet;
 import java.util.*;
 
 public class PhraseQuery extends Query {
@@ -28,13 +22,14 @@ public class PhraseQuery extends Query {
 
     /**
      * Adds a term to the end of the query.
+     *
      * @param term The term to add.
      */
     public void add(Term term) {
         terms.add(term);
 
         int termIndex = 0;
-        if(positions.size() > 0) {
+        if (positions.size() > 0) {
             termIndex = positions.size();
         }
         positions.add(termIndex);
@@ -42,17 +37,18 @@ public class PhraseQuery extends Query {
 
     /**
      * Adds a term with the given index of the phrase.
-     * @param term The term to add.
+     *
+     * @param term     The term to add.
      * @param position The index of the term in the phrase.
      */
     public void add(Term term, int position) {
-        if(position < 0) {
+        if (position < 0) {
             throw new IllegalArgumentException("Term position must be non-negative");
-        } else if(positions.size() > 0) {
+        } else if (positions.size() > 0) {
             int largestPos = positions.get(positions.size() - 1);
-            if(largestPos == position) {
+            if (largestPos == position) {
                 throw new IllegalArgumentException("Term positions must be unique");
-            } else if(largestPos > position) {
+            } else if (largestPos > position) {
                 throw new IllegalArgumentException("Terms must be added in the order they appear in the phrase");
             }
         }
@@ -66,7 +62,7 @@ public class PhraseQuery extends Query {
 
     public PhraseQuery(String fieldName, Term... terms) {
         this.fieldName = fieldName;
-        for(Term t : terms) {
+        for (Term t : terms) {
             this.terms.add(t);
             positions.add(positions.size());
         }
@@ -79,7 +75,7 @@ public class PhraseQuery extends Query {
 
         final PriorityQueue<RankedDocument<Document>> result = new PriorityQueue<RankedDocument<Document>>();
         // Use plain tf ("phrase occurrences") as doc score
-        for(Tuple<Long, Integer> match : docIds) {
+        for (Tuple<Long, Integer> match : docIds) {
             Document doc = index.getDocIndex().getDocument(match.getFirst());
             RankedDocument<Document> rankedDoc = new RankedDocument<Document>(doc, match.getSecond());
             result.add(rankedDoc);
@@ -103,7 +99,8 @@ public class PhraseQuery extends Query {
 
     /**
      * Finds all documentIds of documents containing the phrase.
-     * @param index The inverted index instance.
+     *
+     * @param index   The inverted index instance.
      * @param fieldId The id of the field containing the phrase.
      * @return A set of docIds containing the phrase.
      * @throws IOException
@@ -112,10 +109,10 @@ public class PhraseQuery extends Query {
         // Order terms by frequency to shrink working set early
         PriorityQueue<PhraseQueryTerm> termList =
                 new PriorityQueue<PhraseQueryTerm>(terms.size(), new TermFrequencyComparator());
-        for(int i = 0; i < terms.size(); i++) {
+        for (int i = 0; i < terms.size(); i++) {
             Term t = terms.get(i);
             TermDictionary.TermData data = index.getDictionary().findTerm(t);
-            if(data == null) {
+            if (data == null) {
                 // If a term does not exist, there is no chance of matching the query, so return empty set.
                 return new HashSet<Tuple<Long, Integer>>();
             } else {
@@ -136,12 +133,12 @@ public class PhraseQuery extends Query {
 
             boolean firstTerm = resultSet.isEmpty();
 
-            while(docs.hasNext()) {
+            while (docs.hasNext()) {
                 PostingsData postingsData = docs.next();
                 // Add every term in first run.
-                if(firstTerm) {
-                    for(TermOccurrence position : postingsData.getPositions()) {
-                        if(position.getFieldId() == fieldId) {
+                if (firstTerm) {
+                    for (TermOccurrence position : postingsData.getPositions()) {
+                        if (position.getFieldId() == fieldId) {
                             workingSet.put(postingsData.getDocumentId(), position.getPosition());
                         }
                     }
@@ -149,16 +146,16 @@ public class PhraseQuery extends Query {
                     // Intersect resultSet with current postings
 
                     // If not in working set, skip this doc as it does not contain all terms
-                    if(!resultSet.containsKey(postingsData.getDocumentId())) {
+                    if (!resultSet.containsKey(postingsData.getDocumentId())) {
                         continue;
                     }
 
                     // Check if relative positions correspond to query position
-                    for(TermOccurrence position : postingsData.getPositions()) {
-                        if(position.getFieldId() == fieldId) {
+                    for (TermOccurrence position : postingsData.getPositions()) {
+                        if (position.getFieldId() == fieldId) {
                             // Get position for previous term in document
-                            for(long pos : (Collection<Long>) resultSet.get(postingsData.getDocumentId())) {
-                                if(position.getPosition() - pos == queryTerm.position - prevTermPosition) {
+                            for (long pos : (Collection<Long>) resultSet.get(postingsData.getDocumentId())) {
+                                if (position.getPosition() - pos == queryTerm.position - prevTermPosition) {
                                     // Relative positioning matches!
                                     workingSet.put(postingsData.getDocumentId(), position.getPosition());
                                 }
@@ -173,7 +170,7 @@ public class PhraseQuery extends Query {
 
         // Count occurrences of each match per document
         Set<Tuple<Long, Integer>> tfResult = new HashSet<Tuple<Long, Integer>>();
-        for(Long docId : (Set<Long>) resultSet.keySet()) {
+        for (Long docId : (Set<Long>) resultSet.keySet()) {
             tfResult.add(new Tuple<Long, Integer>(docId, resultSet.getCollection(docId).size()));
         }
 

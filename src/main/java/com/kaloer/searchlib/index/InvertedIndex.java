@@ -43,8 +43,8 @@ public class InvertedIndex {
             Class docType = this.docTypeStore.getDocumentType(d.getDocument().getDocumentType());
             Object doc = docType.newInstance();
             // Set object fields
-            for(FieldData fieldData : d.getDocument().getFields()) {
-                if(fieldData.getField().isStored()) {
+            for (FieldData fieldData : d.getDocument().getFields()) {
+                if (fieldData.getField().isStored()) {
                     docType.getField(fieldData.getField().getFieldName()).set(doc, fieldData.getValue());
                 }
             }
@@ -72,11 +72,11 @@ public class InvertedIndex {
             Object document = docStream.next();
             ArrayList<FieldData> fields = new ArrayList<FieldData>();
             HashSet<Term> termsInDoc = new HashSet<Term>();
-            for(java.lang.reflect.Field f : document.getClass().getFields()) {
+            for (java.lang.reflect.Field f : document.getClass().getFields()) {
                 Field field = f.getAnnotation(Field.class);
-                if(field != null) {
+                if (field != null) {
                     // Check if field already exists - if not, create it
-                    if(!fieldIds.containsKey(f.getName())) {
+                    if (!fieldIds.containsKey(f.getName())) {
                         com.kaloer.searchlib.index.fields.Field fieldInfo = new com.kaloer.searchlib.index.fields.Field();
                         fieldInfo.setFieldName(f.getName());
                         fieldInfo.setFieldId(fieldIds.size());
@@ -86,14 +86,14 @@ public class InvertedIndex {
                         fieldIds.put(f.getName(), fieldInfo);
                     } else {
                         com.kaloer.searchlib.index.fields.Field fieldInfo = fieldIds.get(f.getName());
-                        if(!field.type().equals(fieldInfo.getFieldType().getClass())) {
+                        if (!field.type().equals(fieldInfo.getFieldType().getClass())) {
                             throw new ConflictingFieldTypesException(
                                     String.format("Conflicting field types for %s: %s and %s",
                                             fieldInfo.getFieldName(), field.type(), fieldInfo.getFieldType().getClass()));
                         }
                     }
                     com.kaloer.searchlib.index.fields.Field fieldInfo = fieldIds.get(f.getName());
-                    if(field.indexed()) {
+                    if (field.indexed()) {
                         Iterator<Token> tokens = field.indexAnalyzer().newInstance().analyze(f.get(document));
                         while (tokens.hasNext()) {
                             // Index document
@@ -121,7 +121,7 @@ public class InvertedIndex {
                 }
 
             }
-            if((docId + 1) % 1000 == 0) {
+            if ((docId + 1) % 1000 == 0) {
                 String outputFile = new File(tmpDir, String.format("postings_%d.part", partialFiles.size())).getAbsolutePath();
                 termIndices.add(writePartialPostings(outputFile, partialIndex));
                 partialFiles.add(outputFile);
@@ -146,7 +146,7 @@ public class InvertedIndex {
         // Merge partial files
         HashMap<Term, Long> indices = postings.mergePartialPostingsFiles(partialFiles, termIndices, docFrequencies);
         // Update dictionary with new pointers
-        for(Map.Entry<Term, Long> t : indices.entrySet()) {
+        for (Map.Entry<Term, Long> t : indices.entrySet()) {
             this.dictionary.findTerm(t.getKey()).setPostingsIndex(t.getValue());
         }
     }
@@ -158,15 +158,15 @@ public class InvertedIndex {
                 return o1.getFirst().compareTo(o2.getFirst());
             }
         });
-        for(Tuple<Term, Long> term : termIndices) {
+        for (Tuple<Term, Long> term : termIndices) {
             // Aggregate document frequency and term frequency
             int docFreq = 0;
             HashMap<Integer, Integer> fieldDocFreq = new HashMap<Integer, Integer>();
-            for(Long docId : partialIndex.getDocsForTerm(term.getFirst())) {
+            for (Long docId : partialIndex.getDocsForTerm(term.getFirst())) {
                 docFreq += 1;
                 // Update per-field doc frequency
                 for (TermOccurrence occurrence : partialIndex.getPositionsForDoc(term.getFirst(), docId)) {
-                    if(!fieldDocFreq.containsKey(occurrence.getFieldId())) {
+                    if (!fieldDocFreq.containsKey(occurrence.getFieldId())) {
                         fieldDocFreq.put(occurrence.getFieldId(), 1);
                     } else {
                         int newFreq = fieldDocFreq.get(occurrence.getFieldId()) + 1;
@@ -175,15 +175,15 @@ public class InvertedIndex {
                 }
             }
             // Update dictionary
-            if(this.dictionary.findTerm(term.getFirst()) == null) {
+            if (this.dictionary.findTerm(term.getFirst()) == null) {
                 // First occurrence of this term
                 this.dictionary.addTerm(term.getFirst(), new TermDictionary.TermData(docFreq, fieldDocFreq, term.getSecond()));
             } else {
                 // Term already exists: Increase existing docFreq and fieldDocFreq
                 TermDictionary.TermData existingData = this.dictionary.findTerm(term.getFirst());
                 existingData.setDocFrequency(existingData.getDocFrequency() + docFreq);
-                for(Map.Entry<Integer, Integer> entry : fieldDocFreq.entrySet()) {
-                    if(!existingData.getFieldDocFrequency().containsKey(entry.getKey())) {
+                for (Map.Entry<Integer, Integer> entry : fieldDocFreq.entrySet()) {
+                    if (!existingData.getFieldDocFrequency().containsKey(entry.getKey())) {
                         existingData.getFieldDocFrequency().put(entry.getKey(), entry.getValue());
                     } else {
                         int newVal = existingData.getFieldDocFrequency().get(entry.getKey()) + entry.getValue();

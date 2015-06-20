@@ -10,7 +10,10 @@ import java.io.DataOutput;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Created by mkaloer on 12/04/15.
@@ -18,6 +21,7 @@ import java.util.*;
 public class SequentialPostings extends Postings {
 
     private String filePath;
+
     public SequentialPostings(String file) throws IOException {
         this.filePath = file;
         File f = new File(file);
@@ -52,12 +56,12 @@ public class SequentialPostings extends Postings {
             long pointer = file.length();
             file.seek(pointer);
             int i = 0;
-            for(Tuple<Term, PostingsData[]> termData : docs) {
+            for (Tuple<Term, PostingsData[]> termData : docs) {
                 indices.add(new Tuple<Term, Long>(termData.getFirst(), file.getFilePointer()));
                 writeDocsToFile(file, termData.getSecond());
             }
         } finally {
-            if(file != null) {
+            if (file != null) {
                 file.close();
             }
         }
@@ -73,14 +77,14 @@ public class SequentialPostings extends Postings {
             writeDocsToFile(file, docs);
             return pointer;
         } finally {
-            if(file != null) {
+            if (file != null) {
                 file.close();
             }
         }
     }
 
     private void writeDocsToFile(DataOutput output, PostingsData[] docs) throws IOException {
-        for(int i = 0; i < docs.length; i++) {
+        for (int i = 0; i < docs.length; i++) {
             output.writeLong(docs[i].getDocumentId());
             output.writeInt(docs[i].getPositions().size());
             for (TermOccurrence occurrence : docs[i].getPositions()) {
@@ -96,12 +100,12 @@ public class SequentialPostings extends Postings {
         SequentialPostings partialPostings = new SequentialPostings(file);
         // Sort by term
         ArrayList<Tuple<Term, PostingsData[]>> termDataList = new ArrayList<Tuple<Term, PostingsData[]>>();
-        for(Tuple<Term, HashMap<Long, PostingsData>> term : partialIndex.getSortedPostings()) {
+        for (Tuple<Term, HashMap<Long, PostingsData>> term : partialIndex.getSortedPostings()) {
             TreeMap<Long, PostingsData> sortedDocs = new TreeMap<Long, PostingsData>();
             sortedDocs.putAll(term.getSecond());
             PostingsData[] termData = new PostingsData[sortedDocs.size()];
             int j = 0;
-            for(Map.Entry<Long, PostingsData> doc : sortedDocs.entrySet()) {
+            for (Map.Entry<Long, PostingsData> doc : sortedDocs.entrySet()) {
                 termData[j++] = doc.getValue();
             }
             termDataList.add(new Tuple<Term, PostingsData[]>(term.getFirst(), termData));
@@ -132,7 +136,7 @@ public class SequentialPostings extends Postings {
             outputFile = new RandomAccessFile(filePath, "rw");
 
             // Open all partial files
-            for(String partialPath : partialFiles) {
+            for (String partialPath : partialFiles) {
                 inputFiles.add(new RandomAccessFile(partialPath, "r"));
                 termIndices.add(0);
                 currentFiles.add(true);
@@ -141,14 +145,14 @@ public class SequentialPostings extends Postings {
             }
 
             // While some files contain unread data
-            while(currentFiles.contains(true)) {
+            while (currentFiles.contains(true)) {
                 Term minTerm = null;
                 long minDocId = -1;
                 int minIndex = -1;
                 // Merge step
                 // Find minimum key in all files at their current position
                 for (int i = 0; i < inputFiles.size(); i++) {
-                    if(!currentFiles.get(i) || termsToPointer.get(i).size() == 0) {
+                    if (!currentFiles.get(i) || termsToPointer.get(i).size() == 0) {
                         continue;
                     }
 
@@ -156,14 +160,14 @@ public class SequentialPostings extends Postings {
                     Term t = item.getFirst();
                     if (partialData.get(i) == null) {
                         // Seek to term location if not already visited
-                        if(inputFiles.get(i).getFilePointer() < item.getSecond()) {
+                        if (inputFiles.get(i).getFilePointer() < item.getSecond()) {
                             inputFiles.get(i).seek(item.getSecond());
                         }
                         // Read data
                         partialData.set(i, readPostingsData(inputFiles.get(i)));
 
                         // Check for end of file and mark for next iteration
-                        if(inputFiles.get(i).getFilePointer() >= inputFiles.get(i).length()) {
+                        if (inputFiles.get(i).getFilePointer() >= inputFiles.get(i).length()) {
                             currentFiles.set(i, false);
                         }
                     }
@@ -178,21 +182,21 @@ public class SequentialPostings extends Postings {
                 }
 
                 // If first occurrence of term, store pointer to postings index
-                if(!indices.containsKey(minTerm)) {
+                if (!indices.containsKey(minTerm)) {
                     indices.put(minTerm, outputFile.getFilePointer());
                 }
-                if(minIndex >= 0) {
+                if (minIndex >= 0) {
                     // Write postings to output file
                     writeDocsToFile(outputFile, new PostingsData[]{partialData.get(minIndex)});
                     // Mark buffer for this file as empty
                     partialData.set(minIndex, null);
                     // Update number of docs written with this term
-                    if(!docsWritten.get(minIndex).containsKey(minTerm)) {
+                    if (!docsWritten.get(minIndex).containsKey(minTerm)) {
                         docsWritten.get(minIndex).put(minTerm, 0);
                     }
                     docsWritten.get(minIndex).put(minTerm, docsWritten.get(minIndex).get(minTerm) + 1);
                     // If all docs written, increment  term index
-                    if(docsWritten.get(minIndex).get(minTerm) == docFreqs.get(minIndex).get(minTerm)) {
+                    if (docsWritten.get(minIndex).get(minTerm) == docFreqs.get(minIndex).get(minTerm)) {
                         termIndices.set(minIndex, termIndices.get(minIndex) + 1);
                     }
                 }
@@ -200,11 +204,11 @@ public class SequentialPostings extends Postings {
 
             return indices;
         } finally {
-            if(outputFile != null) {
+            if (outputFile != null) {
                 outputFile.close();
             }
-            for(RandomAccessFile f : inputFiles) {
-                if(f != null) {
+            for (RandomAccessFile f : inputFiles) {
+                if (f != null) {
                     f.close();
                 }
             }

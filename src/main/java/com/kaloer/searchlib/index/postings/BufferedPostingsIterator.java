@@ -37,12 +37,12 @@ public class BufferedPostingsIterator implements IOIterator<PostingsData> {
 
     public PostingsData next() throws IOException {
         // Fill buffer if empty
-        if(buffer.isEmpty() && hasNext()) {
+        if (buffer.isEmpty() && hasNext()) {
             for (int i = 0; i < Math.min(bufferLength, docCount - index); i++) {
                 buffer.add(sequentialPostings.readPostingsData(file));
             }
             // Everything has been read: close file.
-            if(index + buffer.size() == docCount) {
+            if (index + buffer.size() == docCount) {
                 file.close();
             }
         }

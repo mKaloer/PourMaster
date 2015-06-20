@@ -1,13 +1,10 @@
 package com.kaloer.searchlib.index.test;
 
 import com.kaloer.searchlib.index.InvertedIndex;
-import com.kaloer.searchlib.index.search.MultiTermQuery;
 import com.kaloer.searchlib.index.search.RankedDocument;
-import com.kaloer.searchlib.index.search.TermQuery;
 import com.kaloer.searchlib.index.search.WildcardQuery;
 import com.kaloer.searchlib.index.terms.StringTerm;
 import com.kaloer.searchlib.index.test.models.TestDoc;
-import com.kaloer.searchlib.index.test.models.TestDoc2;
 import org.apache.commons.io.FileUtils;
 import org.apache.directory.mavibot.btree.exception.BTreeAlreadyManagedException;
 import org.junit.After;

@@ -2,6 +2,7 @@ package com.kaloer.searchlib.index.util;
 
 /**
  * Simpe 2-tuple class.
+ *
  * @param <T1> Type of first element.
  * @param <T2> Type of second element.
  */

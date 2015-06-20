@@ -28,7 +28,7 @@ public class Document {
     }
 
     public void setFields(List<FieldData> fields) {
-        if(fields.size() > 255) {
+        if (fields.size() > 255) {
             throw new IllegalArgumentException(String.format("Too many fields in document. Maximum number of fields: %d", MAX_NUM_FIELDS));
         }
         this.fields = fields;

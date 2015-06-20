@@ -85,10 +85,10 @@ public class IndexTest {
             query.add(new TermQuery(new StringTerm("test"), "content2"));
             List<RankedDocument> results = index.search(query, -1);
             Assert.assertEquals("Expected two results", 2, results.size());
-            for(RankedDocument doc : results) {
-                if(doc.getDocument() instanceof TestDoc) {
+            for (RankedDocument doc : results) {
+                if (doc.getDocument() instanceof TestDoc) {
                     Assert.assertTrue("Expected content to be null", ((TestDoc) doc.getDocument()).content == null);
-                } else if(doc.getDocument() instanceof TestDoc2) {
+                } else if (doc.getDocument() instanceof TestDoc2) {
                     Assert.assertFalse("Expected content to be set", ((TestDoc2) doc.getDocument()).content2 == null);
                 }
             }
@@ -195,7 +195,7 @@ public class IndexTest {
         }
     }
 
-    @Test(expected=ConflictingFieldTypesException.class)
+    @Test(expected = ConflictingFieldTypesException.class)
     public void testDifferentFieldTypes() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
 
         final InvertedIndex index = createIndex(false);
@@ -220,7 +220,7 @@ public class IndexTest {
         }
     }
 
-    @Test(expected=ClassCastException.class)
+    @Test(expected = ClassCastException.class)
     public void testFieldTypeDataTypeMismatch() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
 
         final InvertedIndex index = createIndex(false);
@@ -239,7 +239,7 @@ public class IndexTest {
         }
     }
 
-    @Test(expected=ClassCastException.class)
+    @Test(expected = ClassCastException.class)
     public void testFieldIncompatibleAnalyzer() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
         final InvertedIndex index = createIndex(false);
 
@@ -315,7 +315,7 @@ public class IndexTest {
                 TermDictionary.TermData data = index.getDictionary().findTerm(term);
                 IOIterator<PostingsData> postingsIterator = index.getPostings().getDocumentsForTerm(data.getPostingsIndex(), data.getDocFrequency());
                 Assert.assertEquals(3, data.getDocFrequency());
-                for(int i = 0; i < 3; i++) {
+                for (int i = 0; i < 3; i++) {
                     PostingsData postingsData = postingsIterator.next();
                     Assert.assertEquals(i, postingsData.getDocumentId());
                     Assert.assertEquals(String.format("Expected %s to be found in %d places", term, postingsData.getPositions().size()),
