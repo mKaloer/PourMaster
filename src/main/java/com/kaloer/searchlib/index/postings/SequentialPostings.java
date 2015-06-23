@@ -16,9 +16,9 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Created by mkaloer on 12/04/15.
+ * Sequential implementation of a postings list.
  */
-public class SequentialPostings extends Postings {
+public class SequentialPostings implements Postings {
 
     private String filePath;
 
@@ -55,7 +55,6 @@ public class SequentialPostings extends Postings {
             file = new RandomAccessFile(outputFile, "rw");
             long pointer = file.length();
             file.seek(pointer);
-            int i = 0;
             for (Tuple<Term, PostingsData[]> termData : docs) {
                 indices.add(new Tuple<Term, Long>(termData.getFirst(), file.getFilePointer()));
                 writeDocsToFile(file, termData.getSecond());
@@ -84,19 +83,17 @@ public class SequentialPostings extends Postings {
     }
 
     private void writeDocsToFile(DataOutput output, PostingsData[] docs) throws IOException {
-        for (int i = 0; i < docs.length; i++) {
-            output.writeLong(docs[i].getDocumentId());
-            output.writeInt(docs[i].getPositions().size());
-            for (TermOccurrence occurrence : docs[i].getPositions()) {
+        for (PostingsData doc : docs) {
+            output.writeLong(doc.getDocumentId());
+            output.writeInt(doc.getPositions().size());
+            for (TermOccurrence occurrence : doc.getPositions()) {
                 output.writeLong(occurrence.getPosition());
                 output.writeInt(occurrence.getFieldId());
             }
         }
     }
 
-    @Override
     public ArrayList<Tuple<Term, Long>> writePartialPostingsToFile(String file, PartialIndexData partialIndex) throws IOException {
-        Map<Term, HashMap<Long, PostingsData>> postings;
         SequentialPostings partialPostings = new SequentialPostings(file);
         // Sort by term
         ArrayList<Tuple<Term, PostingsData[]>> termDataList = new ArrayList<Tuple<Term, PostingsData[]>>();
@@ -114,7 +111,6 @@ public class SequentialPostings extends Postings {
         return partialPostings.batchInsertTerm(termDataList, file);
     }
 
-    @Override
     public HashMap<Term, Long> mergePartialPostingsFiles(ArrayList<String> partialFiles,
                                                          ArrayList<ArrayList<Tuple<Term, Long>>> termsToPointer,
                                                          ArrayList<HashMap<Term, Integer>> docFreqs) throws IOException {
@@ -196,7 +192,7 @@ public class SequentialPostings extends Postings {
                     }
                     docsWritten.get(minIndex).put(minTerm, docsWritten.get(minIndex).get(minTerm) + 1);
                     // If all docs written, increment  term index
-                    if (docsWritten.get(minIndex).get(minTerm) == docFreqs.get(minIndex).get(minTerm)) {
+                    if (docsWritten.get(minIndex).get(minTerm).equals(docFreqs.get(minIndex).get(minTerm))) {
                         termIndices.set(minIndex, termIndices.get(minIndex) + 1);
                     }
                 }

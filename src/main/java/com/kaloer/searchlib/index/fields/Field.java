@@ -4,7 +4,9 @@ import com.kaloer.searchlib.index.Token;
 import com.kaloer.searchlib.index.pipeline.Pipeline;
 
 /**
- * Created by mkaloer on 13/04/15.
+ * A field in a document, such as 'content', 'author', etc. Each field has an associated data type.
+ * @param <T> The data type of the field data.
+ * @param <V> The FieldType used to represent the data type.
  */
 public class Field<T, V extends FieldType<T>> {
 

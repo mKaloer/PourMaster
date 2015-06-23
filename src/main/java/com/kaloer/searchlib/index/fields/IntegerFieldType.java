@@ -5,7 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 /**
- * Created by mkaloer on 03/05/15.
+ * Field type for Integers.
  */
 public class IntegerFieldType implements FieldType<Integer> {
 

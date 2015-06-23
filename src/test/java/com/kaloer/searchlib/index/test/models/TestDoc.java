@@ -10,9 +10,6 @@ import com.kaloer.searchlib.index.terms.StringTerm;
 
 import java.util.Iterator;
 
-/**
- * Created by mkaloer on 03/05/15.
- */
 public class TestDoc {
 
     @Field(

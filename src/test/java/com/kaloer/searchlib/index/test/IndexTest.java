@@ -25,9 +25,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-/**
- * Created by mkaloer on 13/04/15.
- */
 public class IndexTest {
 
     private final File tmpDir = new File("tmp");

@@ -10,7 +10,7 @@ import java.io.RandomAccessFile;
 import java.util.ArrayList;
 
 /**
- * Created by mkaloer on 13/04/15.
+ * Stores field data in a large heap file in no specific order.
  */
 public class HeapFieldDataStore extends FieldDataStore {
 
@@ -28,7 +28,7 @@ public class HeapFieldDataStore extends FieldDataStore {
     public FieldList getFields(long index) throws IOException {
         RandomAccessFile file = null;
         try {
-            ArrayList<FieldData> fields = null;
+            ArrayList<FieldData> fields;
             // Read field index
             file = new RandomAccessFile(filePath, "r");
             file.seek(index);

@@ -3,7 +3,9 @@ package com.kaloer.searchlib.index;
 import java.util.Iterator;
 
 /**
- * Created by mkaloer on 10/05/15.
+ * An Analyzer converts an object (e.g. a string) into a number of tokens. In the process, it may
+ * transform the data by tokenizing it, making it lowercase, stemming it etc.
+ * @param <T> The type of input the analyzer supports.
  */
 public abstract class Analyzer<T> {
 

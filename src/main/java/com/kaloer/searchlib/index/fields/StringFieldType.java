@@ -5,7 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 /**
- * Created by mkaloer on 03/05/15.
+ * A FieldType containing a String.
  */
 public class StringFieldType implements FieldType<String> {
 

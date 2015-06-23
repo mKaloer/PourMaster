@@ -3,7 +3,7 @@ package com.kaloer.searchlib.index.terms;
 import com.kaloer.searchlib.index.AtomicTerm;
 
 /**
- * Created by mkaloer on 03/05/15.
+ * Term type for terms with string values.
  */
 public class StringTermType implements TermType {
 

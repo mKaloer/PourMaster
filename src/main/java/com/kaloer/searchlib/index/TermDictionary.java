@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * Created by mkaloer on 12/04/15.
+ * Abstract class for the term dictionary used for mapping terms to corresponding term data.
  */
 public abstract class TermDictionary {
 

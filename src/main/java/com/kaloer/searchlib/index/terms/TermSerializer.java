@@ -9,7 +9,7 @@ import java.nio.ByteBuffer;
 import java.util.Comparator;
 
 /**
- * Created by mkaloer on 03/05/15.
+ * Term serializer used for the {@link com.kaloer.searchlib.index.BTreeTermDictionary}.
  */
 public abstract class TermSerializer<T extends Term> extends AbstractElementSerializer<Term> {
 

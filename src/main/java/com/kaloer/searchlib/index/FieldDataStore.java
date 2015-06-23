@@ -6,7 +6,7 @@ import com.kaloer.searchlib.index.fields.FieldList;
 import java.io.IOException;
 
 /**
- * Created by mkaloer on 13/04/15.
+ * Data store for storing and retrieving field data given an field data index.
  */
 public abstract class FieldDataStore {
 

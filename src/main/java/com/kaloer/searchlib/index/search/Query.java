@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 /**
- * Created by mkaloer on 07/05/15.
+ * Base class for implementing a search query.
  */
 public abstract class Query {
 

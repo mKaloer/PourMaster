@@ -76,7 +76,7 @@ public class PartialIndexData {
     /**
      * Gets the postings data sorted by term.
      *
-     * @return
+     * @return An iterator of {@code<Term, Posting>} data.
      */
     public Iterable<Tuple<Term, HashMap<Long, PostingsData>>> getSortedPostings() {
         final TreeMap<Term, HashMap<Long, PostingsData>> sortedDict = new TreeMap<Term, HashMap<Long, PostingsData>>();

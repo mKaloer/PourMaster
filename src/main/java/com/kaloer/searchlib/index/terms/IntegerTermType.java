@@ -5,7 +5,7 @@ import com.kaloer.searchlib.index.AtomicTerm;
 import java.nio.ByteBuffer;
 
 /**
- * Created by mkaloer on 03/05/15.
+ * Term type for integers.
  */
 public class IntegerTermType implements TermType {
 

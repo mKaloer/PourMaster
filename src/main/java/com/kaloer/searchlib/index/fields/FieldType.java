@@ -5,7 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 /**
- * Created by mkaloer on 03/05/15.
+ * Represents a field data type. Such a type is responsible for serializing and deserializing the data value.
  */
 public interface FieldType<T> {
 

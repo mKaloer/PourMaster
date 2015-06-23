@@ -52,7 +52,7 @@ public class DocumentTypeStore {
 
     public Class getDocumentType(int docTypeId) {
         if (docTypeId >= docId2TypeMapping.size()) {
-            throw new NoSuchElementException(String.format("No document with id %i found.", docTypeId));
+            throw new NoSuchElementException(String.format("No document with id %d found.", docTypeId));
         }
         return docId2TypeMapping.get(docTypeId);
     }

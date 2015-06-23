@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 /**
- * Created by mkaloer on 13/04/15.
+ * Represents a sequential document index, ordered by document id.
  */
 public class SequentialDocumentIndex extends DocumentIndex {
 

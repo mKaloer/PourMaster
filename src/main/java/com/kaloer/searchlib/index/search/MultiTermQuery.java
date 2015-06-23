@@ -17,7 +17,7 @@ import java.util.Iterator;
 import java.util.PriorityQueue;
 
 /**
- * Created by mkaloer on 07/05/15.
+ * Used to combine multiple {@link TermQuery} instances into one query.
  */
 public class MultiTermQuery extends Query {
 

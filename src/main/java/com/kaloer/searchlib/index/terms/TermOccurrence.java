@@ -1,7 +1,7 @@
 package com.kaloer.searchlib.index.terms;
 
 /**
- * Created by mkaloer on 08/05/15.
+ * Represents a single occurrence of a term in a field of a document.
  */
 public class TermOccurrence {
     private long position;

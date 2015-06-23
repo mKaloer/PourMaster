@@ -3,7 +3,7 @@ package com.kaloer.searchlib.index;
 import java.io.IOException;
 
 /**
- * Created by mkaloer on 13/04/15.
+ * Index for mapping document ids to actual documents.
  */
 public abstract class DocumentIndex {
 

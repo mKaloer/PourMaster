@@ -1,7 +1,7 @@
 package com.kaloer.searchlib.index.search;
 
 /**
- * Created by mkaloer on 07/05/15.
+ * Represents a document and its relevance score.
  */
 public class RankedDocument<T extends Object> implements Comparable<RankedDocument> {
 

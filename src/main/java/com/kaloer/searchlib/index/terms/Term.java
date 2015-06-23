@@ -6,7 +6,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.nio.ByteBuffer;
 
 /**
- * Created by mkaloer on 12/04/15.
+ * Represents a term in a field.
  */
 public class Term implements Comparable<Term> {
 

@@ -3,7 +3,7 @@ package com.kaloer.searchlib.index;
 import java.nio.ByteBuffer;
 
 /**
- * Created by mkaloer on 31/05/15.
+ * Represents an atomic term. Every {@link com.kaloer.searchlib.index.terms.Term} must consist of an atomic term.
  */
 public final class AtomicTerm implements Comparable<AtomicTerm> {
 

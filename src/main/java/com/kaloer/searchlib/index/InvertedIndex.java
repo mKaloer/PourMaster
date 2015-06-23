@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Created by mkaloer on 12/04/15.
+ * The main class for the inverted index used for lookup.
  */
 public class InvertedIndex {
 

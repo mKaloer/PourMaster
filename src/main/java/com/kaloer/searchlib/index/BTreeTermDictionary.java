@@ -18,7 +18,8 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 /**
- * Created by mkaloer on 12/04/15.
+ * Term dictionary based on a B-tree. This allows for efficient lookup even if the
+ * dictionary does not fit into main memory.
  */
 public class BTreeTermDictionary extends TermDictionary {
 

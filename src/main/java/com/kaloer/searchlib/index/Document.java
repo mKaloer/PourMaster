@@ -5,7 +5,7 @@ import com.kaloer.searchlib.index.fields.FieldData;
 import java.util.List;
 
 /**
- * Created by mkaloer on 13/04/15.
+ * Represents data about an indexed document.
  */
 public class Document {
 

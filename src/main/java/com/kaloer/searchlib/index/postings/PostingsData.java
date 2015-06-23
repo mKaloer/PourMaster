@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * Created by mkaloer on 12/04/15.
+ * Contains the data related to a specific document in the postings list.
  */
 public class PostingsData {
     private long documentId;

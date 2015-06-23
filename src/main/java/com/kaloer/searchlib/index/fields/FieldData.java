@@ -7,7 +7,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 /**
- * Created by mkaloer on 16/05/15.
+ * Represents
  */
 public class FieldData {
 

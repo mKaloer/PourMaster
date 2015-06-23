@@ -10,13 +10,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
- * Created by mkaloer on 12/04/15.
+ * Interface for Postings list used to retrieve documents for a given term.
  */
-public abstract class Postings {
+public interface Postings {
 
-    public abstract IOIterator<PostingsData> getDocumentsForTerm(long index, int docCount) throws IOException;
+    IOIterator<PostingsData> getDocumentsForTerm(long index, int docCount) throws IOException;
 
-    public abstract long insertTerm(PostingsData[] docs) throws IOException;
+    long insertTerm(PostingsData[] docs) throws IOException;
 
     /**
      * Wrties a partial postings list to a file which is later merged with other similar files. Please note that this
@@ -26,7 +26,7 @@ public abstract class Postings {
      * @param partialIndex The partial postings to write.
      * @return A list of {@code <term, postings_index>} pairs.
      */
-    public abstract ArrayList<Tuple<Term, Long>> writePartialPostingsToFile(String file, PartialIndexData partialIndex) throws IOException;
+    ArrayList<Tuple<Term, Long>> writePartialPostingsToFile(String file, PartialIndexData partialIndex) throws IOException;
 
     /**
      * Merges partial postings files into one (and replaces existing if exists).
@@ -36,7 +36,7 @@ public abstract class Postings {
      * @param docFreqs       A mapping from terms to their document frequencies in each partial file.
      * @return A map of {@code <term, postings_index>} pairs.
      */
-    public abstract HashMap<Term, Long> mergePartialPostingsFiles(ArrayList<String> partialFiles,
-                                                                  ArrayList<ArrayList<Tuple<Term, Long>>> termsToPointer,
-                                                                  ArrayList<HashMap<Term, Integer>> docFreqs) throws IOException;
+    HashMap<Term, Long> mergePartialPostingsFiles(ArrayList<String> partialFiles,
+                                                  ArrayList<ArrayList<Tuple<Term, Long>>> termsToPointer,
+                                                  ArrayList<HashMap<Term, Integer>> docFreqs) throws IOException;
 }

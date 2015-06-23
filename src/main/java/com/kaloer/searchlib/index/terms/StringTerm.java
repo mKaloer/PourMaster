@@ -1,7 +1,7 @@
 package com.kaloer.searchlib.index.terms;
 
 /**
- * Created by mkaloer on 03/05/15.
+ * A String term.
  */
 public class StringTerm extends Term {
 
