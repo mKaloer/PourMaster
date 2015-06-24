@@ -12,9 +12,7 @@ import com.kaloer.searchlib.index.terms.StringTerm;
 import com.kaloer.searchlib.index.terms.Term;
 import com.kaloer.searchlib.index.test.models.*;
 import com.kaloer.searchlib.index.util.IOIterator;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.apache.commons.io.FileUtils;
-import org.apache.directory.mavibot.btree.exception.BTreeAlreadyManagedException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -47,7 +45,7 @@ public class IndexTest {
         }
     }
 
-    protected static InvertedIndex createIndex(boolean wildcards) throws IOException, ReflectiveOperationException, BTreeAlreadyManagedException {
+    protected static InvertedIndex createIndex(boolean wildcards) throws IOException, ReflectiveOperationException {
         IndexConfig conf = new IndexConfig()
                 .setDocumentIndex(SequentialDocumentIndex.class)
                 .setBaseDirectory("idx")
@@ -58,7 +56,7 @@ public class IndexTest {
     }
 
     @Test
-    public void testStored() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testStored() throws IOException, ReflectiveOperationException {
 
         final InvertedIndex index = createIndex(false);
 
@@ -92,7 +90,7 @@ public class IndexTest {
     }
 
     @Test
-    public void testIndexed() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testIndexed() throws IOException, ReflectiveOperationException {
 
         final InvertedIndex index = createIndex(false);
 
@@ -114,7 +112,7 @@ public class IndexTest {
     }
 
     @Test
-    public void testInDifferentFieldNoMatches() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testInDifferentFieldNoMatches() throws IOException, ReflectiveOperationException {
 
         final InvertedIndex index = createIndex(false);
 
@@ -141,7 +139,7 @@ public class IndexTest {
     }
 
     @Test
-    public void testInDifferentFieldOneMatch() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testInDifferentFieldOneMatch() throws IOException, ReflectiveOperationException {
 
         final InvertedIndex index = createIndex(false);
 
@@ -168,7 +166,7 @@ public class IndexTest {
     }
 
     @Test
-    public void testIntegerField() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testIntegerField() throws IOException, ReflectiveOperationException {
 
         final InvertedIndex index = createIndex(false);
 
@@ -190,7 +188,7 @@ public class IndexTest {
     }
 
     @Test(expected = ConflictingFieldTypesException.class)
-    public void testDifferentFieldTypes() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testDifferentFieldTypes() throws IOException, ReflectiveOperationException {
 
         final InvertedIndex index = createIndex(false);
 
@@ -215,7 +213,7 @@ public class IndexTest {
     }
 
     @Test(expected = ClassCastException.class)
-    public void testFieldTypeDataTypeMismatch() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testFieldTypeDataTypeMismatch() throws IOException, ReflectiveOperationException {
 
         final InvertedIndex index = createIndex(false);
 
@@ -234,7 +232,7 @@ public class IndexTest {
     }
 
     @Test(expected = ClassCastException.class)
-    public void testFieldIncompatibleAnalyzer() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testFieldIncompatibleAnalyzer() throws IOException, ReflectiveOperationException {
         final InvertedIndex index = createIndex(false);
 
         TestDocInvalidAnalyzer d = new TestDocInvalidAnalyzer();
@@ -252,7 +250,7 @@ public class IndexTest {
     }
 
     @Test
-    public void testDocIndexSingleDoc() throws BTreeAlreadyManagedException, ReflectiveOperationException, IOException {
+    public void testDocIndexSingleDoc() throws ReflectiveOperationException, IOException {
         final InvertedIndex index = createIndex(false);
 
         TestDoc d = new TestDoc();
@@ -283,7 +281,7 @@ public class IndexTest {
     }
 
     @Test
-    public void testDocIndexMultipleDocs() throws BTreeAlreadyManagedException, ReflectiveOperationException, IOException {
+    public void testDocIndexMultipleDocs() throws ReflectiveOperationException, IOException {
         final InvertedIndex index = createIndex(false);
 
         TestDoc d1 = new TestDoc();
@@ -325,7 +323,7 @@ public class IndexTest {
     }
 
     @Test
-    public void testSameTermInTwoFields() throws BTreeAlreadyManagedException, ReflectiveOperationException, IOException {
+    public void testSameTermInTwoFields() throws ReflectiveOperationException, IOException {
         final InvertedIndex index = createIndex(false);
 
         TestDoc d1 = new TestDoc();
@@ -346,7 +344,7 @@ public class IndexTest {
     }
 
     @Test
-    public void testDocIndexDuplicatesInOneDoc() throws BTreeAlreadyManagedException, ReflectiveOperationException, IOException {
+    public void testDocIndexDuplicatesInOneDoc() throws ReflectiveOperationException, IOException {
         final InvertedIndex index = createIndex(false);
 
         TestDoc d1 = new TestDoc();
@@ -394,6 +392,27 @@ public class IndexTest {
                     1, postingsData.getPositions().size());
             Assert.assertEquals(String.format("Expected '%s' to be found at index %d", term, 2),
                     2, postingsData.getPositions().get(0).getPosition());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testLoadIndex() throws IOException, ReflectiveOperationException {
+        final InvertedIndex index = createIndex(false);
+
+        TestDoc d1 = new TestDoc();
+        d1.content = "This is a test and this is a test";
+        d1.author = "test and test";
+        final ArrayList<Object> docs = new ArrayList<Object>();
+        docs.add(d1);
+        try {
+            index.indexDocuments(docs, tmpDir);
+            TermDictionary.TermData data = index.getDictionary().findTerm(new StringTerm("test"));
+            Assert.assertEquals("Expected 'test' to be found in one document", 1, data.getDocFrequency());
+            IOIterator<PostingsData> postingsIterator = index.getPostings().getDocumentsForTerm(data.getPostingsIndex(), data.getDocFrequency());
+            PostingsData postingsData = postingsIterator.next();
+            Assert.assertEquals(4, postingsData.getPositions().size());
         } catch (IOException e) {
             e.printStackTrace();
         }

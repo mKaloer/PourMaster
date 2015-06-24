@@ -39,7 +39,7 @@ public class PhraseQueryTest {
     }
 
     @Test
-    public void testOneResult() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testOneResult() throws IOException, ReflectiveOperationException {
         final InvertedIndex index = IndexTest.createIndex(true);
 
         TestDoc d1 = new TestDoc();
@@ -58,7 +58,7 @@ public class PhraseQueryTest {
     }
 
     @Test
-    public void testAllMatches() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testAllMatches() throws IOException, ReflectiveOperationException {
         final InvertedIndex index = IndexTest.createIndex(true);
 
 
@@ -89,7 +89,7 @@ public class PhraseQueryTest {
     }
 
     @Test
-    public void testNoMatches() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testNoMatches() throws IOException, ReflectiveOperationException {
         final InvertedIndex index = IndexTest.createIndex(true);
 
 
@@ -120,7 +120,7 @@ public class PhraseQueryTest {
     }
 
     @Test
-    public void testTermInMiddle() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testTermInMiddle() throws IOException, ReflectiveOperationException {
         final InvertedIndex index = IndexTest.createIndex(true);
 
 
@@ -141,7 +141,7 @@ public class PhraseQueryTest {
     }
 
     @Test
-    public void testPartialMatches() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testPartialMatches() throws IOException, ReflectiveOperationException {
         final InvertedIndex index = IndexTest.createIndex(true);
 
 
@@ -181,7 +181,7 @@ public class PhraseQueryTest {
     }
 
     @Test
-    public void testRanking() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testRanking() throws IOException, ReflectiveOperationException {
         final InvertedIndex index = IndexTest.createIndex(true);
 
 

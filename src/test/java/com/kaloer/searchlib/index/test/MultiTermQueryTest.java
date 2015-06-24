@@ -41,7 +41,7 @@ public class MultiTermQueryTest {
     }
 
     @Test
-    public void testOneResult() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testOneResult() throws IOException, ReflectiveOperationException {
         final InvertedIndex index = IndexTest.createIndex(false);
 
         TestDoc d1 = new TestDoc();
@@ -61,7 +61,7 @@ public class MultiTermQueryTest {
     }
 
     @Test
-    public void testEmptyResult() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testEmptyResult() throws IOException, ReflectiveOperationException {
 
         final InvertedIndex index = IndexTest.createIndex(false);
 
@@ -82,7 +82,7 @@ public class MultiTermQueryTest {
     }
 
     @Test
-    public void testMultipleResults() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testMultipleResults() throws IOException, ReflectiveOperationException {
 
         final InvertedIndex index = IndexTest.createIndex(false);
 
@@ -134,7 +134,7 @@ public class MultiTermQueryTest {
     }
 
     @Test
-    public void testBoosting() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testBoosting() throws IOException, ReflectiveOperationException {
 
         final InvertedIndex index = IndexTest.createIndex(false);
 
@@ -180,7 +180,7 @@ public class MultiTermQueryTest {
     }
 
     @Test
-    public void testTwoFieldMatch() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testTwoFieldMatch() throws IOException, ReflectiveOperationException {
 
         final InvertedIndex index = IndexTest.createIndex(false);
 
@@ -222,7 +222,7 @@ public class MultiTermQueryTest {
     }
 
     @Test
-    public void testPartialMatchResult() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testPartialMatchResult() throws IOException, ReflectiveOperationException {
         final InvertedIndex index = IndexTest.createIndex(false);
 
         TestDoc d1 = new TestDoc();

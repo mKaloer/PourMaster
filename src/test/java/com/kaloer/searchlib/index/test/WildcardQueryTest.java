@@ -39,7 +39,7 @@ public class WildcardQueryTest {
     }
 
     @Test
-    public void testOneResult() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testOneResult() throws IOException, ReflectiveOperationException {
         final InvertedIndex index = IndexTest.createIndex(true);
 
         TestDoc d1 = new TestDoc();
@@ -58,7 +58,7 @@ public class WildcardQueryTest {
     }
 
     @Test
-    public void testMultipleResults() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testMultipleResults() throws IOException, ReflectiveOperationException {
         final InvertedIndex index = IndexTest.createIndex(true);
 
         TestDoc d1 = new TestDoc();
@@ -89,7 +89,7 @@ public class WildcardQueryTest {
     }
 
     @Test
-    public void testNoResults() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testNoResults() throws IOException, ReflectiveOperationException {
         final InvertedIndex index = IndexTest.createIndex(true);
 
         TestDoc d1 = new TestDoc();
@@ -108,7 +108,7 @@ public class WildcardQueryTest {
     }
 
     @Test
-    public void testPrefixQuery() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testPrefixQuery() throws IOException, ReflectiveOperationException {
         final InvertedIndex index = IndexTest.createIndex(true);
 
         TestDoc d1 = new TestDoc();
@@ -131,7 +131,7 @@ public class WildcardQueryTest {
     }
 
     @Test
-    public void testSuffixQuery() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testSuffixQuery() throws IOException, ReflectiveOperationException {
         final InvertedIndex index = IndexTest.createIndex(true);
 
         TestDoc d1 = new TestDoc();
@@ -154,7 +154,7 @@ public class WildcardQueryTest {
     }
 
     @Test
-    public void testEqualPrefixSuffixQuery() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testEqualPrefixSuffixQuery() throws IOException, ReflectiveOperationException {
         final InvertedIndex index = IndexTest.createIndex(true);
 
         TestDoc d1 = new TestDoc();
@@ -173,7 +173,7 @@ public class WildcardQueryTest {
     }
 
     @Test
-    public void testPrefixInSuffixQuery() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testPrefixInSuffixQuery() throws IOException, ReflectiveOperationException {
         final InvertedIndex index = IndexTest.createIndex(true);
 
         TestDoc d1 = new TestDoc();
@@ -192,7 +192,7 @@ public class WildcardQueryTest {
     }
 
     @Test
-    public void testSuffixInPrefixQuery() throws BTreeAlreadyManagedException, IOException, ReflectiveOperationException {
+    public void testSuffixInPrefixQuery() throws IOException, ReflectiveOperationException {
         final InvertedIndex index = IndexTest.createIndex(true);
 
         TestDoc d1 = new TestDoc();
