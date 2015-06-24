@@ -12,6 +12,7 @@ import com.kaloer.searchlib.index.terms.StringTerm;
 import com.kaloer.searchlib.index.terms.Term;
 import com.kaloer.searchlib.index.test.models.*;
 import com.kaloer.searchlib.index.util.IOIterator;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.apache.commons.io.FileUtils;
 import org.apache.directory.mavibot.btree.exception.BTreeAlreadyManagedException;
 import org.junit.After;
@@ -47,16 +48,12 @@ public class IndexTest {
     }
 
     protected static InvertedIndex createIndex(boolean wildcards) throws IOException, ReflectiveOperationException, BTreeAlreadyManagedException {
-        IndexConfig conf = null;
-        try {
-            conf = new IndexConfig().
-                    setDocumentIndex(new SequentialDocumentIndex("idx/docs.idx", "idx/docs_fields.idx", "idx/fields.db", "idx/field_types.db"))
-                    .setPostings(new SequentialPostings("idx/postings.db"))
-                    .setTermDictionary(new BTreeTermDictionary("idx/dict.db", wildcards))
-                    .setDocumentTypeFilePath("idx/te");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        IndexConfig conf = new IndexConfig()
+                .setDocumentIndex(SequentialDocumentIndex.class)
+                .setBaseDirectory("idx")
+                .setPostings(SequentialPostings.class)
+                .setTermDictionary(BTreeTermDictionary.class)
+                .set(BTreeTermDictionary.CONFIG_SUPPORT_WILDCARD_ID, Boolean.toString(wildcards));
         return new InvertedIndex(conf);
     }
 

@@ -27,10 +27,13 @@ public class InvertedIndex {
 
     public InvertedIndex(IndexConfig conf) throws IOException, ReflectiveOperationException {
         this.config = conf;
-        this.docIndex = conf.getDocumentIndex();
-        this.dictionary = conf.getTermDictionary();
+        this.docIndex = conf.getDocumentIndex().newInstance();
+        this.docIndex.init(conf);
+        this.dictionary = conf.getTermDictionary().newInstance();
+        this.dictionary.init(conf);
         this.docTypeStore = new DocumentTypeStore(conf.getDocumentTypeFilePath());
-        this.postings = conf.getPostings();
+        this.postings = conf.getPostings().newInstance();
+        this.postings.init(conf);
     }
 
     public List<RankedDocument> search(Query query, int count) throws IOException, ReflectiveOperationException {
@@ -206,5 +209,9 @@ public class InvertedIndex {
 
     public TermDictionary getDictionary() {
         return dictionary;
+    }
+
+    public IndexConfig getConfig() {
+        return config;
     }
 }

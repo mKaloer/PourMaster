@@ -23,6 +23,11 @@ import java.util.*;
  */
 public class BTreeTermDictionary extends TermDictionary {
 
+    public static final String CONFIG_DICTIONARY_FILE_ID = "termDictionary.file";
+    public static final String CONFIG_SUPPORT_WILDCARD_ID = "termDictionary.wildcard";
+    public static final String CONFIG_PAGE_SIZE = "termDictionary.pageSize";
+
+    private final static String DEFAULT_FILE_NAME = "termDict.idx";
     private final static String B_TREE_NAME = "termDictionary";
     private final static String SUFFIX_B_TREE_NAME = "termDictionary_suffix";
 
@@ -31,22 +36,22 @@ public class BTreeTermDictionary extends TermDictionary {
     private RecordManager recordManager;
     private boolean supportWildcardQuery;
 
-    public BTreeTermDictionary(String dictionaryFile) throws IOException, BTreeAlreadyManagedException {
-        this(dictionaryFile, -1, false);
-    }
+    public void init(IndexConfig config) throws IOException {
+        String dictionaryFile = config.getFilePath(CONFIG_DICTIONARY_FILE_ID, DEFAULT_FILE_NAME);
+        int pageSize = Integer.parseInt(config.get(CONFIG_PAGE_SIZE, "-1"));
+        this.supportWildcardQuery = Boolean.valueOf(config.get(CONFIG_SUPPORT_WILDCARD_ID, "true"));
 
-    public BTreeTermDictionary(String dictionaryFile, boolean supportWildcardQuery) throws IOException, BTreeAlreadyManagedException {
-        this(dictionaryFile, -1, supportWildcardQuery);
-    }
-
-    public BTreeTermDictionary(String dictionaryFile, int pageSize, boolean supportWildcardQuery) throws IOException, BTreeAlreadyManagedException {
-        super();
-        this.supportWildcardQuery = supportWildcardQuery;
         recordManager = new RecordManager(dictionaryFile);
         dictionary = recordManager.getManagedTree(B_TREE_NAME);
         // Create if it does not exist.
         if (dictionary == null) {
-            dictionary = recordManager.addBTree(B_TREE_NAME, new AtomicTermSerializer(), new TermDataSerializer(), false);
+            try {
+                dictionary = recordManager.addBTree(B_TREE_NAME, new AtomicTermSerializer(), new TermDataSerializer(), false);
+            } catch (BTreeAlreadyManagedException e) {
+                // This is thrown when recordManager already manages a btree with this name.
+                e.printStackTrace();
+                throw new IOException("BTree already exist (check that the file is not already in use!)");
+            }
             if (pageSize > 0) {
                 dictionary.setPageSize(pageSize);
             }
@@ -55,7 +60,13 @@ public class BTreeTermDictionary extends TermDictionary {
         if (supportWildcardQuery) {
             suffixDictionary = recordManager.getManagedTree(SUFFIX_B_TREE_NAME);
             if (suffixDictionary == null) {
-                suffixDictionary = recordManager.addBTree(SUFFIX_B_TREE_NAME, new AtomicTermSerializer(), new TermDataSerializer(), false);
+                try {
+                    suffixDictionary = recordManager.addBTree(SUFFIX_B_TREE_NAME, new AtomicTermSerializer(), new TermDataSerializer(), false);
+                } catch (BTreeAlreadyManagedException e) {
+                    // This is thrown when recordManager already manages a btree with this name.
+                    e.printStackTrace();
+                    throw new IOException("BTree already exist (check that the file is not already in use!)");
+                }
                 if (pageSize > 0) {
                     suffixDictionary.setPageSize(pageSize);
                 }

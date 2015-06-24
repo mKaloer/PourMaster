@@ -20,6 +20,13 @@ public abstract class TermDictionary {
     public abstract long getTotalDocCount();
 
     /**
+     * Initializes the TermDictionary.
+     * @param conf The configuration used for creating the index.
+     * @throws IOException Thrown if term file cannot be created or read correctly.
+     */
+    public abstract void init(IndexConfig conf) throws IOException;
+
+    /**
      * Contains information about a term stored in the dictionary.
      */
     public static class TermData {

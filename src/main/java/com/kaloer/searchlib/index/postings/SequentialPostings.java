@@ -1,5 +1,6 @@
 package com.kaloer.searchlib.index.postings;
 
+import com.kaloer.searchlib.index.IndexConfig;
 import com.kaloer.searchlib.index.PartialIndexData;
 import com.kaloer.searchlib.index.terms.Term;
 import com.kaloer.searchlib.index.terms.TermOccurrence;
@@ -20,11 +21,32 @@ import java.util.TreeMap;
  */
 public class SequentialPostings implements Postings {
 
+    public static final String CONFIG_FILE_ID = "postings.file";
+    private static final String DEFAULT_FILE_NAME = "postings.db";
     private String filePath;
 
-    public SequentialPostings(String file) throws IOException {
+    public SequentialPostings() {
+        // Empty constructor
+    }
+
+    /**
+     * Private constructor used for temporary postings file.
+     * @param file The postings file path.
+     * @throws IOException If the file cannot be created.
+     */
+    private SequentialPostings(String file) throws IOException {
         this.filePath = file;
-        File f = new File(file);
+        File f = new File(this.filePath);
+        f.createNewFile();
+    }
+
+    public void init(IndexConfig conf) throws IOException {
+        if (conf.containsKey(CONFIG_FILE_ID)) {
+            this.filePath = conf.get(CONFIG_FILE_ID);
+        } else {
+            this.filePath = new File(conf.getBaseDirectory(), DEFAULT_FILE_NAME).getPath();
+        }
+        File f = new File(this.filePath);
         f.createNewFile();
     }
 

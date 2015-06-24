@@ -1,5 +1,6 @@
 package com.kaloer.searchlib.index.postings;
 
+import com.kaloer.searchlib.index.IndexConfig;
 import com.kaloer.searchlib.index.PartialIndexData;
 import com.kaloer.searchlib.index.terms.Term;
 import com.kaloer.searchlib.index.util.IOIterator;
@@ -39,4 +40,6 @@ public interface Postings {
     HashMap<Term, Long> mergePartialPostingsFiles(ArrayList<String> partialFiles,
                                                   ArrayList<ArrayList<Tuple<Term, Long>>> termsToPointer,
                                                   ArrayList<HashMap<Term, Integer>> docFreqs) throws IOException;
+
+    void init(IndexConfig conf) throws IOException;
 }

@@ -9,7 +9,9 @@ public abstract class DocumentIndex {
 
     private FieldDataStore fieldDataStore;
 
-    public DocumentIndex(FieldDataStore fieldDataStore) {
+    public abstract void init(IndexConfig config) throws IOException;
+
+    protected void setFieldDataStore(FieldDataStore fieldDataStore) {
         this.fieldDataStore = fieldDataStore;
     }
 

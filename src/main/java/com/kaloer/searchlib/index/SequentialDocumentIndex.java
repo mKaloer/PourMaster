@@ -2,7 +2,6 @@ package com.kaloer.searchlib.index;
 
 import com.kaloer.searchlib.index.fields.FieldList;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
@@ -11,6 +10,15 @@ import java.io.RandomAccessFile;
  */
 public class SequentialDocumentIndex extends DocumentIndex {
 
+    public static final String CONFIG_DOCS_FILE_PATH_ID = "docIndex.file";
+    public static final String CONFIG_FIELD_DATA_PATH_ID = "docIndex.fieldData.file";
+    public static final String CONFIG_FIELD_INFO_PATH_ID = "docIndex.fieldInfo.file";
+    public static final String CONFIG_FIELD_TYPES_PATH_ID = "docIndex.fieldTypes.file";
+
+    private static final String DEFAULT_DOCS_FILE_NAME = "docIndex.idx";
+    private static final String DEFAULT_FIELD_DATA_FILE_NAME = "fieldData.idx";
+    private static final String DEFAULT_FIELD_INFO_FILE_NAME= "fieldInfo.idx";
+    private static final String DEFAULT_FIELD_TYPES_FILE_NAME = "fieldTypes.idx";
     /**
      * Size of metadata part in bytes.
      */
@@ -19,10 +27,19 @@ public class SequentialDocumentIndex extends DocumentIndex {
     private String filePath;
     private long docCount = -1;
 
-    public SequentialDocumentIndex(String fileName, String fieldDataFileName, String fieldInfoFileName, String fieldTypesFileName) throws IOException, ReflectiveOperationException {
-        super(new HeapFieldDataStore(fieldDataFileName, fieldInfoFileName, fieldTypesFileName));
-        this.filePath = fileName;
-        new File(filePath).createNewFile();
+    @Override
+    public void init(IndexConfig config) throws IOException {
+        this.filePath = config.getFilePath(CONFIG_DOCS_FILE_PATH_ID, DEFAULT_DOCS_FILE_NAME);
+        String fieldDataFileName = config.getFilePath(CONFIG_FIELD_DATA_PATH_ID, DEFAULT_FIELD_DATA_FILE_NAME);
+        String fieldInfoFileName = config.getFilePath(CONFIG_FIELD_INFO_PATH_ID, DEFAULT_FIELD_INFO_FILE_NAME);
+        String fieldTypesFileName = config.getFilePath(CONFIG_FIELD_TYPES_PATH_ID, DEFAULT_FIELD_TYPES_FILE_NAME);
+
+        this.filePath = config.getFilePath(CONFIG_DOCS_FILE_PATH_ID, DEFAULT_DOCS_FILE_NAME);
+        try {
+            setFieldDataStore(new HeapFieldDataStore(fieldDataFileName, fieldInfoFileName, fieldTypesFileName));
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
