@@ -399,23 +399,36 @@ public class IndexTest {
 
     @Test
     public void testLoadIndex() throws IOException, ReflectiveOperationException {
-        final InvertedIndex index = createIndex(false);
+        InvertedIndex index = createIndex(false);
 
         TestDoc d1 = new TestDoc();
         d1.content = "This is a test and this is a test";
         d1.author = "test and test";
+        TestDoc2 d2 = new TestDoc2();
+        d2.content2 = "This is a test";
+        d2.author2 = "test";
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d1);
-        try {
-            index.indexDocuments(docs, tmpDir);
-            TermDictionary.TermData data = index.getDictionary().findTerm(new StringTerm("test"));
-            Assert.assertEquals("Expected 'test' to be found in one document", 1, data.getDocFrequency());
-            IOIterator<PostingsData> postingsIterator = index.getPostings().getDocumentsForTerm(data.getPostingsIndex(), data.getDocFrequency());
-            PostingsData postingsData = postingsIterator.next();
-            Assert.assertEquals(4, postingsData.getPositions().size());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        docs.add(d2);
+        index.indexDocuments(docs, tmpDir);
+
+        // Reload index
+        index = createIndex(false);
+
+        List<RankedDocument> results = index.search(new TermQuery(new StringTerm("test"), "content"), -1);
+        Assert.assertEquals(1, results.size());
+        Assert.assertEquals(TestDoc.class, results.get(0).getDocument().getClass());
+        results = index.search(new TermQuery(new StringTerm("test"), "content2"), -1);
+        Assert.assertEquals(1, results.size());
+        Assert.assertEquals(TestDoc2.class, results.get(0).getDocument().getClass());
+
+        TermDictionary.TermData data = index.getDictionary().findTerm(new StringTerm("test"));
+        Assert.assertEquals("Expected 'test' to be found in two documents", 2, data.getDocFrequency());
+        IOIterator<PostingsData> postingsIterator = index.getPostings().getDocumentsForTerm(data.getPostingsIndex(), data.getDocFrequency());
+        PostingsData postingsData = postingsIterator.next();
+        Assert.assertEquals(4, postingsData.getPositions().size());
+        postingsData = postingsIterator.next();
+        Assert.assertEquals(2, postingsData.getPositions().size());
     }
 
 }

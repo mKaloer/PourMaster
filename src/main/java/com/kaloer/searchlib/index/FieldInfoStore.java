@@ -23,7 +23,10 @@ public class FieldInfoStore {
     public FieldInfoStore(String fieldStorePath, String fieldTypeStorePath) throws IOException, ReflectiveOperationException {
         this.filePath = fieldStorePath;
         this.fieldTypeStore = new FieldTypeStore(fieldTypeStorePath);
-        new File(filePath).createNewFile();
+        File file = new File(filePath);
+        if (!file.exists()) {
+            file.createNewFile();
+        }
         loadFromFile();
     }
 

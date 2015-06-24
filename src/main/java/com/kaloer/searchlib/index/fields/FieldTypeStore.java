@@ -15,7 +15,10 @@ public class FieldTypeStore {
 
     public FieldTypeStore(String filePath) throws IOException, ReflectiveOperationException {
         this.filePath = filePath;
-        new File(filePath).createNewFile();
+        File file = new File(filePath);
+        if (!file.exists()) {
+            file.createNewFile();
+        }
         // Reload from disc
         loadFromFile();
     }

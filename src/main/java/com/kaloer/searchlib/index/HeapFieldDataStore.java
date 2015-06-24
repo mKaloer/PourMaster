@@ -20,7 +20,10 @@ public class HeapFieldDataStore extends FieldDataStore {
     public HeapFieldDataStore(String filePath, String fieldInfoStorePath, String fieldTypeStorePath) throws IOException, ReflectiveOperationException {
         super();
         this.filePath = filePath;
-        new File(filePath).createNewFile();
+        File file = new File(filePath);
+        if (!file.exists()) {
+            file.createNewFile();
+        }
         this.fieldInfoStore = new FieldInfoStore(fieldInfoStorePath, fieldTypeStorePath);
     }
 

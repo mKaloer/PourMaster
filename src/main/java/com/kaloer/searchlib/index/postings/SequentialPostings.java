@@ -37,7 +37,9 @@ public class SequentialPostings implements Postings {
     private SequentialPostings(String file) throws IOException {
         this.filePath = file;
         File f = new File(this.filePath);
-        f.createNewFile();
+        if (!f.exists()) {
+            f.createNewFile();
+        }
     }
 
     public void init(IndexConfig conf) throws IOException {
@@ -47,7 +49,9 @@ public class SequentialPostings implements Postings {
             this.filePath = new File(conf.getBaseDirectory(), DEFAULT_FILE_NAME).getPath();
         }
         File f = new File(this.filePath);
-        f.createNewFile();
+        if (!f.exists()) {
+            f.createNewFile();
+        }
     }
 
     public IOIterator<PostingsData> getDocumentsForTerm(long index, int docCount) throws IOException {

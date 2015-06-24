@@ -22,7 +22,10 @@ public class DocumentTypeStore {
 
     public DocumentTypeStore(String docTypeStorePath) throws IOException, ReflectiveOperationException {
         this.filePath = docTypeStorePath;
-        new File(filePath).createNewFile();
+        File file = new File(filePath);
+        if (!file.exists()) {
+            file.createNewFile();
+        }
         loadFromFile();
     }
 
@@ -39,7 +42,7 @@ public class DocumentTypeStore {
             if (index > 255) {
                 throw new IndexOutOfBoundsException("Too many document types!");
             }
-            file.writeByte(index);
+            file.writeUTF(docType.getName());
             type2DocIdMapping.put(docType, index);
             docId2TypeMapping.add(docType);
             return index;
