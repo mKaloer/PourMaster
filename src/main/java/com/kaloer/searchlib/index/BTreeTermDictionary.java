@@ -85,6 +85,11 @@ public class BTreeTermDictionary extends TermDictionary {
 
     @Override
     public List<TermData> findTerm(Term prefix, Term suffix) throws IOException {
+
+        if (suffixDictionary == null) {
+            throw new UnsupportedOperationException("Prefix/suffix queries not enabled.");
+        }
+
         Term reverseSuffix = null;
         if (suffix != null) {
             reverseSuffix = new Term(suffix.getTermType().reverse(suffix.getValue()), suffix.getTermType());
