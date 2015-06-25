@@ -60,6 +60,9 @@ public class InvertedIndex {
     }
 
     public void indexDocuments(Iterator<Object> docStream) throws IOException, ReflectiveOperationException {
+        // Clear index
+        deleteAll();
+
         String tmpDir = config.getTmpDir();
         PartialIndexData partialIndex = new PartialIndexData();
         ArrayList<String> partialFiles = new ArrayList<String>(); // Partial files paths
@@ -205,6 +208,13 @@ public class InvertedIndex {
         }
 
         return termIndices;
+    }
+
+    public void deleteAll() throws IOException {
+        docTypeStore.deleteAll();
+        dictionary.deleteAll();
+        docIndex.deleteAll();
+        postings.deleteAll();
     }
 
     public DocumentIndex getDocIndex() {

@@ -42,4 +42,6 @@ public interface Postings {
                                                   ArrayList<HashMap<Term, Integer>> docFreqs) throws IOException;
 
     void init(IndexConfig conf) throws IOException;
+
+    void deleteAll() throws IOException;
 }

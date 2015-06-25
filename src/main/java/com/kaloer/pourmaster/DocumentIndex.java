@@ -24,4 +24,6 @@ public abstract class DocumentIndex {
     }
 
     public abstract long getDocumentCount() throws IOException;
+
+    public abstract void deleteAll() throws IOException;
 }

@@ -18,4 +18,5 @@ public abstract class FieldDataStore {
 
     public abstract Field getField(int id) throws IOException;
 
+    public abstract void deleteAll() throws IOException;
 }

@@ -1,11 +1,13 @@
 package com.kaloer.pourmaster;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
+import java.util.Random;
 
 /**
  * Stores different document classes
@@ -74,6 +76,15 @@ public class DocumentTypeStore {
                 file.close();
             }
         }
+    }
+
+    protected void deleteAll() throws IOException {
+        // Delete file contents
+        RandomAccessFile file = new RandomAccessFile(filePath, "rw");
+        file.setLength(0);
+        // Delete cached contents
+        docId2TypeMapping.clear();
+        type2DocIdMapping.clear();
     }
 
 }

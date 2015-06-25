@@ -2,6 +2,7 @@ package com.kaloer.pourmaster;
 
 import com.kaloer.pourmaster.terms.Term;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +19,8 @@ public abstract class TermDictionary {
     public abstract void addTerm(Term term, TermData data) throws IOException;
 
     public abstract long getTotalDocCount();
+
+    abstract void deleteAll() throws IOException;
 
     /**
      * Initializes the TermDictionary.

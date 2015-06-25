@@ -54,6 +54,11 @@ public class SequentialPostings implements Postings {
         }
     }
 
+    public void deleteAll() throws IOException {
+        RandomAccessFile file = new RandomAccessFile(filePath, "rw");
+        file.setLength(0);
+    }
+
     public IOIterator<PostingsData> getDocumentsForTerm(long index, int docCount) throws IOException {
         RandomAccessFile file = new RandomAccessFile(filePath, "r");
         file.seek(index);

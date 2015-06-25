@@ -93,4 +93,14 @@ public class FieldInfoStore {
             }
         }
     }
+
+    public void deleteAll() throws IOException {
+        // Clear file
+        RandomAccessFile file = new RandomAccessFile(filePath, "rw");
+        file.setLength(0);
+        // Clear cache
+        fieldNameMapping.clear();
+        fieldIdMapping.clear();
+        fieldTypeStore.deleteAll();
+    }
 }

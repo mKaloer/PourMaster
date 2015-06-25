@@ -73,4 +73,10 @@ public class FieldTypeStore {
             }
         }
     }
+
+    public void deleteAll() throws IOException {
+        RandomAccessFile file = new RandomAccessFile(filePath, "rw");
+        file.setLength(0);
+        fieldTypeMapping.clear();
+    }
 }

@@ -109,4 +109,11 @@ public class SequentialDocumentIndex extends DocumentIndex {
         }
         return docCount;
     }
+
+    @Override
+    public void deleteAll() throws IOException {
+        RandomAccessFile file = new RandomAccessFile(filePath, "rw");
+        file.setLength(0);
+        getFieldDataStore().deleteAll();
+    }
 }

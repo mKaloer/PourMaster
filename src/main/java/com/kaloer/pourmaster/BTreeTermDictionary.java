@@ -13,7 +13,9 @@ import org.apache.directory.mavibot.btree.serializer.IntSerializer;
 import org.apache.directory.mavibot.btree.serializer.LongSerializer;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -35,12 +37,16 @@ public class BTreeTermDictionary extends TermDictionary {
     private BTree<AtomicTerm, TermData> suffixDictionary = null;
     private RecordManager recordManager;
     private boolean supportWildcardQuery;
+    private String dictionaryFile;
 
     public void init(IndexConfig config) throws IOException {
-        String dictionaryFile = config.getFilePath(CONFIG_DICTIONARY_FILE_ID, DEFAULT_FILE_NAME);
+        dictionaryFile = config.getFilePath(CONFIG_DICTIONARY_FILE_ID, DEFAULT_FILE_NAME);
         int pageSize = Integer.parseInt(config.get(CONFIG_PAGE_SIZE, "-1"));
         this.supportWildcardQuery = Boolean.valueOf(config.get(CONFIG_SUPPORT_WILDCARD_ID, "true"));
+        setupBTree(pageSize);
+    }
 
+    private void setupBTree(int pageSize) throws IOException {
         recordManager = new RecordManager(dictionaryFile);
         dictionary = recordManager.getManagedTree(B_TREE_NAME);
         // Create if it does not exist.
@@ -175,6 +181,15 @@ public class BTreeTermDictionary extends TermDictionary {
             AtomicTerm reversedTerm = new AtomicTerm(term.getTermType().reverse(term.getValue()), atomicTerm.getDataType());
             suffixDictionary.insert(reversedTerm, data);
         }
+    }
+
+    @Override
+    void deleteAll() throws IOException {
+        // Delete dictionary file
+        RandomAccessFile file = new RandomAccessFile(dictionaryFile, "rw");
+        file.setLength(0);
+        // Setup new btree
+        setupBTree(recordManager.getPageSize());
     }
 
     @Override

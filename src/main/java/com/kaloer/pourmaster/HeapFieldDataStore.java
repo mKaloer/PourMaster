@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Stores field data in a large heap file in no specific order.
@@ -82,6 +83,13 @@ public class HeapFieldDataStore extends FieldDataStore {
     @Override
     public Field getField(int id) throws IOException {
         return fieldInfoStore.getFieldById(id);
+    }
+
+    @Override
+    public void deleteAll() throws IOException {
+        RandomAccessFile file = new RandomAccessFile(filePath, "rw");
+        file.setLength(0);
+        fieldInfoStore.deleteAll();
     }
 
     @Override
