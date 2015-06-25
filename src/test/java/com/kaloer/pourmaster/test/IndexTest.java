@@ -399,6 +399,17 @@ public class IndexTest {
     }
 
     @Test
+    public void testSearchBeforeIndexed() throws IOException, ReflectiveOperationException {
+
+        final InvertedIndex index = createIndex(false);
+
+        MultiTermQuery query = new MultiTermQuery();
+        query.add(new TermQuery(new IntegerTerm(42), "id"));
+        List<RankedDocument> results = index.search(query, -1);
+        Assert.assertEquals("Expected zero results", 0, results.size());
+    }
+
+    @Test
     public void testLoadIndex() throws IOException, ReflectiveOperationException {
         InvertedIndex index = createIndex(false);
 
