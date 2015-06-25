@@ -26,12 +26,12 @@ import java.util.List;
 
 public class IndexTest {
 
-    private final File tmpDir = new File("tmp");
+    protected static final File TMP_DIR = new File("tmp");
     private final File indexDir = new File("idx");
 
     @Before
     public void setup() {
-        tmpDir.mkdirs();
+        TMP_DIR.mkdirs();
         indexDir.mkdirs();
     }
 
@@ -39,7 +39,7 @@ public class IndexTest {
     public void tearDown() {
         try {
             FileUtils.deleteDirectory(indexDir);
-            FileUtils.deleteDirectory(tmpDir);
+            FileUtils.deleteDirectory(TMP_DIR);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -51,7 +51,8 @@ public class IndexTest {
                 .setBaseDirectory("idx")
                 .setPostings(SequentialPostings.class)
                 .setTermDictionary(BTreeTermDictionary.class)
-                .set(BTreeTermDictionary.CONFIG_SUPPORT_WILDCARD_ID, Boolean.toString(wildcards));
+                .set(BTreeTermDictionary.CONFIG_SUPPORT_WILDCARD_ID, Boolean.toString(wildcards))
+                .setTmpDir(TMP_DIR.getPath());
         return new InvertedIndex(conf);
     }
 
@@ -71,7 +72,7 @@ public class IndexTest {
         docs.add(d1);
         docs.add(d2);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             MultiTermQuery query = new MultiTermQuery();
             query.add(new TermQuery(new StringTerm("test"), "content"));
             query.add(new TermQuery(new StringTerm("test"), "content2"));
@@ -101,7 +102,7 @@ public class IndexTest {
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d1);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             MultiTermQuery query = new MultiTermQuery();
             query.add(new TermQuery(new IntegerTerm(42), "id"));
             List<RankedDocument> results = index.search(query, -1);
@@ -128,7 +129,7 @@ public class IndexTest {
         docs.add(d1);
         docs.add(d2);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             MultiTermQuery query = new MultiTermQuery();
             query.add(new TermQuery(new StringTerm("test"), "author"));
             List<RankedDocument> results = index.search(query, -1);
@@ -155,7 +156,7 @@ public class IndexTest {
         docs.add(d1);
         docs.add(d2);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             MultiTermQuery query = new MultiTermQuery();
             query.add(new TermQuery(new StringTerm("test"), "author"));
             List<RankedDocument> results = index.search(query, -1);
@@ -177,7 +178,7 @@ public class IndexTest {
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d1);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             MultiTermQuery query = new MultiTermQuery();
             query.add(new TermQuery(new IntegerTerm(42), "id2"));
             List<RankedDocument> results = index.search(query, -1);
@@ -203,7 +204,7 @@ public class IndexTest {
         docs.add(d1);
         docs.add(d2);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             MultiTermQuery query = new MultiTermQuery();
             query.add(new TermQuery(new IntegerTerm(42), "id2"));
             List<RankedDocument> results = index.search(query, -1);
@@ -222,7 +223,7 @@ public class IndexTest {
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             MultiTermQuery query = new MultiTermQuery();
             query.add(new TermQuery(new IntegerTerm(42), "id2"));
             List<RankedDocument> results = index.search(query, -1);
@@ -240,7 +241,7 @@ public class IndexTest {
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             MultiTermQuery query = new MultiTermQuery();
             query.add(new TermQuery(new IntegerTerm(42), "id2"));
             List<RankedDocument> results = index.search(query, -1);
@@ -259,7 +260,7 @@ public class IndexTest {
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             TestDoc.SimpleStringAnalyzer analyzer = new TestDoc.SimpleStringAnalyzer();
             Iterator<Token> tokens = analyzer.analyze(d.content);
             int tokenIndex = 0;
@@ -298,7 +299,7 @@ public class IndexTest {
         docs.add(d2);
         docs.add(d3);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             TestDoc.SimpleStringAnalyzer analyzer = new TestDoc.SimpleStringAnalyzer();
             Iterator<Token> tokens = analyzer.analyze(d1.content);
             int tokenIndex = 0;
@@ -332,7 +333,7 @@ public class IndexTest {
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d1);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             TermDictionary.TermData data = index.getDictionary().findTerm(new StringTerm("test"));
             Assert.assertEquals("Expected 'test' to be found in one document", 1, data.getDocFrequency());
             IOIterator<PostingsData> postingsIterator = index.getPostings().getDocumentsForTerm(data.getPostingsIndex(), data.getDocFrequency());
@@ -353,7 +354,7 @@ public class IndexTest {
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d1);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
 
             // 'This'
             String term = "This";
@@ -410,7 +411,7 @@ public class IndexTest {
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d1);
         docs.add(d2);
-        index.indexDocuments(docs, tmpDir);
+        index.indexDocuments(docs);
 
         // Reload index
         index = createIndex(false);

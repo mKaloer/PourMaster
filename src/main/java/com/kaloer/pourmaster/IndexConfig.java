@@ -13,6 +13,7 @@ import java.util.Properties;
  */
 public class IndexConfig {
 
+    public static final String TMP_DIR_ID = "index.tmpDirectory";
     public static final String BASE_DIR_ID = "index.baseDirectory";
     public static final String DOC_INDEX_CLASS_ID = "index.documentIndex";
     public static final String TERM_DICTIONARY_CLASS_ID = "index.termDictionary";
@@ -95,6 +96,15 @@ public class IndexConfig {
 
     public String getBaseDirectory() {
         return get(BASE_DIR_ID, "index");
+    }
+
+    public IndexConfig setTmpDir(String dir) {
+        set(TMP_DIR_ID, dir);
+        return this;
+    }
+
+    public String getTmpDir() {
+        return get(TMP_DIR_ID, ".tmp");
     }
 
     public String getFilePath(String key, String defaultFileName) {

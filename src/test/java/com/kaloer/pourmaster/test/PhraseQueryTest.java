@@ -18,12 +18,11 @@ import java.util.List;
 
 public class PhraseQueryTest {
 
-    private final File tmpDir = new File("tmp");
     private final File indexDir = new File("idx");
 
     @Before
     public void setup() {
-        tmpDir.mkdirs();
+        IndexTest.TMP_DIR.mkdirs();
         indexDir.mkdirs();
     }
 
@@ -31,7 +30,7 @@ public class PhraseQueryTest {
     public void tearDown() {
         try {
             FileUtils.deleteDirectory(indexDir);
-            FileUtils.deleteDirectory(tmpDir);
+            FileUtils.deleteDirectory(IndexTest.TMP_DIR);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -47,7 +46,7 @@ public class PhraseQueryTest {
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d1);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             PhraseQuery query = new PhraseQuery("content", new StringTerm("a"), new StringTerm("test"));
             List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Expected one result", 1, d.size());
@@ -78,7 +77,7 @@ public class PhraseQueryTest {
         docs.add(d2);
         docs.add(d3);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             PhraseQuery query = new PhraseQuery("content", new StringTerm("This"), new StringTerm("is"));
             List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Expected three results", 3, d.size());
@@ -109,7 +108,7 @@ public class PhraseQueryTest {
         docs.add(d2);
         docs.add(d3);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             PhraseQuery query = new PhraseQuery("content", new StringTerm("This"), new StringTerm("is"), new StringTerm("stupid"));
             List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Expected zero results", 0, d.size());
@@ -130,7 +129,7 @@ public class PhraseQueryTest {
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d1);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             PhraseQuery query = new PhraseQuery("content", new StringTerm("This"), new StringTerm("is"));
             List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Expected zero results", 0, d.size());
@@ -167,7 +166,7 @@ public class PhraseQueryTest {
         docs.add(d3);
         docs.add(d4);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             PhraseQuery query = new PhraseQuery("content", new StringTerm("This"), new StringTerm("is"));
             List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Expected three results", 3, d.size());
@@ -201,7 +200,7 @@ public class PhraseQueryTest {
         docs.add(d2);
         docs.add(d3);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             PhraseQuery query = new PhraseQuery("content", new StringTerm("This"), new StringTerm("is"));
             List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Expected three results", 3, d.size());

@@ -55,11 +55,12 @@ public class InvertedIndex {
         return docs;
     }
 
-    public void indexDocuments(Iterable<Object> docStream, File tmpDir) throws IOException, ReflectiveOperationException {
-        this.indexDocuments(docStream.iterator(), tmpDir);
+    public void indexDocuments(Iterable<Object> docStream) throws IOException, ReflectiveOperationException {
+        this.indexDocuments(docStream.iterator());
     }
 
-    public void indexDocuments(Iterator<Object> docStream, File tmpDir) throws IOException, ReflectiveOperationException {
+    public void indexDocuments(Iterator<Object> docStream) throws IOException, ReflectiveOperationException {
+        String tmpDir = config.getTmpDir();
         PartialIndexData partialIndex = new PartialIndexData();
         ArrayList<String> partialFiles = new ArrayList<String>(); // Partial files paths
         // Term indices in (per partial file)
@@ -150,6 +151,14 @@ public class InvertedIndex {
         // Update dictionary with new pointers
         for (Map.Entry<Term, Long> t : indices.entrySet()) {
             this.dictionary.findTerm(t.getKey()).setPostingsIndex(t.getValue());
+        }
+
+        // Delete tmp files
+        for (String tmpFileName : partialFiles) {
+            File f = new File(tmpFileName);
+            if (f.exists()) {
+                f.delete();
+            }
         }
     }
 

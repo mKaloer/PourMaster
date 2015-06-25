@@ -18,13 +18,12 @@ import java.io.IOException;
 
 public class ConfigTest {
 
-    private final File tmpDir = new File("tmp");
     private final File indexDir = new File("idx");
     private final File configFile = new File("config.proerties");
 
     @Before
     public void setup() {
-        tmpDir.mkdirs();
+        IndexTest.TMP_DIR.mkdirs();
         indexDir.mkdirs();
     }
 
@@ -32,7 +31,7 @@ public class ConfigTest {
     public void tearDown() {
         try {
             FileUtils.deleteDirectory(indexDir);
-            FileUtils.deleteDirectory(tmpDir);
+            FileUtils.deleteDirectory(IndexTest.TMP_DIR);
             configFile.delete();
         } catch (IOException e) {
             e.printStackTrace();
@@ -52,7 +51,8 @@ public class ConfigTest {
                 .setBaseDirectory("idx")
                 .setPostings(SequentialPostings.class)
                 .setTermDictionary(BTreeTermDictionary.class)
-                .set(BTreeTermDictionary.CONFIG_SUPPORT_WILDCARD_ID, Boolean.toString(wildcards));
+                .set(BTreeTermDictionary.CONFIG_SUPPORT_WILDCARD_ID, Boolean.toString(wildcards))
+                .setTmpDir(IndexTest.TMP_DIR.getPath());
         return new InvertedIndex(conf);
     }
 

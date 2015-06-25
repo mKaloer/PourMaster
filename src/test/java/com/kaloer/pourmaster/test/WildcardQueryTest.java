@@ -18,12 +18,11 @@ import java.util.List;
 
 public class WildcardQueryTest {
 
-    private final File tmpDir = new File("tmp");
     private final File indexDir = new File("idx");
 
     @Before
     public void setup() {
-        tmpDir.mkdirs();
+        IndexTest.TMP_DIR.mkdirs();
         indexDir.mkdirs();
     }
 
@@ -31,7 +30,7 @@ public class WildcardQueryTest {
     public void tearDown() {
         try {
             FileUtils.deleteDirectory(indexDir);
-            FileUtils.deleteDirectory(tmpDir);
+            FileUtils.deleteDirectory(IndexTest.TMP_DIR);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -47,7 +46,7 @@ public class WildcardQueryTest {
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d1);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             WildcardQuery query = new WildcardQuery(new StringTerm("foo"), new StringTerm("bar"), "content");
             List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Expected one result", 1, d.size());
@@ -78,7 +77,7 @@ public class WildcardQueryTest {
         docs.add(d3);
         docs.add(d4);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             WildcardQuery query = new WildcardQuery(new StringTerm("foo"), new StringTerm("bar"), "content");
             List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Expected three results", 3, d.size());
@@ -97,7 +96,7 @@ public class WildcardQueryTest {
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d1);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             WildcardQuery query = new WildcardQuery(new StringTerm("foo"), new StringTerm("bar"), "content");
             List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Expected zero results", 0, d.size());
@@ -120,7 +119,7 @@ public class WildcardQueryTest {
         docs.add(d1);
         docs.add(d2);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             WildcardQuery query = new WildcardQuery(new StringTerm("exa"), null, "content");
             List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Expected one result", 1, d.size());
@@ -143,7 +142,7 @@ public class WildcardQueryTest {
         docs.add(d1);
         docs.add(d2);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             WildcardQuery query = new WildcardQuery(null, new StringTerm("mple"), "content");
             List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Expected one result", 1, d.size());
@@ -162,7 +161,7 @@ public class WildcardQueryTest {
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d1);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             WildcardQuery query = new WildcardQuery(new StringTerm("abbabba"), new StringTerm("abbabba"), "content");
             List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Expected zero results", 0, d.size());
@@ -181,7 +180,7 @@ public class WildcardQueryTest {
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d1);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             WildcardQuery query = new WildcardQuery(new StringTerm("abbabba"), new StringTerm("ba"), "content");
             List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Expected zero results", 0, d.size());
@@ -200,7 +199,7 @@ public class WildcardQueryTest {
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d1);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             WildcardQuery query = new WildcardQuery(new StringTerm("ab"), new StringTerm("abbabba"), "content");
             List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Expected zero results", 0, d.size());

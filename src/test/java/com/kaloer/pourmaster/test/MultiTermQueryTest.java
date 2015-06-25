@@ -20,12 +20,11 @@ import java.util.List;
 
 public class MultiTermQueryTest {
 
-    private final File tmpDir = new File("tmp");
     private final File indexDir = new File("idx");
 
     @Before
     public void setup() {
-        tmpDir.mkdirs();
+        IndexTest.TMP_DIR.mkdirs();
         indexDir.mkdirs();
     }
 
@@ -33,7 +32,7 @@ public class MultiTermQueryTest {
     public void tearDown() {
         try {
             FileUtils.deleteDirectory(indexDir);
-            FileUtils.deleteDirectory(tmpDir);
+            FileUtils.deleteDirectory(IndexTest.TMP_DIR);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -49,7 +48,7 @@ public class MultiTermQueryTest {
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d1);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             MultiTermQuery query = new MultiTermQuery();
             query.add(new TermQuery(new StringTerm("test"), "content"));
             List<RankedDocument> d = index.search(query, -1);
@@ -70,7 +69,7 @@ public class MultiTermQueryTest {
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d1);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             MultiTermQuery query = new MultiTermQuery();
             query.add(new TermQuery(new StringTerm("Foo"), "content"));
             List<RankedDocument> d = index.search(query, -1);
@@ -115,7 +114,7 @@ public class MultiTermQueryTest {
         docs.add(d5);
         docs.add(d6);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             MultiTermQuery query = new MultiTermQuery();
             query.add(new TermQuery(new StringTerm("test"), "content"));
             query.add(new TermQuery(new StringTerm("test"), "content2"));
@@ -161,7 +160,7 @@ public class MultiTermQueryTest {
         docs.add(d4);
         docs.add(d5);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             MultiTermQuery query = new MultiTermQuery();
             query.add(new TermQuery(new StringTerm("test"), "content"));
             TermQuery testAuthorQuery = new TermQuery(new StringTerm("test"), "author");
@@ -205,7 +204,7 @@ public class MultiTermQueryTest {
         docs.add(d3);
         docs.add(d4);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             MultiTermQuery query = new MultiTermQuery();
             query.add(new TermQuery(new StringTerm("test"), "content"));
             query.add(new TermQuery(new StringTerm("test"), "author"));
@@ -230,7 +229,7 @@ public class MultiTermQueryTest {
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d1);
         try {
-            index.indexDocuments(docs, tmpDir);
+            index.indexDocuments(docs);
             MultiTermQuery query = new MultiTermQuery();
             query.add(new TermQuery(new StringTerm("test"), "content"));
             query.add(new TermQuery(new StringTerm("ThisShouldNotBeFoundAnywhere"), "content"));
