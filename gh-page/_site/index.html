@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>PourMaster &#8211; PourMaster</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A lightweight inverted index.">
+    <meta name="author" content="mKaloer">
+    
+    <link rel="canonical" href="mkaloer.github.io/PourMaster/">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/pixyll.css" type="text/css">
+
+    <!-- Fonts -->
+    <link href='//fonts.googleapis.com/css?family=Merriweather:900,900italic,300,300italic' rel='stylesheet' type='text/css'>
+    <link href='//fonts.googleapis.com/css?family=Lato:900,300' rel='stylesheet' type='text/css'>
+    
+
+
+    
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-4579974-8']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+    
+</head>
+
+<body class="">
+  <a href="https://github.com/mkaloer/PourMaster"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/365986a132ccd6a44c23a9169022c0b5c890c387/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f7265645f6161303030302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png"></a>
+  <div class="site-wrap">
+    <div class="post p2 p-responsive wrap" role="main">
+      <div class="measure">
+        <div class="post-header mb2">
+  <h1>PourMaster</h1>
+</div>
+
+<article class="post-content">
+  <p>PourMaster is a lightweight easy-to-use inverted index written in Java.</p>
+
+<h3 id="contents">Contents</h3>
+
+<ol>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#usage">Usage</a></li>
+<li><a href="#implementation">Implementation</a></li>
+</ol>
+
+<h2 id="installation">Installation</h2>
+
+<p>TODO</p>
+
+<h2 id="usage">Usage</h2>
+
+<h3 id="document-declaration">Document Declaration</h3>
+
+<p>Different types of indexable documents are declared as classes with annotations.</p>
+
+<p>For example, the following class represents a book. A <code>@Field</code> annotation indicates that a field is part of the document. Fields are typically indexed (searchable) and/or stored (retrievable). In the <code>Books</code> class, the <code>author</code> field is both indexed and stored, and analyzed using a <code>SimpleStringAnalyzer</code>. The <code>content</code> field is indexed but not stored. Storing a field takes up disc space, and in this case we do not want the content to be stored. The <code>id</code> field is stored but not indexed, as we will not be searching for an id but may need it to identify a book. In addition, a the <code>@Field</code> annotation sets the type of analyzer used for an indexed field. An analyzer defines how the content is pre-processed before being inserted into the index (e.g. tokenization, stemming etc).</p>
+
+<div class="highlight"><pre><code class="language-java" data-lang="java"><span class="lineno"> 1</span> <span class="kd">public</span> <span class="kd">class</span> <span class="nc">Book</span> <span class="o">{</span>
+<span class="lineno"> 2</span>     <span class="nd">@Field</span><span class="o">(</span>
+<span class="lineno"> 3</span>            <span class="n">type</span> <span class="o">=</span> <span class="n">StringFieldType</span><span class="o">.</span><span class="na">class</span><span class="o">,</span>
+<span class="lineno"> 4</span>            <span class="n">indexed</span> <span class="o">=</span> <span class="kc">true</span><span class="o">,</span>
+<span class="lineno"> 5</span>            <span class="n">stored</span> <span class="o">=</span> <span class="kc">true</span><span class="o">,</span>
+<span class="lineno"> 6</span>            <span class="n">indexAnalyzer</span> <span class="o">=</span> <span class="n">SimpleStringAnalyzer</span><span class="o">.</span><span class="na">class</span>
+<span class="lineno"> 7</span>            <span class="o">)</span>
+<span class="lineno"> 8</span>     <span class="kd">public</span> <span class="n">String</span> <span class="n">author</span><span class="o">;</span>
+<span class="lineno"> 9</span> 
+<span class="lineno">10</span>     <span class="nd">@Field</span><span class="o">(</span>
+<span class="lineno">11</span>            <span class="n">type</span> <span class="o">=</span> <span class="n">StringFieldType</span><span class="o">.</span><span class="na">class</span><span class="o">,</span>
+<span class="lineno">12</span>            <span class="n">indexAnalyzer</span> <span class="o">=</span> <span class="n">SimpleStringAnalyzer</span><span class="o">.</span><span class="na">class</span><span class="o">,</span>
+<span class="lineno">13</span>            <span class="n">indexed</span> <span class="o">=</span> <span class="kc">true</span><span class="o">,</span>
+<span class="lineno">14</span>            <span class="n">stored</span> <span class="o">=</span> <span class="kc">false</span>
+<span class="lineno">15</span>            <span class="o">)</span>
+<span class="lineno">16</span>     <span class="kd">public</span> <span class="n">String</span> <span class="n">content</span><span class="o">;</span>
+<span class="lineno">17</span> 
+<span class="lineno">18</span>     <span class="nd">@Field</span><span class="o">(</span>
+<span class="lineno">19</span>            <span class="n">type</span> <span class="o">=</span> <span class="n">IntegerFieldType</span><span class="o">.</span><span class="na">class</span><span class="o">,</span>
+<span class="lineno">20</span>            <span class="n">indexed</span> <span class="o">=</span> <span class="kc">false</span><span class="o">,</span>
+<span class="lineno">21</span>            <span class="n">stored</span> <span class="o">=</span> <span class="kc">true</span>
+<span class="lineno">22</span>            <span class="o">)</span>
+<span class="lineno">23</span>     <span class="kd">public</span> <span class="kt">int</span> <span class="n">id</span><span class="o">;</span>
+<span class="lineno">24</span> <span class="o">}</span></code></pre></div>
+
+<p>An analyzer is defined as a subclass of the <code>Analyzer</code> class, and must override the <code>analyze()</code> method which returns an iterator of tokens.</p>
+
+<div class="highlight"><pre><code class="language-java" data-lang="java"><span class="lineno"> 1</span> <span class="kd">public</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">SimpleStringAnalyzer</span> <span class="kd">extends</span> <span class="n">Analyzer</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="o">{</span>
+<span class="lineno"> 2</span> 
+<span class="lineno"> 3</span>     <span class="nd">@Override</span>
+<span class="lineno"> 4</span>     <span class="kd">public</span> <span class="n">Iterator</span><span class="o">&lt;</span><span class="n">Token</span><span class="o">&gt;</span> <span class="nf">analyze</span><span class="o">(</span><span class="n">String</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
+<span class="lineno"> 5</span>         <span class="kd">final</span> <span class="n">String</span><span class="o">[]</span> <span class="n">words</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="na">split</span><span class="o">(</span><span class="s">&quot; &quot;</span><span class="o">);</span>
+<span class="lineno"> 6</span>         <span class="k">return</span> <span class="k">new</span> <span class="n">Iterator</span><span class="o">&lt;</span><span class="n">Token</span><span class="o">&gt;()</span> <span class="o">{</span>
+<span class="lineno"> 7</span>             <span class="kt">int</span> <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+<span class="lineno"> 8</span> 
+<span class="lineno"> 9</span>             <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">hasNext</span><span class="o">()</span> <span class="o">{</span>
+<span class="lineno">10</span>                   <span class="k">return</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="n">words</span><span class="o">.</span><span class="na">length</span><span class="o">;</span>
+<span class="lineno">11</span>          <span class="o">}</span>
+<span class="lineno">12</span> 
+<span class="lineno">13</span>             <span class="kd">public</span> <span class="n">Token</span> <span class="nf">next</span><span class="o">()</span> <span class="o">{</span>
+<span class="lineno">14</span>                   <span class="k">return</span> <span class="k">new</span> <span class="nf">Token</span><span class="o">(</span><span class="k">new</span> <span class="nf">StringTerm</span><span class="o">(</span><span class="n">words</span><span class="o">[</span><span class="n">index</span><span class="o">]),</span> <span class="n">index</span><span class="o">++);</span>
+<span class="lineno">15</span>             <span class="o">}</span>
+<span class="lineno">16</span> 
+<span class="lineno">17</span>             <span class="kd">public</span> <span class="kt">void</span> <span class="nf">remove</span><span class="o">()</span> <span class="o">{</span> <span class="o">}</span>
+<span class="lineno">18</span>         <span class="o">};</span>
+<span class="lineno">19</span>     <span class="o">}</span>
+<span class="lineno">20</span> <span class="o">}</span></code></pre></div>
+
+<h3 id="creating-an-index">Creating an Index</h3>
+
+<p>A index is represented with the <code>InvertedIndex</code> class and configured with the <code>IndexConfig</code> class, as shown in the following example:</p>
+
+<div class="highlight"><pre><code class="language-java" data-lang="java"><span class="lineno">1</span> <span class="n">IndexConfig</span> <span class="n">conf</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">IndexConfig</span><span class="o">()</span>
+<span class="lineno">2</span>     <span class="o">.</span><span class="na">setDocumentIndex</span><span class="o">(</span><span class="n">SequentialDocumentIndex</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+<span class="lineno">3</span>     <span class="o">.</span><span class="na">setBaseDirectory</span><span class="o">(</span><span class="s">&quot;idx&quot;</span><span class="o">)</span>
+<span class="lineno">4</span>     <span class="o">.</span><span class="na">setPostings</span><span class="o">(</span><span class="n">SequentialPostings</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+<span class="lineno">5</span>     <span class="o">.</span><span class="na">setTermDictionary</span><span class="o">(</span><span class="n">BTreeTermDictionary</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+<span class="lineno">6</span>     <span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="n">BTreeTermDictionary</span><span class="o">.</span><span class="na">CONFIG_SUPPORT_WILDCARD_ID</span><span class="o">,</span> <span class="n">Boolean</span><span class="o">.</span><span class="na">toString</span><span class="o">(</span><span class="n">wildcards</span><span class="o">))</span>
+<span class="lineno">7</span>     <span class="o">.</span><span class="na">setTmpDir</span><span class="o">(</span><span class="s">&quot;.tmp/&quot;</span><span class="o">);</span>
+<span class="lineno">8</span> <span class="n">InvertedIndex</span> <span class="n">index</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">InvertedIndex</span><span class="o">(</span><span class="n">conf</span><span class="o">);</span></code></pre></div>
+
+<p>The config file has reasonable default for most preferences.</p>
+
+<h3 id="indexing-documents">Indexing Documents</h3>
+
+<p>When an instance of the <code>InvertedIndex</code> class is created, we can start indexing documents. PourMaster currently only supports bulk insertion, meaning that all documents have to be indexed at once. Indexing is done with the <code>indexDocuments(Iterable&lt;Object&gt; docStream)</code> and <code>indexDocuments(Iterator&lt;Object&gt; docStream)</code> methods. These takes iterators of document classes as arguments:</p>
+
+<div class="highlight"><pre><code class="language-java" data-lang="java"><span class="lineno">1</span> <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">Book</span><span class="o">&gt;</span> <span class="n">books</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">Book</span><span class="o">&gt;();</span>
+<span class="lineno">2</span> <span class="n">docs</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">book1</span><span class="o">);</span>
+<span class="lineno">3</span> <span class="n">docs</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">book2</span><span class="o">);</span>
+<span class="lineno">4</span> <span class="n">index</span><span class="o">.</span><span class="na">indexDocuments</span><span class="o">(</span><span class="n">books</span><span class="o">);</span></code></pre></div>
+
+<h3 id="quering-documents">Quering Documents</h3>
+
+<p>Search queries are defined with a <code>Query</code> subclass, for examples the <code>TermQuery</code> class, which is the most basic kind of query in PourMaster. It searches for a single specific term in a specific field. More useful queries are the <code>MultiTermQuery</code> and the <code>WildCardQuery</code>. A <code>MultiTermQuery</code> combines several <code>TermQueries</code> into one query, and a <code>WildCardQuery</code> matches terms with a wildcard. The following snippet shows how to search for &ldquo;william shakespeare&rdquo; using the <code>MultiTerm</code> query.</p>
+
+<div class="highlight"><pre><code class="language-java" data-lang="java"><span class="lineno">1</span> <span class="n">MultiTermQuery</span> <span class="n">query</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">MultiTermQuery</span><span class="o">();</span>
+<span class="lineno">2</span> <span class="n">query</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="nf">TermQuery</span><span class="o">(</span><span class="k">new</span> <span class="nf">StringTerm</span><span class="o">(</span><span class="s">&quot;William&quot;</span><span class="o">),</span> <span class="s">&quot;author&quot;</span><span class="o">));</span>
+<span class="lineno">3</span> <span class="n">query</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="nf">TermQuery</span><span class="o">(</span><span class="k">new</span> <span class="nf">StringTerm</span><span class="o">(</span><span class="s">&quot;Shakespeare&quot;</span><span class="o">),</span> <span class="s">&quot;author&quot;</span><span class="o">));</span>
+<span class="lineno">4</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">RankedDocument</span><span class="o">&gt;</span> <span class="n">results</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="na">search</span><span class="o">(</span><span class="n">query</span><span class="o">);</span></code></pre></div>
+
+<h2 id="implementation">Implementation</h2>
+
+<p>TODO</p>
+
+</article>
+
+
+
+
+
+
+
+
+
+      </div>
+    </div>
+  </div>
+
+  
+</body>
+</html>
