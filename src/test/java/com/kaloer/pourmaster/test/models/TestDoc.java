@@ -31,7 +31,6 @@ public class TestDoc {
 
     @Field(
             type = IntegerFieldType.class,
-            indexAnalyzer = SimpleIntAnalyzer.class,
             stored = true,
             indexed = false
     )
