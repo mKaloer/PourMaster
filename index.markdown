@@ -1,7 +1,9 @@
 ---
-layout: post
+layout: default
 title: PourMaster
 ---
+# PourMaster
+
 PourMaster is a lightweight easy-to-use inverted index written in Java.
 
 ### Contents

@@ -2,7 +2,7 @@
 title:       PourMaster
 author:      mKaloer
 description: "A lightweight inverted index."
-baseurl:     ""
+baseurl:     "PourMaster"
 url:         "mkaloer.github.io/PourMaster"
 
 # Google analytics
