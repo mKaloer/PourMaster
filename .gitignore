@@ -68,3 +68,6 @@ release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
+
+# Emacs TAGS file
+TAGS
