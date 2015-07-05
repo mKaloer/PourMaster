@@ -18,6 +18,11 @@ import java.util.*;
  */
 public class InvertedIndex {
 
+    // TODO: Fuzzy queries
+    // TODO: Scoring class
+    // TODO: Index compression
+    // TODO: Query parser (see https://github.com/jparsec/jparsec )
+
     private DocumentTypeStore docTypeStore;
     private TermDictionary dictionary;
     private DocumentIndex docIndex;
@@ -33,6 +38,10 @@ public class InvertedIndex {
         this.docTypeStore = new DocumentTypeStore(conf.getDocumentTypeFilePath());
         this.postings = conf.getPostings().newInstance();
         this.postings.init(conf);
+    }
+
+    public List<RankedDocument> search(Query query) throws IOException, ReflectiveOperationException {
+        return search(query, -1);
     }
 
     public List<RankedDocument> search(Query query, int count) throws IOException, ReflectiveOperationException {
