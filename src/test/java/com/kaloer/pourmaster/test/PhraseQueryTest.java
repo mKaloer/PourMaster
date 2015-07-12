@@ -204,9 +204,9 @@ public class PhraseQueryTest {
             PhraseQuery query = new PhraseQuery("content", new StringTerm("This"), new StringTerm("is"));
             List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Expected three results", 3, d.size());
-            Assert.assertEquals(((TestDoc) d.get(0).getDocument()).id, d2.id);
-            Assert.assertEquals(((TestDoc) d.get(1).getDocument()).id, d3.id);
-            Assert.assertEquals(((TestDoc) d.get(2).getDocument()).id, d1.id);
+            Assert.assertEquals(d2.id, ((TestDoc) d.get(0).getDocument()).id);
+            Assert.assertEquals(d1.id, ((TestDoc) d.get(2).getDocument()).id);
+            Assert.assertEquals(d3.id, ((TestDoc) d.get(1).getDocument()).id);
         } catch (IOException e) {
             e.printStackTrace();
         }

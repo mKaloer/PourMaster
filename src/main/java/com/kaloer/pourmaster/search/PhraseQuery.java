@@ -14,11 +14,10 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.io.IOException;
 import java.util.*;
 
-public class PhraseQuery extends Query {
+public class PhraseQuery extends FieldQuery {
 
     private ArrayList<Term> terms = new ArrayList<Term>();
     private ArrayList<Integer> positions = new ArrayList<Integer>();
-    private String fieldName;
 
     /**
      * Adds a term to the end of the query.
@@ -57,11 +56,11 @@ public class PhraseQuery extends Query {
     }
 
     public PhraseQuery(String fieldName) {
-        this.fieldName = fieldName;
+        super(fieldName);
     }
 
     public PhraseQuery(String fieldName, Term... terms) {
-        this.fieldName = fieldName;
+        super(fieldName);
         for (Term t : terms) {
             this.terms.add(t);
             positions.add(positions.size());
@@ -69,32 +68,17 @@ public class PhraseQuery extends Query {
     }
 
     @Override
-    public Iterator<RankedDocument<Document>> search(InvertedIndex index) throws IOException {
-        int fieldId = index.getDocIndex().getFieldDataStore().getField(fieldName).getFieldId();
+    public Iterator<RankedDocumentId> search(InvertedIndex index) throws IOException {
+        int fieldId = index.getDocIndex().getFieldDataStore().getField(getField()).getFieldId();
         Set<Tuple<Long, Integer>> docIds = findPhraseMatches(index, fieldId);
 
-        final PriorityQueue<RankedDocument<Document>> result = new PriorityQueue<RankedDocument<Document>>();
+        final PriorityQueue<RankedDocumentId> result = new PriorityQueue<RankedDocumentId>();
         // Use plain tf ("phrase occurrences") as doc score
         for (Tuple<Long, Integer> match : docIds) {
-            Document doc = index.getDocIndex().getDocument(match.getFirst());
-            RankedDocument<Document> rankedDoc = new RankedDocument<Document>(doc, match.getSecond());
-            result.add(rankedDoc);
+            result.add(new RankedDocumentId(match.getFirst(), match.getSecond()));
         }
 
-        // Return iterator
-        return new Iterator<RankedDocument<Document>>() {
-            public boolean hasNext() {
-                return result.size() > 0;
-            }
-
-            public RankedDocument next() {
-                return result.poll();
-            }
-
-            public void remove() {
-                throw new NotImplementedException();
-            }
-        };
+        return result.iterator();
     }
 
     /**

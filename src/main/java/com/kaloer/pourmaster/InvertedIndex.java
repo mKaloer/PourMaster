@@ -1,10 +1,12 @@
 package com.kaloer.pourmaster;
 
 import com.kaloer.pourmaster.exceptions.ConflictingFieldTypesException;
+import com.kaloer.pourmaster.fields.Field;
 import com.kaloer.pourmaster.search.Query;
 import com.kaloer.pourmaster.search.RankedDocument;
 import com.kaloer.pourmaster.fields.FieldData;
 import com.kaloer.pourmaster.postings.Postings;
+import com.kaloer.pourmaster.search.RankedDocumentId;
 import com.kaloer.pourmaster.terms.Term;
 import com.kaloer.pourmaster.terms.TermOccurrence;
 import com.kaloer.pourmaster.util.Tuple;
@@ -23,9 +25,13 @@ public class InvertedIndex {
     // TODO: Index compression
     // TODO: Query parser (see https://github.com/jparsec/jparsec )
 
+    // Number of documents per index iteration
+    private final static int DOCS_PER_ITERATION = 1000;
+
     private DocumentTypeStore docTypeStore;
     private TermDictionary dictionary;
     private DocumentIndex docIndex;
+    private FieldNormsStore fieldNormsStore;
     private Postings postings;
     private IndexConfig config;
 
@@ -38,6 +44,9 @@ public class InvertedIndex {
         this.docTypeStore = new DocumentTypeStore(conf.getDocumentTypeFilePath());
         this.postings = conf.getPostings().newInstance();
         this.postings.init(conf);
+        this.fieldNormsStore = new FieldNormsStore(conf.getFieldNormsFilePath(),
+                this.docIndex.getFieldDataStore().getFieldCount(),
+                this.docIndex.getDocumentCount());
     }
 
     public List<RankedDocument> search(Query query) throws IOException, ReflectiveOperationException {
@@ -45,21 +54,22 @@ public class InvertedIndex {
     }
 
     public List<RankedDocument> search(Query query, int count) throws IOException, ReflectiveOperationException {
-        Iterator<RankedDocument<Document>> result = query.search(this);
+        Iterator<RankedDocumentId> result = query.search(this);
         // Convert documents to original document format
         ArrayList<RankedDocument> docs = new ArrayList<RankedDocument>();
         while (result.hasNext() && (count == -1 || docs.size() < count)) {
-            RankedDocument<Document> d = result.next();
+            RankedDocumentId dId = result.next();
+            Document d = getDocIndex().getDocument(dId.getDocument());
             // Create result object
-            Class docType = this.docTypeStore.getDocumentType(d.getDocument().getDocumentType());
+            Class docType = this.docTypeStore.getDocumentType(d.getDocumentType());
             Object doc = docType.newInstance();
             // Set object fields
-            for (FieldData fieldData : d.getDocument().getFields()) {
+            for (FieldData fieldData : d.getFields()) {
                 if (fieldData.getField().isStored()) {
                     docType.getField(fieldData.getField().getFieldName()).set(doc, fieldData.getValue());
                 }
             }
-            docs.add(new RankedDocument(doc, d.getScore()));
+            docs.add(new RankedDocument(doc, dId.getScore()));
         }
         return docs;
     }
@@ -80,6 +90,9 @@ public class InvertedIndex {
         // Mapping from term to document frequencies (per partial file)
         ArrayList<HashMap<Term, Integer>> docFrequencies = new ArrayList<HashMap<Term, Integer>>();
         docFrequencies.add(new HashMap<Term, Integer>());
+        ArrayList<FieldNormsStore> fieldNormsStores = new ArrayList<FieldNormsStore>();
+        FieldNormsStore normsStore = new FieldNormsStore(tmpDir + "/fns_" + fieldNormsStores.size(), 256, DOCS_PER_ITERATION);
+        fieldNormsStores.add(normsStore);
 
         HashMap<String, com.kaloer.pourmaster.fields.Field> fieldIds = new HashMap<String, com.kaloer.pourmaster.fields.Field>();
         long docId = 0;
@@ -133,16 +146,20 @@ public class InvertedIndex {
                     fieldData.setField(fieldInfo);
                     fieldData.setValue(f.get(document));
                     fields.add(fieldData);
+                    // Set field length
+                    normsStore.setFieldNorm(fieldInfo.getFieldId(), docId, 1.0f / (float) fieldData.getLength());
                 }
 
             }
-            if ((docId + 1) % 1000 == 0) {
+            if ((docId + 1) % DOCS_PER_ITERATION == 0) {
                 String outputFile = new File(tmpDir, String.format("postings_%d.part", partialFiles.size())).getAbsolutePath();
                 termIndices.add(writePartialPostings(outputFile, partialIndex));
                 partialFiles.add(outputFile);
                 partialIndex.clear();
                 // Add new docFrequencies map for next partial file
                 docFrequencies.add(new HashMap<Term, Integer>());
+                normsStore = new FieldNormsStore(tmpDir + "fns_" + fieldNormsStores.size(), 256, DOCS_PER_ITERATION);
+                fieldNormsStores.add(normsStore);
             }
 
             // Add document to document index and field store
@@ -163,6 +180,15 @@ public class InvertedIndex {
         // Update dictionary with new pointers
         for (Map.Entry<Term, Long> t : indices.entrySet()) {
             this.dictionary.findTerm(t.getKey()).setPostingsIndex(t.getValue());
+        }
+
+        // Merge norms stores
+        fieldNormsStore = new FieldNormsStore(config.getFieldNormsFilePath(), fieldIds.size(), docId);
+        for (long i = 0; i < docId; i++) {
+            FieldNormsStore partial = fieldNormsStores.get((int) (i / DOCS_PER_ITERATION));
+            for (Field f : fieldIds.values()) {
+                fieldNormsStore.setFieldNorm(f.getFieldId(), i, partial.getFieldNorm(f.getFieldId(), i));
+            }
         }
 
         // Delete tmp files
@@ -224,6 +250,7 @@ public class InvertedIndex {
         dictionary.deleteAll();
         docIndex.deleteAll();
         postings.deleteAll();
+        fieldNormsStore.deleteAll();
     }
 
     public DocumentIndex getDocIndex() {
@@ -240,5 +267,9 @@ public class InvertedIndex {
 
     public IndexConfig getConfig() {
         return config;
+    }
+
+    public FieldNormsStore getFieldNormsStore() {
+        return fieldNormsStore;
     }
 }

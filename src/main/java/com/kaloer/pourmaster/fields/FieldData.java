@@ -36,6 +36,7 @@ public class FieldData {
 
     public void setValue(Object value) {
         this.value = value;
+        setLength(getField().getFieldType().getLength(value));
     }
 
     public void setLength(long length) {

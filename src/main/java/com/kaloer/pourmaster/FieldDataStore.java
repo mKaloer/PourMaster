@@ -16,6 +16,8 @@ public abstract class FieldDataStore {
 
     public abstract Field getField(String name) throws IOException;
 
+    public abstract int getFieldCount() throws IOException;
+
     public abstract Field getField(int id) throws IOException;
 
     public abstract void deleteAll() throws IOException;

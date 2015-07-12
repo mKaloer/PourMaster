@@ -19,6 +19,7 @@ public class IndexConfig {
     public static final String TERM_DICTIONARY_CLASS_ID = "index.termDictionary";
     public static final String POSTINGS_CLASS_ID = "index.postings";
     public static final String DOC_TYPE_FILE_PATH = "index.docTypeFilePath";
+    public static final String FIELD_NORMS_FILE_PATH = "index.fieldNormsFilePath";
 
     private Properties configMap; // Map of various configuration values
 
@@ -69,6 +70,16 @@ public class IndexConfig {
 
     public IndexConfig setDocumentTypeFilePath(String documentTypeFilePath) {
         this.set(DOC_TYPE_FILE_PATH, documentTypeFilePath);
+        return this;
+    }
+
+    public String getFieldNormsFilePath() {
+        // Get path by id or create default.
+        return getFilePath(FIELD_NORMS_FILE_PATH, "fieldNorms.db");
+    }
+
+    public IndexConfig setFieldNormsFilePath(String fieldNormsFilePath) {
+        this.set(FIELD_NORMS_FILE_PATH, fieldNormsFilePath);
         return this;
     }
 

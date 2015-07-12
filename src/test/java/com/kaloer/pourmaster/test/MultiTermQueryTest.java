@@ -3,6 +3,7 @@ package com.kaloer.pourmaster.test;
 import com.kaloer.pourmaster.InvertedIndex;
 import com.kaloer.pourmaster.search.MultiTermQuery;
 import com.kaloer.pourmaster.search.RankedDocument;
+import com.kaloer.pourmaster.search.WildcardQuery;
 import com.kaloer.pourmaster.terms.StringTerm;
 import com.kaloer.pourmaster.test.models.TestDoc;
 import com.kaloer.pourmaster.test.models.TestDoc2;
@@ -121,11 +122,11 @@ public class MultiTermQueryTest {
             List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Expected three results", 3, d.size());
             Assert.assertTrue("Expected doc3 first", d.get(0).getDocument() instanceof TestDoc2);
-            Assert.assertEquals("Expected doc3 first", ((TestDoc2) d.get(0).getDocument()).author2, "Alice");
+            Assert.assertEquals("Expected doc3 first", "Alice", ((TestDoc2) d.get(0).getDocument()).author2);
             Assert.assertTrue("Expected doc1 second", d.get(1).getDocument() instanceof TestDoc);
-            Assert.assertEquals("Expected doc1 second", ((TestDoc) d.get(1).getDocument()).author, "Mads");
+            Assert.assertEquals("Expected doc1 second", "Mads", ((TestDoc) d.get(1).getDocument()).author);
             Assert.assertTrue("Expected doc2 third", d.get(2).getDocument() instanceof TestDoc2);
-            Assert.assertEquals("Expected doc2 third", ((TestDoc2) d.get(2).getDocument()).author2, "Bob");
+            Assert.assertEquals("Expected doc2 third", "Bob", ((TestDoc2) d.get(2).getDocument()).author2);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -168,10 +169,10 @@ public class MultiTermQueryTest {
             query.add(testAuthorQuery);
             List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Unexpected number of results", 4, d.size());
-            Assert.assertEquals("Expected doc4 first", ((TestDoc) d.get(0).getDocument()).author, "test");
-            Assert.assertEquals("Expected doc3 second", ((TestDoc) d.get(1).getDocument()).author, "Alice");
-            Assert.assertEquals("Expected doc1 third", ((TestDoc) d.get(2).getDocument()).author, "Mads");
-            Assert.assertEquals("Expected doc2 fourth", ((TestDoc) d.get(3).getDocument()).author, "Bob");
+            Assert.assertEquals("Expected doc4 first", "test", ((TestDoc) d.get(0).getDocument()).author);
+            Assert.assertEquals("Expected doc3 second", "Alice", ((TestDoc) d.get(1).getDocument()).author);
+            Assert.assertEquals("Expected doc1 third", "Mads", ((TestDoc) d.get(2).getDocument()).author);
+            Assert.assertEquals("Expected doc2 fourth", "Bob", ((TestDoc) d.get(3).getDocument()).author);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -233,6 +234,31 @@ public class MultiTermQueryTest {
             MultiTermQuery query = new MultiTermQuery();
             query.add(new TermQuery(new StringTerm("test"), "content"));
             query.add(new TermQuery(new StringTerm("ThisShouldNotBeFoundAnywhere"), "content"));
+            List<RankedDocument> d = index.search(query, -1);
+            Assert.assertEquals("Expected one result", 1, d.size());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testPartialMatchResult2() throws IOException, ReflectiveOperationException {
+        final InvertedIndex index = IndexTest.createIndex(true);
+
+        TestDoc d1 = new TestDoc();
+        d1.author = "Mads";
+        d1.content = "this is a test";
+        TestDoc d2 = new TestDoc();
+        d2.author = "Ole";
+        d2.content = "test";
+        final ArrayList<Object> docs = new ArrayList<Object>();
+        docs.add(d1);
+        docs.add(d2);
+        try {
+            index.indexDocuments(docs);
+            MultiTermQuery query = new MultiTermQuery();
+            query.add(new TermQuery(new StringTerm("test"), "content"));
+            query.add(new WildcardQuery(new StringTerm("th"), new StringTerm("s"), "content"));
             List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Expected one result", 1, d.size());
         } catch (IOException e) {

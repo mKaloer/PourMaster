@@ -97,4 +97,8 @@ public class HeapFieldDataStore extends FieldDataStore {
         return fieldInfoStore.getFieldByName(name);
     }
 
+    @Override
+    public int getFieldCount() throws IOException {
+        return fieldInfoStore.getFieldCount();
+    }
 }

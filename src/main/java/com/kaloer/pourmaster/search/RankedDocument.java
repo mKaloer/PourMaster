@@ -28,4 +28,5 @@ public class RankedDocument<T extends Object> implements Comparable<RankedDocume
     public int compareTo(RankedDocument o) {
         return Double.compare(o.score, score);
     }
+
 }

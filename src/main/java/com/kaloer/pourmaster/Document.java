@@ -45,4 +45,19 @@ public class Document {
     public int getDocumentType() {
         return documentType;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        return this.documentId == ((Document) o).documentId;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (documentId ^ (documentId >>> 32));
+        result = 31 * result + documentType;
+        return result;
+    }
 }

@@ -103,4 +103,8 @@ public class FieldInfoStore {
         fieldIdMapping.clear();
         fieldTypeStore.deleteAll();
     }
+
+    public int getFieldCount() {
+        return fieldIdMapping.size();
+    }
 }

@@ -1,100 +1,59 @@
 package com.kaloer.pourmaster.search;
 
-import com.kaloer.pourmaster.Document;
 import com.kaloer.pourmaster.InvertedIndex;
-import com.kaloer.pourmaster.fields.Field;
-import com.kaloer.pourmaster.postings.PostingsData;
-import com.kaloer.pourmaster.util.IOIterator;
-import com.kaloer.pourmaster.TermDictionary;
-import com.kaloer.pourmaster.fields.FieldData;
-import com.kaloer.pourmaster.terms.TermOccurrence;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.PriorityQueue;
+import java.util.*;
 
 /**
- * Used to combine multiple {@link TermQuery} instances into one query.
+ * Used to combine multiple {@link FieldQuery} instances into one query.
  */
 public class MultiTermQuery extends Query {
 
-    private ArrayList<TermQuery> subQueries = new ArrayList<TermQuery>();
+    private ArrayList<FieldQuery> subQueries = new ArrayList<FieldQuery>();
 
-    public void add(TermQuery query) {
+    public void add(FieldQuery query) {
         subQueries.add(query);
     }
 
     @Override
-    public Iterator<RankedDocument<Document>> search(InvertedIndex index) throws IOException {
-        // For each docId, accumulate scores per field (identified by id).
-        HashMap<Long, HashMap<Integer, Double>> scores = new HashMap<Long, HashMap<Integer, Double>>();
+    public Iterator<RankedDocumentId> search(InvertedIndex index) throws IOException {
+        // For each docId, accumulate scores
+        final HashMap<Long, Double> scores = new HashMap<Long, Double>();
 
-        for (TermQuery query : subQueries) {
-            Field queryField = index.getDocIndex().getFieldDataStore().getField(query.getFieldName());
-            TermDictionary.TermData termData = index.getDictionary().findTerm(query.getTerm());
-            if (termData == null) {
-                // No results
-                continue;
-            }
-            final IOIterator<PostingsData> docs = index.getPostings().getDocumentsForTerm(termData.getPostingsIndex(), termData.getDocFrequency());
-            while (docs.hasNext()) {
-                PostingsData postingsData = docs.next();
-                int tf = 0;
-                for (TermOccurrence occurrence : postingsData.getPositions()) {
-                    Field field = index.getDocIndex().getFieldDataStore().getField(occurrence.getFieldId());
-                    if (field.getFieldId() == queryField.getFieldId()) {
-                        tf++;
-                    }
+        for (FieldQuery query : subQueries) {
+            Iterator<RankedDocumentId> subResult = query.search(index);
+            while (subResult.hasNext()) {
+                // Add scores per document
+                RankedDocumentId doc = subResult.next();
+                Double docScore = scores.remove(doc.getDocument());
+                if (docScore == null) {
+                    docScore = 0.0;
                 }
-                // Only add if exists in searched field.
-                if (tf > 0) {
-                    if (!scores.containsKey(postingsData.getDocumentId())) {
-                        scores.put(postingsData.getDocumentId(), new HashMap<Integer, Double>());
-                    }
-                    if (!scores.get(postingsData.getDocumentId()).containsKey(queryField.getFieldId())) {
-                        scores.get(postingsData.getDocumentId()).put(queryField.getFieldId(), 0.0);
-                    }
-                    HashMap<Integer, Double> docScores = scores.get(postingsData.getDocumentId());
-                    double prevScore = docScores.get(queryField.getFieldId());
-                    double idf = Math.log((double) index.getDocIndex().getDocumentCount() / (double) (1 + termData.getFieldDocFrequency(queryField.getFieldId())));
-                    double boostedScore = tf * idf * query.getBoost();
-                    docScores.put(queryField.getFieldId(), prevScore + boostedScore);
-                }
+                scores.put(doc.getDocument(), docScore + doc.getScore());
             }
         }
 
-        final PriorityQueue<RankedDocument<Document>> result = new PriorityQueue<RankedDocument<Document>>();
-        // Normalize scores and add to result set
-        for (Long docId : scores.keySet()) {
-            Document doc = index.getDocIndex().getDocument(docId);
-            RankedDocument<Document> rankedDoc = new RankedDocument<Document>(doc, 0.0);
-            for (int fieldId : scores.get(docId).keySet()) {
-                for (FieldData f : doc.getFields()) {
-                    if (f.getField().getFieldId() == fieldId) {
-                        double normalizedScore = scores.get(docId).get(fieldId) / (double) f.getLength();
-                        rankedDoc.setScore(rankedDoc.getScore() + normalizedScore);
-                        break;
-                    }
-                }
+        final ArrayList<Map.Entry<Long, Double>> scoreEntries = new ArrayList<Map.Entry<Long, Double>>(scores.entrySet());
+        Collections.sort(scoreEntries, new Comparator<Map.Entry<Long, Double>>() {
+            public int compare(Map.Entry<Long, Double> o1, Map.Entry<Long, Double> o2) {
+                return o2.getValue().compareTo(o1.getValue());
             }
-            result.add(rankedDoc);
-        }
+        });
 
-        // Return iterator
-        return new Iterator<RankedDocument<Document>>() {
+        return new Iterator<RankedDocumentId>() {
+            int index = 0;
             public boolean hasNext() {
-                return result.size() > 0;
+                return index < scoreEntries.size();
             }
 
-            public RankedDocument next() {
-                return result.poll();
+            public RankedDocumentId next() {
+                Map.Entry<Long, Double> entry = scoreEntries.get(index++);
+                return new RankedDocumentId(entry.getKey(), entry.getValue() * getBoost());
             }
 
             public void remove() {
-                throw new NotImplementedException();
+                throw new UnsupportedOperationException();
             }
         };
     }
