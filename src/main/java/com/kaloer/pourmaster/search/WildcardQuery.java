@@ -3,6 +3,7 @@ package com.kaloer.pourmaster.search;
 import com.kaloer.pourmaster.Document;
 import com.kaloer.pourmaster.InvertedIndex;
 import com.kaloer.pourmaster.TermDictionary;
+import com.kaloer.pourmaster.fields.Field;
 import com.kaloer.pourmaster.postings.PostingsData;
 import com.kaloer.pourmaster.terms.Term;
 import com.kaloer.pourmaster.terms.TermOccurrence;
@@ -33,7 +34,9 @@ public class WildcardQuery extends FieldQuery {
             // No results
             return Collections.emptyIterator();
         }
-        int fieldId = index.getDocIndex().getFieldDataStore().getField(getField()).getFieldId();
+        long documentCount = index.getDocIndex().getDocumentCount();
+        Field queryField = index.getDocIndex().getFieldDataStore().getField(getField());
+        int fieldId = queryField.getFieldId();
         PriorityQueue<RankedDocumentId> result = new PriorityQueue<RankedDocumentId>();
         for (TermDictionary.TermData termData : matches) {
             IOIterator<PostingsData> postingsData = index.getPostings().getDocumentsForTerm(termData.getPostingsIndex(), termData.getDocFrequency());
@@ -49,8 +52,9 @@ public class WildcardQuery extends FieldQuery {
                     }
                 }
                 if (tf > 0) {
-                    // Return pure TF score
-                    result.add(new RankedDocumentId(docId, tf));
+                    double idf = Math.log((double) documentCount / (double) (1 + termData.getFieldDocFrequency(queryField.getFieldId())));
+                    float fieldNorm = index.getFieldNormsStore().getFieldNorm(fieldId, docId);
+                    result.add(new RankedDocumentId(docId, tf * idf * getBoost() * fieldNorm));
                 }
             }
         }
