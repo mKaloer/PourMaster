@@ -7,6 +7,7 @@ import com.kaloer.pourmaster.postings.PostingsData;
 import com.kaloer.pourmaster.terms.Term;
 import com.kaloer.pourmaster.terms.TermOccurrence;
 import com.kaloer.pourmaster.util.IOIterator;
+import com.kaloer.pourmaster.util.PriorityQueueIterator;
 import com.kaloer.pourmaster.util.Tuple;
 import org.apache.commons.collections.map.MultiValueMap;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -78,7 +79,7 @@ public class PhraseQuery extends FieldQuery {
             result.add(new RankedDocumentId(match.getFirst(), match.getSecond()));
         }
 
-        return result.iterator();
+        return new PriorityQueueIterator<RankedDocumentId>(result);
     }
 
     /**

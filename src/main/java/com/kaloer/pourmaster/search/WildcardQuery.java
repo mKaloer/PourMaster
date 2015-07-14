@@ -7,6 +7,7 @@ import com.kaloer.pourmaster.postings.PostingsData;
 import com.kaloer.pourmaster.terms.Term;
 import com.kaloer.pourmaster.terms.TermOccurrence;
 import com.kaloer.pourmaster.util.IOIterator;
+import com.kaloer.pourmaster.util.PriorityQueueIterator;
 
 import java.io.IOException;
 import java.util.*;
@@ -53,7 +54,7 @@ public class WildcardQuery extends FieldQuery {
                 }
             }
         }
-        return result.iterator();
+        return new PriorityQueueIterator<RankedDocumentId>(result);
     }
 
     @Override

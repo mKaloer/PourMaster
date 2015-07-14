@@ -250,17 +250,17 @@ public class MultiTermQueryTest {
         d1.content = "this is a test";
         TestDoc d2 = new TestDoc();
         d2.author = "Ole";
-        d2.content = "test";
+        d2.content = "foo the";
         final ArrayList<Object> docs = new ArrayList<Object>();
         docs.add(d1);
         docs.add(d2);
         try {
             index.indexDocuments(docs);
             MultiTermQuery query = new MultiTermQuery();
-            query.add(new TermQuery(new StringTerm("test"), "content"));
+            query.add(new TermQuery(new StringTerm("Ole"), "author"));
             query.add(new WildcardQuery(new StringTerm("th"), new StringTerm("s"), "content"));
             List<RankedDocument> d = index.search(query, -1);
-            Assert.assertEquals("Expected one result", 1, d.size());
+            Assert.assertEquals("Expected one result", 2, d.size());
         } catch (IOException e) {
             e.printStackTrace();
         }

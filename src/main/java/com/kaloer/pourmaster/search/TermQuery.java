@@ -8,6 +8,7 @@ import com.kaloer.pourmaster.postings.PostingsData;
 import com.kaloer.pourmaster.terms.Term;
 import com.kaloer.pourmaster.terms.TermOccurrence;
 import com.kaloer.pourmaster.util.IOIterator;
+import com.kaloer.pourmaster.util.PriorityQueueIterator;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -57,7 +58,7 @@ public class TermQuery extends FieldQuery {
                 result.add(new RankedDocumentId(docId, tf * idf * getBoost() * fieldNorm));
             }
         }
-        return result.iterator();
+        return new PriorityQueueIterator<RankedDocumentId>(result);
     }
 
     @Override
