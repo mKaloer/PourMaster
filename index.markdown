@@ -93,13 +93,17 @@ index.indexDocuments(books);
 {% endhighlight %}
 
 ### Quering Documents
-Search queries are defined with a `Query` subclass, for examples the `TermQuery` class, which is the most basic kind of query in PourMaster. It searches for a single specific term in a specific field. More useful queries are the `MultiTermQuery` and the `WildCardQuery`. A `MultiTermQuery` combines several `TermQueries` into one query, and a `WildCardQuery` matches terms with a wildcard. The following snippet shows how to search for "william shakespeare" using the `MultiTerm` query.
+Search queries are defined as `Query` or `FieldQuery` subclasses. The most basic kind of query in PourMaster is the `TermQuery` class. It searches for a single specific term in a specific field. More fancy are the `WildCardQuery` and `PhraseQuery` query classes, which match terms with a single wildcard and multiple terms with specific relative positions, respectively. Each of these queries are `FieldQueries`, meaning that the query is only defined for a single field. Multiple instances of `FieldQuery` can be combined with the `MultiTermQuery` class. The following snippet shows how to search for "william shakespeare" using the `MultiTerm` query.
+
 {% highlight java linenos %}
 MultiTermQuery query = new MultiTermQuery();
 query.add(new TermQuery(new StringTerm("William"), "author"));
 query.add(new TermQuery(new StringTerm("Shakespeare"), "author"));
 List<RankedDocument> results = index.search(query);
 {% endhighlight %}
+
+#### Document Scoring
+The `TermQuery` class uses length-normalized, smoothed [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) weighting, while the `WildCardQuery` and `PhraseQuery` uses a plain tf weighting. It is currently not possible to customize the scoring function. The `MultiTermQuery` uses a sum of the individual query scores.
 
 ## Implementation
 TODO
