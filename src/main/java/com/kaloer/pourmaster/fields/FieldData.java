@@ -24,8 +24,6 @@ public class FieldData {
         // Read value if stored, otherwise read length
         if (f.isStored()) {
             fieldData.setValue(f.getFieldType().readFromInput(input));
-        } else {
-            fieldData.setLength(input.readLong());
         }
         return fieldData;
     }
@@ -45,11 +43,9 @@ public class FieldData {
 
     public void writeToOutput(DataOutput output) throws IOException {
         output.writeShort(field.getFieldId());
-        // Store value if stored, otherwise just store length (for normalization)
+        // Store value if stored
         if (field.isStored()) {
             field.getFieldType().writeToOutput(output, value);
-        } else {
-            output.writeLong(field.getFieldType().getLength(value));
         }
     }
 

@@ -205,8 +205,8 @@ public class PhraseQueryTest {
             List<RankedDocument> d = index.search(query, -1);
             Assert.assertEquals("Expected three results", 3, d.size());
             Assert.assertEquals(d2.id, ((TestDoc) d.get(0).getDocument()).id);
-            Assert.assertEquals(d1.id, ((TestDoc) d.get(2).getDocument()).id);
-            Assert.assertEquals(d3.id, ((TestDoc) d.get(1).getDocument()).id);
+            Assert.assertEquals(d1.id, ((TestDoc) d.get(1).getDocument()).id);
+            Assert.assertEquals(d3.id, ((TestDoc) d.get(2).getDocument()).id);
         } catch (IOException e) {
             e.printStackTrace();
         }

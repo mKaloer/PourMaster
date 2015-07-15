@@ -15,6 +15,9 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * Query for matching specific terms within a relative distance between each other.
+ */
 public class PhraseQuery extends FieldQuery {
 
     private ArrayList<Term> terms = new ArrayList<Term>();
@@ -71,11 +74,11 @@ public class PhraseQuery extends FieldQuery {
     @Override
     public Iterator<RankedDocumentId> search(InvertedIndex index) throws IOException {
         int fieldId = index.getDocIndex().getFieldDataStore().getField(getField()).getFieldId();
-        Set<Tuple<Long, Integer>> docIds = findPhraseMatches(index, fieldId);
+        Set<Tuple<Long, Double>> docIds = findPhraseMatches(index, fieldId);
 
         final PriorityQueue<RankedDocumentId> result = new PriorityQueue<RankedDocumentId>();
         // Use plain tf ("phrase occurrences") as doc score
-        for (Tuple<Long, Integer> match : docIds) {
+        for (Tuple<Long, Double> match : docIds) {
             result.add(new RankedDocumentId(match.getFirst(), match.getSecond()));
         }
 
@@ -90,7 +93,7 @@ public class PhraseQuery extends FieldQuery {
      * @return A set of docIds containing the phrase.
      * @throws IOException
      */
-    private Set<Tuple<Long, Integer>> findPhraseMatches(InvertedIndex index, int fieldId) throws IOException {
+    private Set<Tuple<Long, Double>> findPhraseMatches(InvertedIndex index, int fieldId) throws IOException {
         // Order terms by frequency to shrink working set early
         PriorityQueue<PhraseQueryTerm> termList =
                 new PriorityQueue<PhraseQueryTerm>(terms.size(), new TermFrequencyComparator());
@@ -99,7 +102,7 @@ public class PhraseQuery extends FieldQuery {
             TermDictionary.TermData data = index.getDictionary().findTerm(t);
             if (data == null) {
                 // If a term does not exist, there is no chance of matching the query, so return empty set.
-                return new HashSet<Tuple<Long, Integer>>();
+                return new HashSet<Tuple<Long, Double>>();
             } else {
                 termList.add(new PhraseQueryTerm(positions.get(i), t, data));
             }
@@ -154,9 +157,10 @@ public class PhraseQuery extends FieldQuery {
         }
 
         // Count occurrences of each match per document
-        Set<Tuple<Long, Integer>> tfResult = new HashSet<Tuple<Long, Integer>>();
+        Set<Tuple<Long, Double>> tfResult = new HashSet<Tuple<Long, Double>>();
         for (Long docId : (Set<Long>) resultSet.keySet()) {
-            tfResult.add(new Tuple<Long, Integer>(docId, resultSet.getCollection(docId).size()));
+            double fieldNorm = index.getFieldNormsStore().getFieldNorm(fieldId, docId);
+            tfResult.add(new Tuple<Long, Double>(docId, (double) resultSet.getCollection(docId).size() * fieldNorm));
         }
 
         return tfResult;

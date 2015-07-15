@@ -122,8 +122,10 @@ public class InvertedIndex {
                     }
                     com.kaloer.pourmaster.fields.Field fieldInfo = fieldIds.get(f.getName());
                     if (field.indexed()) {
+                        int numTokens = 0;
                         Iterator<Token> tokens = field.indexAnalyzer().newInstance().analyze(f.get(document));
                         while (tokens.hasNext()) {
+                            numTokens++;
                             // Index document
                             Token t = tokens.next();
                             partialIndex.addPositionForTerm(t, docId, fieldInfo.getFieldId());
@@ -140,14 +142,14 @@ public class InvertedIndex {
                                 docFrequencies.get(partialFiles.size()).put(t.getValue(), oldFreq + 1);
                             }
                         }
-                    }
 
+                        // Set field length
+                        normsStore.setFieldNorm(fieldInfo.getFieldId(), docId, 1.0f / (float) numTokens);
+                    }
                     FieldData fieldData = new FieldData();
                     fieldData.setField(fieldInfo);
                     fieldData.setValue(f.get(document));
                     fields.add(fieldData);
-                    // Set field length
-                    normsStore.setFieldNorm(fieldInfo.getFieldId(), docId, 1.0f / (float) fieldData.getLength());
                 }
 
             }
