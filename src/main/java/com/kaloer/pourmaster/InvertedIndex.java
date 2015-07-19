@@ -14,6 +14,7 @@ import com.kaloer.pourmaster.util.Tuple;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * The main class for the inverted index used for lookup.
@@ -24,6 +25,8 @@ public class InvertedIndex {
     // TODO: Scoring class
     // TODO: Index compression
     // TODO: Query parser (see https://github.com/jparsec/jparsec )
+
+    private final static Logger LOGGER = Logger.getLogger(InvertedIndex.class.getName());
 
     // Number of documents per index iteration
     private final static int DOCS_PER_ITERATION = 1000;
@@ -37,6 +40,7 @@ public class InvertedIndex {
 
     public InvertedIndex(IndexConfig conf) throws IOException, ReflectiveOperationException {
         this.config = conf;
+        new File(conf.getBaseDirectory()).mkdirs();
         this.docIndex = conf.getDocumentIndex().newInstance();
         this.docIndex.init(conf);
         this.dictionary = conf.getTermDictionary().newInstance();
@@ -144,7 +148,7 @@ public class InvertedIndex {
                         }
 
                         // Set field length
-                        normsStore.setFieldNorm(fieldInfo.getFieldId(), docId, 1.0f / (float) numTokens);
+                        normsStore.setFieldNorm(fieldInfo.getFieldId(), docId % DOCS_PER_ITERATION, 1.0f / (float) numTokens);
                     }
                     FieldData fieldData = new FieldData();
                     fieldData.setField(fieldInfo);
@@ -154,14 +158,17 @@ public class InvertedIndex {
 
             }
             if ((docId + 1) % DOCS_PER_ITERATION == 0) {
+                LOGGER.info(String.format("Indexed %d documents", docId + 1));
+                LOGGER.info("Writing partial file...");
                 String outputFile = new File(tmpDir, String.format("postings_%d.part", partialFiles.size())).getAbsolutePath();
                 termIndices.add(writePartialPostings(outputFile, partialIndex));
                 partialFiles.add(outputFile);
                 partialIndex.clear();
                 // Add new docFrequencies map for next partial file
                 docFrequencies.add(new HashMap<Term, Integer>());
-                normsStore = new FieldNormsStore(tmpDir + "fns_" + fieldNormsStores.size(), 256, DOCS_PER_ITERATION);
+                normsStore = new FieldNormsStore(tmpDir + File.separator + "fns_" + fieldNormsStores.size(), 256, DOCS_PER_ITERATION);
                 fieldNormsStores.add(normsStore);
+                LOGGER.info("Partial write successful.");
             }
 
             // Add document to document index and field store
@@ -173,10 +180,13 @@ public class InvertedIndex {
             docId++;
         }
         // Write remaining postings
-        String outputFile = new File(tmpDir, String.format("postings_%d.part", partialFiles.size())).getAbsolutePath();
-        termIndices.add(writePartialPostings(outputFile, partialIndex));
-        partialFiles.add(outputFile);
+        if (partialIndex.dictionary.size() > 0) {
+            String outputFile = new File(tmpDir, String.format("postings_%d.part", partialFiles.size())).getAbsolutePath();
+            termIndices.add(writePartialPostings(outputFile, partialIndex));
+            partialFiles.add(outputFile);
+        }
 
+        LOGGER.info("Merging partial files...");
         // Merge partial files
         HashMap<Term, Long> indices = postings.mergePartialPostingsFiles(partialFiles, termIndices, docFrequencies);
         // Update dictionary with new pointers
@@ -189,7 +199,7 @@ public class InvertedIndex {
         for (long i = 0; i < docId; i++) {
             FieldNormsStore partial = fieldNormsStores.get((int) (i / DOCS_PER_ITERATION));
             for (Field f : fieldIds.values()) {
-                fieldNormsStore.setFieldNorm(f.getFieldId(), i, partial.getFieldNorm(f.getFieldId(), i));
+                fieldNormsStore.setFieldNorm(f.getFieldId(), i, partial.getFieldNorm(f.getFieldId(), i % DOCS_PER_ITERATION));
             }
         }
 
@@ -200,6 +210,8 @@ public class InvertedIndex {
                 f.delete();
             }
         }
+        LOGGER.info(String.format("Indexed %d documents", docId + 1));
+        LOGGER.info("Indexing completed.");
     }
 
     private ArrayList<Tuple<Term, Long>> writePartialPostings(String outputFile, PartialIndexData partialIndex) throws IOException {

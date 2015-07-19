@@ -7,14 +7,8 @@ import com.kaloer.pourmaster.terms.Term;
 import com.kaloer.pourmaster.terms.TermOccurrence;
 import com.kaloer.pourmaster.util.Tuple;
 
-import java.io.DataOutput;
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
+import java.io.*;
+import java.util.*;
 
 /**
  * Sequential implementation of a postings list.
@@ -81,39 +75,39 @@ public class SequentialPostings implements Postings {
 
     public ArrayList<Tuple<Term, Long>> batchInsertTerm(ArrayList<Tuple<Term, PostingsData[]>> docs, String outputFile) throws IOException {
         ArrayList<Tuple<Term, Long>> indices = new ArrayList<Tuple<Term, Long>>(docs.size());
-        RandomAccessFile file = null;
+        File file = new File(outputFile);
+        DataOutputStream out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(file, true)));
         try {
-            file = new RandomAccessFile(outputFile, "rw");
-            long pointer = file.length();
-            file.seek(pointer);
+            long filePointer = file.length();
             for (Tuple<Term, PostingsData[]> termData : docs) {
-                indices.add(new Tuple<Term, Long>(termData.getFirst(), file.getFilePointer()));
-                writeDocsToFile(file, termData.getSecond());
+                indices.add(new Tuple<Term, Long>(termData.getFirst(), filePointer));
+                filePointer += writeDocsToFile(out, termData.getSecond());
             }
         } finally {
-            if (file != null) {
-                file.close();
+            if (out != null) {
+                out.close();
             }
         }
         return indices;
     }
 
     public long insertTerm(PostingsData[] docs) throws IOException {
-        RandomAccessFile file = null;
+        File file = new File(filePath);
+        DataOutputStream out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(filePath, true)));
         try {
-            file = new RandomAccessFile(filePath, "rw");
+
             long pointer = file.length();
-            file.seek(pointer);
-            writeDocsToFile(file, docs);
+            writeDocsToFile(out, docs);
             return pointer;
         } finally {
-            if (file != null) {
-                file.close();
+            if (out != null) {
+                out.close();
             }
         }
     }
 
-    private void writeDocsToFile(DataOutput output, PostingsData[] docs) throws IOException {
+    private long writeDocsToFile(DataOutput output, PostingsData[] docs) throws IOException {
+        int written = 0;
         for (PostingsData doc : docs) {
             output.writeLong(doc.getDocumentId());
             output.writeInt(doc.getPositions().size());
@@ -121,7 +115,9 @@ public class SequentialPostings implements Postings {
                 output.writeLong(occurrence.getPosition());
                 output.writeInt(occurrence.getFieldId());
             }
+            written += (8 + 4) * (doc.getPositions().size() + 1);
         }
+        return written;
     }
 
     public ArrayList<Tuple<Term, Long>> writePartialPostingsToFile(String file, PartialIndexData partialIndex) throws IOException {
@@ -129,12 +125,19 @@ public class SequentialPostings implements Postings {
         // Sort by term
         ArrayList<Tuple<Term, PostingsData[]>> termDataList = new ArrayList<Tuple<Term, PostingsData[]>>();
         for (Tuple<Term, HashMap<Long, PostingsData>> term : partialIndex.getSortedPostings()) {
-            TreeMap<Long, PostingsData> sortedDocs = new TreeMap<Long, PostingsData>();
-            sortedDocs.putAll(term.getSecond());
+            PriorityQueue<Tuple<Long, PostingsData>> sortedDocs = new PriorityQueue<Tuple<Long, PostingsData>>(term.getSecond().size(),
+                    new Comparator<Tuple<Long, PostingsData>>() {
+                public int compare(Tuple<Long, PostingsData> o1, Tuple<Long, PostingsData> o2) {
+                    return o1.getFirst().compareTo(o2.getFirst());
+                }
+            });
+            for (Map.Entry<Long, PostingsData> doc : term.getSecond().entrySet()) {
+                sortedDocs.add(new Tuple<Long, PostingsData>(doc.getKey(), doc.getValue()));
+            }
             PostingsData[] termData = new PostingsData[sortedDocs.size()];
             int j = 0;
-            for (Map.Entry<Long, PostingsData> doc : sortedDocs.entrySet()) {
-                termData[j++] = doc.getValue();
+            while (sortedDocs.size() > 0) {
+                termData[j++] = sortedDocs.poll().getSecond();
             }
             termDataList.add(new Tuple<Term, PostingsData[]>(term.getFirst(), termData));
         }
@@ -145,7 +148,8 @@ public class SequentialPostings implements Postings {
     public HashMap<Term, Long> mergePartialPostingsFiles(ArrayList<String> partialFiles,
                                                          ArrayList<ArrayList<Tuple<Term, Long>>> termsToPointer,
                                                          ArrayList<HashMap<Term, Integer>> docFreqs) throws IOException {
-        RandomAccessFile outputFile = null;
+        DataOutputStream outputFile = null;
+        long fileIndex = 0;
         // List of input files
         ArrayList<RandomAccessFile> inputFiles = new ArrayList<RandomAccessFile>(partialFiles.size());
         // Map from term to postings index (in merged file)
@@ -160,7 +164,7 @@ public class SequentialPostings implements Postings {
         ArrayList<HashMap<Term, Integer>> docsWritten = new ArrayList<HashMap<Term, Integer>>();
 
         try {
-            outputFile = new RandomAccessFile(filePath, "rw");
+            outputFile = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(filePath, true)));
 
             // Open all partial files
             for (String partialPath : partialFiles) {
@@ -179,7 +183,7 @@ public class SequentialPostings implements Postings {
                 // Merge step
                 // Find minimum key in all files at their current position
                 for (int i = 0; i < inputFiles.size(); i++) {
-                    if (!currentFiles.get(i) || termsToPointer.get(i).size() == 0) {
+                    if (!currentFiles.get(i)) {
                         continue;
                     }
 
@@ -199,22 +203,21 @@ public class SequentialPostings implements Postings {
                         }
                     }
                     // Check if this is the smallest key (and update if so)
-                    if (minTerm == null || t.compareTo(minTerm) > 0) {
-                        if (minDocId == -1 || minDocId > partialData.get(i).getDocumentId()) {
-                            minTerm = t;
-                            minDocId = partialData.get(i).getDocumentId();
-                            minIndex = i;
-                        }
+                    int comparison = minTerm == null ? -1 : t.compareTo(minTerm);
+                    if (comparison < 0 || (comparison == 0 && minDocId > partialData.get(i).getDocumentId())) {
+                        minTerm = t;
+                        minDocId = partialData.get(i).getDocumentId();
+                        minIndex = i;
                     }
                 }
 
                 // If first occurrence of term, store pointer to postings index
                 if (!indices.containsKey(minTerm)) {
-                    indices.put(minTerm, outputFile.getFilePointer());
+                    indices.put(minTerm, fileIndex);
                 }
                 if (minIndex >= 0) {
                     // Write postings to output file
-                    writeDocsToFile(outputFile, new PostingsData[]{partialData.get(minIndex)});
+                    fileIndex += writeDocsToFile(outputFile, new PostingsData[]{partialData.get(minIndex)});
                     // Mark buffer for this file as empty
                     partialData.set(minIndex, null);
                     // Update number of docs written with this term

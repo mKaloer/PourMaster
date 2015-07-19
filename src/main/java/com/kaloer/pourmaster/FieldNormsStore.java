@@ -33,6 +33,7 @@ public class FieldNormsStore {
         this.filePath = filePath;
         File file = new File(filePath);
         if (!file.exists()) {
+            file.getParentFile().mkdirs();
             file.createNewFile();
         }
         // Allocate length

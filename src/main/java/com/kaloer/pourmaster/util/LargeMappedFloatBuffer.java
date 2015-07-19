@@ -55,7 +55,7 @@ public class LargeMappedFloatBuffer {
         seek(position);
         int relPos = positionToRelative(position);
         if (relPos + FLOAT_SIZE > bufferSize) {
-            throw new IndexOutOfBoundsException();
+            throw new IndexOutOfBoundsException("Tried to access index " + position + " in buffer of size " + size);
         }
         return buffer.getFloat(relPos);
     }
