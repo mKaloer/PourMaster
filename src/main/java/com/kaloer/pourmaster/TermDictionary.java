@@ -1,10 +1,12 @@
 package com.kaloer.pourmaster;
 
 import com.kaloer.pourmaster.terms.Term;
+import com.kaloer.pourmaster.util.Tuple;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -20,6 +22,8 @@ public abstract class TermDictionary {
 
     public abstract long getTotalDocCount();
 
+    public abstract void bulkInsertData(Iterator<Tuple<Term, TermData>> data) throws IOException;
+
     abstract void deleteAll() throws IOException;
 
     /**
@@ -32,7 +36,9 @@ public abstract class TermDictionary {
     /**
      * Contains information about a term stored in the dictionary.
      */
-    public static class TermData {
+    public static class TermData implements Comparable {
+
+        private final static BTreeTermDictionary.TermDataComparator COMPARATOR = new BTreeTermDictionary.TermDataComparator();
 
         private HashMap<Integer, Integer> fieldDocFrequency; // fieldId -> docFrequency
         private int docFrequency;
@@ -76,5 +82,11 @@ public abstract class TermDictionary {
             return postingsIndex;
         }
 
+        public int compareTo(Object o) {
+            if (!(o instanceof TermDictionary)) {
+                return -1;
+            }
+            return COMPARATOR.compare(this, (TermData) o);
+        }
     }
 }

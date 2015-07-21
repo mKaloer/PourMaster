@@ -2,10 +2,10 @@ package com.kaloer.pourmaster;
 
 import com.kaloer.pourmaster.exceptions.ConflictingFieldTypesException;
 import com.kaloer.pourmaster.fields.Field;
-import com.kaloer.pourmaster.search.Query;
-import com.kaloer.pourmaster.search.RankedDocument;
 import com.kaloer.pourmaster.fields.FieldData;
 import com.kaloer.pourmaster.postings.Postings;
+import com.kaloer.pourmaster.search.Query;
+import com.kaloer.pourmaster.search.RankedDocument;
 import com.kaloer.pourmaster.search.RankedDocumentId;
 import com.kaloer.pourmaster.terms.Term;
 import com.kaloer.pourmaster.terms.TermOccurrence;
@@ -91,6 +91,7 @@ public class InvertedIndex {
         ArrayList<String> partialFiles = new ArrayList<String>(); // Partial files paths
         // Term indices in (per partial file)
         ArrayList<ArrayList<Tuple<Term, Long>>> termIndices = new ArrayList<ArrayList<Tuple<Term, Long>>>();
+        final HashMap<Term, TermDictionary.TermData> tempTermData = new HashMap<Term, TermDictionary.TermData>();
         // Mapping from term to document frequencies (per partial file)
         ArrayList<HashMap<Term, Integer>> docFrequencies = new ArrayList<HashMap<Term, Integer>>();
         docFrequencies.add(new HashMap<Term, Integer>());
@@ -161,7 +162,7 @@ public class InvertedIndex {
                 LOGGER.info(String.format("Indexed %d documents", docId + 1));
                 LOGGER.info("Writing partial file...");
                 String outputFile = new File(tmpDir, String.format("postings_%d.part", partialFiles.size())).getAbsolutePath();
-                termIndices.add(writePartialPostings(outputFile, partialIndex));
+                termIndices.add(writePartialPostings(outputFile, partialIndex, tempTermData));
                 partialFiles.add(outputFile);
                 partialIndex.clear();
                 // Add new docFrequencies map for next partial file
@@ -182,17 +183,32 @@ public class InvertedIndex {
         // Write remaining postings
         if (partialIndex.dictionary.size() > 0) {
             String outputFile = new File(tmpDir, String.format("postings_%d.part", partialFiles.size())).getAbsolutePath();
-            termIndices.add(writePartialPostings(outputFile, partialIndex));
+            termIndices.add(writePartialPostings(outputFile, partialIndex, tempTermData));
             partialFiles.add(outputFile);
         }
 
         LOGGER.info("Merging partial files...");
         // Merge partial files
-        HashMap<Term, Long> indices = postings.mergePartialPostingsFiles(partialFiles, termIndices, docFrequencies);
-        // Update dictionary with new pointers
-        for (Map.Entry<Term, Long> t : indices.entrySet()) {
-            this.dictionary.findTerm(t.getKey()).setPostingsIndex(t.getValue());
-        }
+        final HashMap<Term, Long> indices = postings.mergePartialPostingsFiles(partialFiles, termIndices, docFrequencies);
+
+        // Insert into dictionary
+        this.dictionary.bulkInsertData(new Iterator<Tuple<Term, TermDictionary.TermData>>() {
+            private Iterator<Map.Entry<Term, TermDictionary.TermData>> iterator = tempTermData.entrySet().iterator();
+
+            public boolean hasNext() {
+                return iterator.hasNext();
+            }
+
+            public Tuple<Term, TermDictionary.TermData> next() {
+                Map.Entry<Term, TermDictionary.TermData> next = iterator.next();
+                next.getValue().setPostingsIndex(indices.get(next.getKey()));
+                return new Tuple<Term, TermDictionary.TermData>(next.getKey(), next.getValue());
+            }
+
+            public void remove() {
+                iterator.remove();
+            }
+        });
 
         // Merge norms stores
         fieldNormsStore = new FieldNormsStore(config.getFieldNormsFilePath(), fieldIds.size(), docId);
@@ -214,13 +230,9 @@ public class InvertedIndex {
         LOGGER.info("Indexing completed.");
     }
 
-    private ArrayList<Tuple<Term, Long>> writePartialPostings(String outputFile, PartialIndexData partialIndex) throws IOException {
+    private ArrayList<Tuple<Term, Long>> writePartialPostings(String outputFile, PartialIndexData partialIndex, HashMap<Term,
+            TermDictionary.TermData> tempTermData) throws IOException {
         ArrayList<Tuple<Term, Long>> termIndices = this.postings.writePartialPostingsToFile(outputFile, partialIndex);
-        Collections.sort(termIndices, new Comparator<Tuple<Term, Long>>() {
-            public int compare(Tuple<Term, Long> o1, Tuple<Term, Long> o2) {
-                return o1.getFirst().compareTo(o2.getFirst());
-            }
-        });
         for (Tuple<Term, Long> term : termIndices) {
             // Aggregate document frequency and term frequency
             int docFreq = 0;
@@ -238,12 +250,11 @@ public class InvertedIndex {
                 }
             }
             // Update dictionary
-            if (this.dictionary.findTerm(term.getFirst()) == null) {
-                // First occurrence of this term
-                this.dictionary.addTerm(term.getFirst(), new TermDictionary.TermData(docFreq, fieldDocFreq, term.getSecond()));
+            if (!tempTermData.containsKey(term.getFirst())) {
+                tempTermData.put(term.getFirst(), new TermDictionary.TermData(docFreq, fieldDocFreq, term.getSecond()));
             } else {
                 // Term already exists: Increase existing docFreq and fieldDocFreq
-                TermDictionary.TermData existingData = this.dictionary.findTerm(term.getFirst());
+                TermDictionary.TermData existingData = tempTermData.get(term.getFirst());
                 existingData.setDocFrequency(existingData.getDocFrequency() + docFreq);
                 for (Map.Entry<Integer, Integer> entry : fieldDocFreq.entrySet()) {
                     if (!existingData.getFieldDocFrequency().containsKey(entry.getKey())) {

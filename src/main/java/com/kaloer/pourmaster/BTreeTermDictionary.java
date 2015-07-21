@@ -1,10 +1,9 @@
 package com.kaloer.pourmaster;
 
 import com.kaloer.pourmaster.terms.Term;
-import org.apache.directory.mavibot.btree.BTree;
-import org.apache.directory.mavibot.btree.RecordManager;
+import com.kaloer.pourmaster.util.*;
+import org.apache.directory.mavibot.btree.*;
 import org.apache.directory.mavibot.btree.Tuple;
-import org.apache.directory.mavibot.btree.TupleCursor;
 import org.apache.directory.mavibot.btree.exception.BTreeAlreadyManagedException;
 import org.apache.directory.mavibot.btree.exception.KeyNotFoundException;
 import org.apache.directory.mavibot.btree.serializer.AbstractElementSerializer;
@@ -33,7 +32,7 @@ public class BTreeTermDictionary extends TermDictionary {
     private final static String B_TREE_NAME = "termDictionary";
     private final static String SUFFIX_B_TREE_NAME = "termDictionary_suffix";
 
-    private BTree<AtomicTerm, TermData> dictionary;
+    public BTree<AtomicTerm, TermData> dictionary;
     private BTree<AtomicTerm, TermData> suffixDictionary = null;
     private RecordManager recordManager;
     private boolean supportWildcardQuery;
@@ -180,6 +179,42 @@ public class BTreeTermDictionary extends TermDictionary {
         if (supportWildcardQuery) {
             AtomicTerm reversedTerm = new AtomicTerm(term.getTermType().reverse(term.getValue()), atomicTerm.getDataType());
             suffixDictionary.insert(reversedTerm, data);
+        }
+    }
+
+    @Override
+    public void bulkInsertData(final Iterator<com.kaloer.pourmaster.util.Tuple<Term, TermData>> data) throws IOException {
+        BulkLoader.load(dictionary, new Iterator<Tuple<AtomicTerm, TermData>>() {
+            public boolean hasNext() {
+                return data.hasNext();
+            }
+
+            public Tuple<AtomicTerm, TermData> next() {
+                com.kaloer.pourmaster.util.Tuple<Term, TermData> value = data.next();
+                return new Tuple<AtomicTerm, TermData>(value.getFirst().toAtomic(), value.getSecond());
+            }
+
+            public void remove() {
+                data.remove();
+            }
+        }, 10000);
+        if (supportWildcardQuery) {
+            BulkLoader.load(suffixDictionary, new Iterator<Tuple<AtomicTerm, TermData>>() {
+                public boolean hasNext() {
+                    return data.hasNext();
+                }
+
+                public Tuple<AtomicTerm, TermData> next() {
+                    com.kaloer.pourmaster.util.Tuple<Term, TermData> value = data.next();
+                    AtomicTerm atomicTerm = value.getFirst().toAtomic();
+                    AtomicTerm reversedTerm = new AtomicTerm(value.getFirst().getTermType().reverse(value.getFirst().getValue()), atomicTerm.getDataType());
+                    return new Tuple<AtomicTerm, TermData>(reversedTerm, value.getSecond());
+                }
+
+                public void remove() {
+                    data.remove();
+                }
+            }, 10000);
         }
     }
 

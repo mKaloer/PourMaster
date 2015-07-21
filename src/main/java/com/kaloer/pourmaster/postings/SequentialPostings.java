@@ -196,11 +196,6 @@ public class SequentialPostings implements Postings {
                         }
                         // Read data
                         partialData.set(i, readPostingsData(inputFiles.get(i)));
-
-                        // Check for end of file and mark for next iteration
-                        if (inputFiles.get(i).getFilePointer() >= inputFiles.get(i).length()) {
-                            currentFiles.set(i, false);
-                        }
                     }
                     // Check if this is the smallest key (and update if so)
                     int comparison = minTerm == null ? -1 : t.compareTo(minTerm);
@@ -220,6 +215,10 @@ public class SequentialPostings implements Postings {
                     fileIndex += writeDocsToFile(outputFile, new PostingsData[]{partialData.get(minIndex)});
                     // Mark buffer for this file as empty
                     partialData.set(minIndex, null);
+                    // If file is fully read, mark as done:
+                    if (inputFiles.get(minIndex).getFilePointer() >= inputFiles.get(minIndex).length()) {
+                        currentFiles.set(minIndex, false);
+                    }
                     // Update number of docs written with this term
                     if (!docsWritten.get(minIndex).containsKey(minTerm)) {
                         docsWritten.get(minIndex).put(minTerm, 0);
