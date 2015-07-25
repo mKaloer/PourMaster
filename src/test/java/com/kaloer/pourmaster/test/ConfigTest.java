@@ -6,7 +6,6 @@ import com.kaloer.pourmaster.InvertedIndex;
 import com.kaloer.pourmaster.SequentialDocumentIndex;
 import com.kaloer.pourmaster.postings.SequentialPostings;
 import org.apache.commons.io.FileUtils;
-import org.apache.directory.mavibot.btree.exception.BTreeAlreadyManagedException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -45,7 +44,7 @@ public class ConfigTest {
         writer.close();
     }
 
-    protected static InvertedIndex createIndex(boolean wildcards) throws IOException, ReflectiveOperationException, BTreeAlreadyManagedException {
+    protected static InvertedIndex createIndex(boolean wildcards) throws IOException, ReflectiveOperationException {
         IndexConfig conf = new IndexConfig()
                 .setDocumentIndex(SequentialDocumentIndex.class)
                 .setBaseDirectory("idx")

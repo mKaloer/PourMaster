@@ -7,8 +7,6 @@ import com.kaloer.pourmaster.AtomicTerm;
  */
 public interface TermType {
 
-    TermSerializer getSerializer();
-
     byte[] getBytes(Object value);
 
     Object readFromBytes(byte[] input);

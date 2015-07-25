@@ -1,22 +1,21 @@
 package com.kaloer.pourmaster;
 
+import com.google.common.collect.ImmutableList;
 import com.kaloer.pourmaster.terms.Term;
-import com.kaloer.pourmaster.util.*;
-import org.apache.directory.mavibot.btree.*;
-import org.apache.directory.mavibot.btree.Tuple;
-import org.apache.directory.mavibot.btree.exception.BTreeAlreadyManagedException;
-import org.apache.directory.mavibot.btree.exception.KeyNotFoundException;
-import org.apache.directory.mavibot.btree.serializer.AbstractElementSerializer;
-import org.apache.directory.mavibot.btree.serializer.BufferHandler;
-import org.apache.directory.mavibot.btree.serializer.IntSerializer;
-import org.apache.directory.mavibot.btree.serializer.LongSerializer;
+import com.kaloer.pourmaster.util.Tuple;
+import org.mapdb.BTreeMap;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
+import org.mapdb.Serializer;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.io.FileNotFoundException;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.concurrent.ConcurrentNavigableMap;
 
 /**
  * Term dictionary based on a B-tree. This allows for efficient lookup even if the
@@ -32,60 +31,46 @@ public class BTreeTermDictionary extends TermDictionary {
     private final static String B_TREE_NAME = "termDictionary";
     private final static String SUFFIX_B_TREE_NAME = "termDictionary_suffix";
 
-    public BTree<AtomicTerm, TermData> dictionary;
-    private BTree<AtomicTerm, TermData> suffixDictionary = null;
-    private RecordManager recordManager;
+    public BTreeMap<AtomicTerm, TermData> dictionary;
+    private BTreeMap<AtomicTerm, TermData> suffixDictionary = null;
+    private DB btreeDb;
     private boolean supportWildcardQuery;
     private String dictionaryFile;
 
     public void init(IndexConfig config) throws IOException {
         dictionaryFile = config.getFilePath(CONFIG_DICTIONARY_FILE_ID, DEFAULT_FILE_NAME);
+        new File(dictionaryFile).createNewFile();
         int pageSize = Integer.parseInt(config.get(CONFIG_PAGE_SIZE, "-1"));
         this.supportWildcardQuery = Boolean.valueOf(config.get(CONFIG_SUPPORT_WILDCARD_ID, "true"));
         setupBTree(pageSize);
     }
 
     private void setupBTree(int pageSize) throws IOException {
-        recordManager = new RecordManager(dictionaryFile);
-        dictionary = recordManager.getManagedTree(B_TREE_NAME);
-        // Create if it does not exist.
-        if (dictionary == null) {
-            try {
-                dictionary = recordManager.addBTree(B_TREE_NAME, new AtomicTermSerializer(), new TermDataSerializer(), false);
-            } catch (BTreeAlreadyManagedException e) {
-                // This is thrown when recordManager already manages a btree with this name.
-                e.printStackTrace();
-                throw new IOException("BTree already exist (check that the file is not already in use!)");
-            }
-            if (pageSize > 0) {
-                dictionary.setPageSize(pageSize);
-            }
+        btreeDb = DBMaker.fileDB(new File(dictionaryFile)).fileLockDisable().lockDisable().make();
+        DB.BTreeMapMaker bTreeMaker = btreeDb.treeMapCreate(B_TREE_NAME)
+                .keySerializer(new AtomicTermSerializer())
+                .valueSerializer(new TermDataSerializer())
+                .comparator(new AtomicTermComparator());
+        if (pageSize > 0) {
+            bTreeMaker.nodeSize(pageSize);
         }
+        dictionary = bTreeMaker.makeOrGet();
         // Create suffix dictionary
         if (supportWildcardQuery) {
-            suffixDictionary = recordManager.getManagedTree(SUFFIX_B_TREE_NAME);
-            if (suffixDictionary == null) {
-                try {
-                    suffixDictionary = recordManager.addBTree(SUFFIX_B_TREE_NAME, new AtomicTermSerializer(), new TermDataSerializer(), false);
-                } catch (BTreeAlreadyManagedException e) {
-                    // This is thrown when recordManager already manages a btree with this name.
-                    e.printStackTrace();
-                    throw new IOException("BTree already exist (check that the file is not already in use!)");
-                }
-                if (pageSize > 0) {
-                    suffixDictionary.setPageSize(pageSize);
-                }
+            bTreeMaker = btreeDb.treeMapCreate(SUFFIX_B_TREE_NAME)
+                    .keySerializer(new AtomicTermSerializer())
+                    .valueSerializer(new TermDataSerializer())
+                    .comparator(new AtomicTermComparator());
+            if (pageSize > 0) {
+                bTreeMaker.nodeSize(pageSize);
             }
+            suffixDictionary = bTreeMaker.makeOrGet();
         }
     }
 
     @Override
     public TermData findTerm(Term term) throws IOException {
-        try {
-            return dictionary.get(term.toAtomic());
-        } catch (KeyNotFoundException e) {
-            return null;
-        }
+        return dictionary.get(term.toAtomic());
     }
 
     @Override
@@ -99,132 +84,106 @@ public class BTreeTermDictionary extends TermDictionary {
         if (suffix != null) {
             reverseSuffix = new Term(suffix.getTermType().reverse(suffix.getValue()), suffix.getTermType());
         }
-        TupleCursor<AtomicTerm, TermData> cursor = null;
-        try {
-            // Hash table mapping postings pointers to term and data
-            HashMap<Long, Tuple<AtomicTerm, TermData>> prefixMatches = null;
-            if (prefix != null) {
-                // Add all prefix matches to set
-                prefixMatches = new HashMap<Long, Tuple<AtomicTerm, TermData>>();
-                cursor = dictionary.browseFrom(prefix.toAtomic());
-                // Cursor starts at matching node, but we have to look at this node as well.
-                // So step back once if we can.
-                if (cursor.hasPrevKey()) {
-                    cursor.prevKey();
+
+        // Hash table mapping postings pointers to term and data
+        HashMap<Long, Tuple<AtomicTerm, TermData>> prefixMatches = null;
+        if (prefix != null) {
+            // Add all prefix matches to set
+            prefixMatches = new HashMap<Long, Tuple<AtomicTerm, TermData>>();
+            AtomicTerm atomicPrefix = prefix.toAtomic();
+            ConcurrentNavigableMap<AtomicTerm, TermData> cursor = dictionary.tailMap(atomicPrefix, true);
+            AtomicTerm currentTerm = cursor.ceilingKey(atomicPrefix);
+            do {
+                TermData termData = dictionary.get(currentTerm);
+                // Check if actually a prefix
+                if (!prefix.isPrefix(currentTerm.getValue())) {
+                    break;
                 }
-                while (cursor.hasNextKey()) {
-                    Tuple<AtomicTerm, TermData> termItem = cursor.nextKey();
-                    // Check if actually a prefix
-                    if (!prefix.isPrefix(termItem.getKey().getValue())) {
-                        break;
-                    }
-                    prefixMatches.put(termItem.getValue().getPostingsIndex(), termItem);
+                prefixMatches.put(termData.getPostingsIndex(), new Tuple(currentTerm, termData));
+            } while ((currentTerm = cursor.higherKey(currentTerm)) != null);
+        }
+
+        ArrayList<TermData> resultMatches = new ArrayList<TermData>();
+
+        // If prefixMatches != null and its size == 0, there is no need to find suffixes (none will match)
+        if (suffix != null && (prefixMatches == null || prefixMatches.size() > 0)) {
+            AtomicTerm reverseAtomicSuffix = reverseSuffix.toAtomic();
+            ConcurrentNavigableMap<AtomicTerm, TermData> cursor = suffixDictionary.tailMap(reverseAtomicSuffix, true);
+            AtomicTerm currentTerm = cursor.ceilingKey(reverseAtomicSuffix);
+            do {
+                TermData termData = suffixDictionary.get(currentTerm);
+                // Check if actually a prefix
+                if (!reverseSuffix.isPrefix(currentTerm.getValue())) {
+                    break;
                 }
-                cursor.close();
-            }
-
-            ArrayList<TermData> resultMatches = new ArrayList<TermData>();
-
-            // If prefixMatches != null and its size == 0, there is no need to find suffixes (none will match)
-            if (suffix != null && (prefixMatches == null || prefixMatches.size() > 0)) {
-                cursor = suffixDictionary.browseFrom(reverseSuffix.toAtomic());
-                // Cursor starts at matching node, but we have to look at this node as well.
-                // So step back once if we can.
-                if (cursor.hasPrevKey()) {
-                    cursor.prevKey();
-                }
-                while (cursor.hasNextKey() && (prefixMatches == null || prefixMatches.size() > 0)) {
-                    Tuple<AtomicTerm, TermData> termItem = cursor.nextKey();
-
-                    // Check if actually a suffix
-                    if (!reverseSuffix.isPrefix(termItem.getKey().getValue())) {
-                        break;
-                    }
-
-                    // Add to results
-                    if (prefix == null) {
-                        resultMatches.add(termItem.getValue());
-                    } else if (prefixMatches.containsKey(termItem.getValue().getPostingsIndex())) {
-                        // If prefix not null and suffix not null, we must check that the term
-                        // does not fully match either the prefix or suffix, e.g. "abba" should not
-                        // match query with prefix = "abba", suffix = "ba".
-                        if (!termItem.getKey().getValue().equals(prefix.getValue()) &&
-                                !termItem.getKey().getValue().equals(suffix.getValue())) {
-                            resultMatches.add(termItem.getValue());
-                            // Remove from prefixMatches for faster containsKey() in next iterations.
-                            prefixMatches.remove(termItem.getValue().getPostingsIndex());
-                        }
+                // Add to results
+                if (prefix == null) {
+                    resultMatches.add(termData);
+                } else if (prefixMatches.containsKey(termData.getPostingsIndex())) {
+                    // If prefix not null and suffix not null, we must check that the term
+                    // does not fully match either the prefix or suffix, e.g. "abba" should not
+                    // match query with prefix = "abba", suffix = "ba".
+                    if (!currentTerm.getValue().equals(prefix.getValue()) &&
+                            !currentTerm.getValue().equals(suffix.getValue())) {
+                        resultMatches.add(termData);
+                        // Remove from prefixMatches for faster containsKey() in next iterations.
+                        prefixMatches.remove(termData.getPostingsIndex());
                     }
                 }
-            } else {
-                // Handle prefix-query (suffix is null, so add all with matching prefix)
-                for (Tuple<AtomicTerm, TermData> match : prefixMatches.values()) {
-                    resultMatches.add(match.getValue());
-                }
-            }
-
-            return resultMatches;
-
-        } finally {
-            if (cursor != null) {
-                cursor.close();
+            } while ((currentTerm = cursor.higherKey(currentTerm)) != null);
+        } else {
+            // Handle prefix-query (suffix is null, so add all with matching prefix)
+            for (Tuple<AtomicTerm, TermData> match : prefixMatches.values()) {
+                resultMatches.add(match.getSecond());
             }
         }
+
+        return resultMatches;
     }
 
     @Override
     public void addTerm(Term term, TermData data) throws IOException {
         AtomicTerm atomicTerm = term.toAtomic();
-        dictionary.insert(atomicTerm, data);
+        dictionary.put(atomicTerm, data);
         if (supportWildcardQuery) {
             AtomicTerm reversedTerm = new AtomicTerm(term.getTermType().reverse(term.getValue()), atomicTerm.getDataType());
-            suffixDictionary.insert(reversedTerm, data);
+            suffixDictionary.put(reversedTerm, data);
         }
+        btreeDb.commit();
     }
 
     @Override
-    public void bulkInsertData(final Iterator<com.kaloer.pourmaster.util.Tuple<Term, TermData>> data) throws IOException {
-        BulkLoader.load(dictionary, new Iterator<Tuple<AtomicTerm, TermData>>() {
-            public boolean hasNext() {
-                return data.hasNext();
-            }
-
-            public Tuple<AtomicTerm, TermData> next() {
-                com.kaloer.pourmaster.util.Tuple<Term, TermData> value = data.next();
-                return new Tuple<AtomicTerm, TermData>(value.getFirst().toAtomic(), value.getSecond());
-            }
-
-            public void remove() {
-                data.remove();
-            }
-        }, 10000);
-        if (supportWildcardQuery) {
-            BulkLoader.load(suffixDictionary, new Iterator<Tuple<AtomicTerm, TermData>>() {
-                public boolean hasNext() {
-                    return data.hasNext();
-                }
-
-                public Tuple<AtomicTerm, TermData> next() {
-                    com.kaloer.pourmaster.util.Tuple<Term, TermData> value = data.next();
-                    AtomicTerm atomicTerm = value.getFirst().toAtomic();
-                    AtomicTerm reversedTerm = new AtomicTerm(value.getFirst().getTermType().reverse(value.getFirst().getValue()), atomicTerm.getDataType());
-                    return new Tuple<AtomicTerm, TermData>(reversedTerm, value.getSecond());
-                }
-
-                public void remove() {
-                    data.remove();
-                }
-            }, 10000);
+    public void bulkInsertData(final ImmutableList<Tuple<Term, TermData>> data) throws IOException {
+        HashMap<AtomicTerm, TermData> mapData = new HashMap<AtomicTerm, TermData>(data.size());
+        for (Tuple<Term, TermData> entry : data) {
+            mapData.put(entry.getFirst().toAtomic(), entry.getSecond());
         }
+        dictionary.putAll(mapData);
+        if (supportWildcardQuery) {
+            mapData = new HashMap<AtomicTerm, TermData>(data.size());
+            for (Tuple<Term, TermData> entry : data) {
+                AtomicTerm atomicTerm = entry.getFirst().toAtomic();
+                AtomicTerm reversedTerm = new AtomicTerm(entry.getFirst().getTermType().reverse(
+                        entry.getFirst().getValue()), atomicTerm.getDataType());
+                mapData.put(reversedTerm, entry.getSecond());
+            }
+            suffixDictionary.putAll(mapData);
+        }
+        btreeDb.commit();
     }
 
     @Override
     void deleteAll() throws IOException {
-        // Delete dictionary file
-        RandomAccessFile file = new RandomAccessFile(dictionaryFile, "rw");
-        file.setLength(0);
         // Setup new btree
-        setupBTree(recordManager.getPageSize());
+        dictionary.clear();
+        if (suffixDictionary != null) {
+            suffixDictionary.clear();
+        }
+    }
+
+    @Override
+    void close() {
+
     }
 
     @Override
@@ -232,61 +191,35 @@ public class BTreeTermDictionary extends TermDictionary {
         throw new NotImplementedException();
     }
 
-    public static class TermDataSerializer extends AbstractElementSerializer<TermData> {
+    public static class TermDataSerializer extends Serializer<TermData> {
 
-        public TermDataSerializer() {
-            super(new TermDataComparator());
-        }
-
-        public byte[] serialize(TermData termData) {
+        @Override
+        public void serialize(DataOutput out, TermData termData) throws IOException {
             // Store fieldId:docFreq per field the term occurs in
             int numFields = termData.getFieldDocFrequency().size();
-            ByteBuffer buffer = ByteBuffer.allocate(4 + 1 + numFields * (1 + 4) + 8);
-            buffer.putInt(termData.getDocFrequency());
+            out.writeInt(termData.getDocFrequency());
 
-            buffer.put((byte) numFields);
+            out.writeByte(numFields);
             for (Map.Entry<Integer, Integer> field : termData.getFieldDocFrequency().entrySet()) {
-                buffer.put(field.getKey().byteValue());
-                buffer.putInt(field.getValue());
+                out.writeByte(field.getKey().byteValue());
+                out.writeInt(field.getValue());
             }
-            buffer.putLong(termData.getPostingsIndex());
-            return buffer.array();
+            out.writeLong(termData.getPostingsIndex());
         }
 
-        public TermData deserialize(BufferHandler bufferHandler) throws IOException {
-            int docFrequency = IntSerializer.deserialize(bufferHandler.read(4));
-            int numFields = bufferHandler.read(1)[0];
+        @Override
+        public TermData deserialize(DataInput in, int available) throws IOException {
+            int docFrequency = in.readInt();
+            int numFields = in.readByte();
             HashMap<Integer, Integer> fieldDocFrequency = new HashMap<Integer, Integer>();
             for (int i = 0; i < numFields; i++) {
-                int fieldId = bufferHandler.read(1)[0];
-                int freq = IntSerializer.deserialize(bufferHandler.read(4));
+                int fieldId = in.readByte();
+                int freq = in.readInt();
                 fieldDocFrequency.put(fieldId, freq);
             }
-            long postingsIndex = LongSerializer.deserialize(bufferHandler.read(8));
+            long postingsIndex = in.readLong();
 
             return new TermData(docFrequency, fieldDocFrequency, postingsIndex);
-        }
-
-        public TermData deserialize(ByteBuffer byteBuffer) throws IOException {
-            int docFrequency = byteBuffer.getInt();
-            int numFields = byteBuffer.get();
-            HashMap<Integer, Integer> fieldDocFrequency = new HashMap<Integer, Integer>();
-            for (int i = 0; i < numFields; i++) {
-                int fieldId = byteBuffer.get();
-                int freq = byteBuffer.getInt();
-                fieldDocFrequency.put(fieldId, freq);
-            }
-            long postingsIndex = byteBuffer.getLong();
-
-            return new TermData(docFrequency, fieldDocFrequency, postingsIndex);
-        }
-
-        public TermData fromBytes(byte[] bytes) throws IOException {
-            return deserialize(ByteBuffer.wrap(bytes));
-        }
-
-        public TermData fromBytes(byte[] bytes, int i) throws IOException {
-            return deserialize(ByteBuffer.wrap(bytes, i, bytes.length - i));
         }
     }
 
@@ -302,32 +235,21 @@ public class BTreeTermDictionary extends TermDictionary {
         }
     }
 
-    public static class AtomicTermSerializer extends AbstractElementSerializer<AtomicTerm> {
+    public static class AtomicTermSerializer extends Serializer<AtomicTerm> {
 
-        public AtomicTermSerializer() {
-            super(new AtomicTermComparator());
+        @Override
+        public void serialize(DataOutput dataOutput, AtomicTerm atomicTerm) throws IOException {
+            byte[] data = atomicTerm.serialize();
+            dataOutput.writeInt(data.length);
+            dataOutput.write(data);
         }
 
-        private InvertedIndex index;
-
-        public byte[] serialize(AtomicTerm term) {
-            return term.serialize();
-        }
-
-        public AtomicTerm deserialize(BufferHandler bufferHandler) throws IOException {
-            return new AtomicTerm(ByteBuffer.wrap(bufferHandler.getBuffer()));
-        }
-
-        public AtomicTerm deserialize(ByteBuffer byteBuffer) throws IOException {
-            return new AtomicTerm(byteBuffer);
-        }
-
-        public AtomicTerm fromBytes(byte[] bytes) throws IOException {
-            return deserialize(ByteBuffer.wrap(bytes));
-        }
-
-        public AtomicTerm fromBytes(byte[] bytes, int i) throws IOException {
-            return deserialize(ByteBuffer.wrap(bytes, i, bytes.length - i));
+        @Override
+        public AtomicTerm deserialize(DataInput dataInput, int i) throws IOException {
+            int length = dataInput.readInt();
+            byte[] data = new byte[length];
+            dataInput.readFully(data);
+            return new AtomicTerm(ByteBuffer.wrap(data));
         }
     }
 

@@ -3,7 +3,7 @@ package com.kaloer.pourmaster.annotations;
 import com.kaloer.pourmaster.Analyzer;
 import com.kaloer.pourmaster.Token;
 import com.kaloer.pourmaster.fields.FieldType;
-import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.collections4.IteratorUtils;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

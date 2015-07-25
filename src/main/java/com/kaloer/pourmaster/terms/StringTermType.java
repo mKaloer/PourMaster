@@ -8,7 +8,6 @@ import com.kaloer.pourmaster.AtomicTerm;
 public class StringTermType implements TermType {
 
     private static StringTermType instance;
-    private StringTermSerializer stringTermSerializer = new StringTermSerializer();
 
     public static StringTermType getInstance() {
         if (instance == null) {
@@ -18,10 +17,6 @@ public class StringTermType implements TermType {
     }
 
     private StringTermType() {
-    }
-
-    public TermSerializer getSerializer() {
-        return stringTermSerializer;
     }
 
     public byte[] getBytes(Object value) {
@@ -66,11 +61,4 @@ public class StringTermType implements TermType {
         return new StringBuilder((String) value).reverse().toString();
     }
 
-    public static class StringTermSerializer extends TermSerializer<StringTerm> {
-
-        @Override
-        public TermType getTermType() {
-            return StringTermType.getInstance();
-        }
-    }
 }

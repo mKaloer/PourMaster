@@ -1,6 +1,5 @@
 package com.kaloer.pourmaster.search;
 
-import com.kaloer.pourmaster.Document;
 import com.kaloer.pourmaster.InvertedIndex;
 import com.kaloer.pourmaster.TermDictionary;
 import com.kaloer.pourmaster.postings.PostingsData;
@@ -9,8 +8,7 @@ import com.kaloer.pourmaster.terms.TermOccurrence;
 import com.kaloer.pourmaster.util.IOIterator;
 import com.kaloer.pourmaster.util.PriorityQueueIterator;
 import com.kaloer.pourmaster.util.Tuple;
-import org.apache.commons.collections.map.MultiValueMap;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import org.apache.commons.collections4.map.MultiValueMap;
 
 import java.io.IOException;
 import java.util.*;

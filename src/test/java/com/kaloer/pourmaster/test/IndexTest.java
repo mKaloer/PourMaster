@@ -425,6 +425,7 @@ public class IndexTest {
         index.indexDocuments(docs);
 
         // Reload index
+        index.close();
         index = createIndex(false);
 
         List<RankedDocument> results = index.search(new TermQuery(new StringTerm("test"), "content"), -1);
@@ -473,6 +474,7 @@ public class IndexTest {
         postingsData = postingsIterator.next();
         Assert.assertEquals(2, postingsData.getPositions().size());
 
+        index.close();
         // Index again
         index.indexDocuments(docs);
 

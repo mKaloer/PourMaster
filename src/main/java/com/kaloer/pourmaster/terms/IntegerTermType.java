@@ -10,7 +10,6 @@ import java.nio.ByteBuffer;
 public class IntegerTermType implements TermType {
 
     private static IntegerTermType instance;
-    private IntegerTermSerializer integerTermSerializer = new IntegerTermSerializer();
 
     public static IntegerTermType getInstance() {
         if (instance == null) {
@@ -20,10 +19,6 @@ public class IntegerTermType implements TermType {
     }
 
     private IntegerTermType() {
-    }
-
-    public TermSerializer getSerializer() {
-        return integerTermSerializer;
     }
 
     public byte[] getBytes(Object value) {
@@ -78,11 +73,4 @@ public class IntegerTermType implements TermType {
         return reversed;
     }
 
-    public static class IntegerTermSerializer extends TermSerializer<IntegerTerm> {
-
-        @Override
-        public TermType getTermType() {
-            return IntegerTermType.getInstance();
-        }
-    }
 }

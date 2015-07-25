@@ -54,12 +54,12 @@ public class SequentialPostings implements Postings {
     }
 
     public IOIterator<PostingsData> getDocumentsForTerm(long index, int docCount) throws IOException {
-        RandomAccessFile file = new RandomAccessFile(filePath, "r");
-        file.seek(index);
+        DataInputStream file = new DataInputStream(new BufferedInputStream(new FileInputStream(filePath)));
+        file.skip(index);
         return new BufferedPostingsIterator(file, docCount, this);
     }
 
-    protected PostingsData readPostingsData(RandomAccessFile file) throws IOException {
+    protected PostingsData readPostingsData(DataInputStream file) throws IOException {
         long docId = file.readLong();
         int arrLength = file.readInt();
         ArrayList<TermOccurrence> positions = new ArrayList<TermOccurrence>(arrLength);
@@ -151,7 +151,7 @@ public class SequentialPostings implements Postings {
         DataOutputStream outputFile = null;
         long fileIndex = 0;
         // List of input files
-        ArrayList<RandomAccessFile> inputFiles = new ArrayList<RandomAccessFile>(partialFiles.size());
+        ArrayList<DataInputStream> inputFiles = new ArrayList<DataInputStream>(partialFiles.size());
         // Map from term to postings index (in merged file)
         HashMap<Term, Long> indices = new HashMap<Term, Long>();
         // Keep index of terms currently merged per partial file
@@ -168,7 +168,7 @@ public class SequentialPostings implements Postings {
 
             // Open all partial files
             for (String partialPath : partialFiles) {
-                inputFiles.add(new RandomAccessFile(partialPath, "r"));
+                inputFiles.add(new DataInputStream(new BufferedInputStream(new FileInputStream(partialPath))));
                 termIndices.add(0);
                 currentFiles.add(true);
                 partialData.add(null);
@@ -190,10 +190,6 @@ public class SequentialPostings implements Postings {
                     Tuple<Term, Long> item = termsToPointer.get(i).get(termIndices.get(i));
                     Term t = item.getFirst();
                     if (partialData.get(i) == null) {
-                        // Seek to term location if not already visited
-                        if (inputFiles.get(i).getFilePointer() < item.getSecond()) {
-                            inputFiles.get(i).seek(item.getSecond());
-                        }
                         // Read data
                         partialData.set(i, readPostingsData(inputFiles.get(i)));
                     }
@@ -215,18 +211,19 @@ public class SequentialPostings implements Postings {
                     fileIndex += writeDocsToFile(outputFile, new PostingsData[]{partialData.get(minIndex)});
                     // Mark buffer for this file as empty
                     partialData.set(minIndex, null);
-                    // If file is fully read, mark as done:
-                    if (inputFiles.get(minIndex).getFilePointer() >= inputFiles.get(minIndex).length()) {
-                        currentFiles.set(minIndex, false);
-                    }
                     // Update number of docs written with this term
                     if (!docsWritten.get(minIndex).containsKey(minTerm)) {
                         docsWritten.get(minIndex).put(minTerm, 0);
                     }
                     docsWritten.get(minIndex).put(minTerm, docsWritten.get(minIndex).get(minTerm) + 1);
-                    // If all docs written, increment  term index
+                    // If all docs written, increment term index or mark file as complete
                     if (docsWritten.get(minIndex).get(minTerm).equals(docFreqs.get(minIndex).get(minTerm))) {
-                        termIndices.set(minIndex, termIndices.get(minIndex) + 1);
+                        if (termIndices.get(minIndex) == termsToPointer.get(minIndex).size() - 1) {
+                            // End of file.
+                            currentFiles.set(minIndex, false);
+                        } else {
+                            termIndices.set(minIndex, termIndices.get(minIndex) + 1);
+                        }
                     }
                 }
             }
@@ -236,9 +233,9 @@ public class SequentialPostings implements Postings {
             if (outputFile != null) {
                 outputFile.close();
             }
-            for (RandomAccessFile f : inputFiles) {
-                if (f != null) {
-                    f.close();
+            for (InputStream in : inputFiles) {
+                if (in != null) {
+                    in.close();
                 }
             }
         }

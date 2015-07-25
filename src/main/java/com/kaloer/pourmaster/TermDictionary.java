@@ -1,12 +1,11 @@
 package com.kaloer.pourmaster;
 
+import com.google.common.collect.ImmutableList;
 import com.kaloer.pourmaster.terms.Term;
 import com.kaloer.pourmaster.util.Tuple;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -22,9 +21,11 @@ public abstract class TermDictionary {
 
     public abstract long getTotalDocCount();
 
-    public abstract void bulkInsertData(Iterator<Tuple<Term, TermData>> data) throws IOException;
+    public abstract void bulkInsertData(ImmutableList<Tuple<Term, TermData>> data) throws IOException;
 
     abstract void deleteAll() throws IOException;
+
+    abstract void close();
 
     /**
      * Initializes the TermDictionary.

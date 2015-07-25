@@ -1,5 +1,8 @@
 package com.kaloer.pourmaster;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.kaloer.pourmaster.exceptions.ConflictingFieldTypesException;
 import com.kaloer.pourmaster.fields.Field;
 import com.kaloer.pourmaster.fields.FieldData;
@@ -13,6 +16,7 @@ import com.kaloer.pourmaster.util.Tuple;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -29,7 +33,7 @@ public class InvertedIndex {
     private final static Logger LOGGER = Logger.getLogger(InvertedIndex.class.getName());
 
     // Number of documents per index iteration
-    private final static int DOCS_PER_ITERATION = 1000;
+    private final static int DOCS_PER_ITERATION = 1000000;
 
     private DocumentTypeStore docTypeStore;
     private TermDictionary dictionary;
@@ -138,10 +142,12 @@ public class InvertedIndex {
                             // Update document frequency mapping if not already added (only add once per unique term)
                             if (!termsInDoc.contains(t.getValue())) {
                                 termsInDoc.add(t.getValue());
+
+                                // Update document frequency
                                 if (!docFrequencies.get(partialFiles.size()).containsKey(t.getValue())) {
-                                    // New term in this file. Add doc freq 0
                                     docFrequencies.get(partialFiles.size()).put(t.getValue(), 0);
                                 }
+
                                 // Add new doc frequency
                                 int oldFreq = docFrequencies.get(partialFiles.size()).get(t.getValue());
                                 docFrequencies.get(partialFiles.size()).put(t.getValue(), oldFreq + 1);
@@ -164,9 +170,8 @@ public class InvertedIndex {
                 String outputFile = new File(tmpDir, String.format("postings_%d.part", partialFiles.size())).getAbsolutePath();
                 termIndices.add(writePartialPostings(outputFile, partialIndex, tempTermData));
                 partialFiles.add(outputFile);
-                partialIndex.clear();
-                // Add new docFrequencies map for next partial file
                 docFrequencies.add(new HashMap<Term, Integer>());
+                partialIndex.clear();
                 normsStore = new FieldNormsStore(tmpDir + File.separator + "fns_" + fieldNormsStores.size(), 256, DOCS_PER_ITERATION);
                 fieldNormsStores.add(normsStore);
                 LOGGER.info("Partial write successful.");
@@ -192,23 +197,14 @@ public class InvertedIndex {
         final HashMap<Term, Long> indices = postings.mergePartialPostingsFiles(partialFiles, termIndices, docFrequencies);
 
         // Insert into dictionary
-        this.dictionary.bulkInsertData(new Iterator<Tuple<Term, TermDictionary.TermData>>() {
-            private Iterator<Map.Entry<Term, TermDictionary.TermData>> iterator = tempTermData.entrySet().iterator();
-
-            public boolean hasNext() {
-                return iterator.hasNext();
+        this.dictionary.bulkInsertData(
+                ImmutableList.copyOf(Collections2.transform(tempTermData.entrySet(),
+                        new Function<Map.Entry<Term, TermDictionary.TermData>, Tuple<Term, TermDictionary.TermData>>() {
+            public Tuple<Term, TermDictionary.TermData> apply(Map.Entry<Term, TermDictionary.TermData> termEntry) {
+                termEntry.getValue().setPostingsIndex(indices.get(termEntry.getKey()));
+                return new Tuple<Term, TermDictionary.TermData>(termEntry.getKey(), termEntry.getValue());
             }
-
-            public Tuple<Term, TermDictionary.TermData> next() {
-                Map.Entry<Term, TermDictionary.TermData> next = iterator.next();
-                next.getValue().setPostingsIndex(indices.get(next.getKey()));
-                return new Tuple<Term, TermDictionary.TermData>(next.getKey(), next.getValue());
-            }
-
-            public void remove() {
-                iterator.remove();
-            }
-        });
+        })));
 
         // Merge norms stores
         fieldNormsStore = new FieldNormsStore(config.getFieldNormsFilePath(), fieldIds.size(), docId);
@@ -278,6 +274,10 @@ public class InvertedIndex {
         fieldNormsStore.deleteAll();
     }
 
+    public void close() {
+        dictionary.close();
+    }
+
     public DocumentIndex getDocIndex() {
         return docIndex;
     }
@@ -297,4 +297,5 @@ public class InvertedIndex {
     public FieldNormsStore getFieldNormsStore() {
         return fieldNormsStore;
     }
+
 }
