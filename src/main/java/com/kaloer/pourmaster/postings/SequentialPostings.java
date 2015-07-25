@@ -147,7 +147,7 @@ public class SequentialPostings implements Postings {
 
     public HashMap<Term, Long> mergePartialPostingsFiles(ArrayList<String> partialFiles,
                                                          ArrayList<ArrayList<Tuple<Term, Long>>> termsToPointer,
-                                                         ArrayList<HashMap<Term, Integer>> docFreqs) throws IOException {
+                                                         HashMap<Term, List<Integer>> docFreqs) throws IOException {
         DataOutputStream outputFile = null;
         long fileIndex = 0;
         // List of input files
@@ -217,7 +217,7 @@ public class SequentialPostings implements Postings {
                     }
                     docsWritten.get(minIndex).put(minTerm, docsWritten.get(minIndex).get(minTerm) + 1);
                     // If all docs written, increment term index or mark file as complete
-                    if (docsWritten.get(minIndex).get(minTerm).equals(docFreqs.get(minIndex).get(minTerm))) {
+                    if (docsWritten.get(minIndex).get(minTerm).equals(docFreqs.get(minTerm).get(minIndex))) {
                         if (termIndices.get(minIndex) == termsToPointer.get(minIndex).size() - 1) {
                             // End of file.
                             currentFiles.set(minIndex, false);

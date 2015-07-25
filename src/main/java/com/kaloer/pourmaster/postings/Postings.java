@@ -9,6 +9,7 @@ import com.kaloer.pourmaster.util.Tuple;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Interface for Postings list used to retrieve documents for a given term.
@@ -39,7 +40,7 @@ public interface Postings {
      */
     HashMap<Term, Long> mergePartialPostingsFiles(ArrayList<String> partialFiles,
                                                   ArrayList<ArrayList<Tuple<Term, Long>>> termsToPointer,
-                                                  ArrayList<HashMap<Term, Integer>> docFreqs) throws IOException;
+                                                  HashMap<Term, List<Integer>> docFreqs) throws IOException;
 
     void init(IndexConfig conf) throws IOException;
 

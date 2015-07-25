@@ -260,7 +260,7 @@ public class MultiTermQueryTest {
             query.add(new TermQuery(new StringTerm("Ole"), "author"));
             query.add(new WildcardQuery(new StringTerm("th"), new StringTerm("s"), "content"));
             List<RankedDocument> d = index.search(query, -1);
-            Assert.assertEquals("Expected one result", 2, d.size());
+            Assert.assertEquals("Expected two results", 2, d.size());
         } catch (IOException e) {
             e.printStackTrace();
         }

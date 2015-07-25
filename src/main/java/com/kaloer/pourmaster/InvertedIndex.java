@@ -33,7 +33,7 @@ public class InvertedIndex {
     private final static Logger LOGGER = Logger.getLogger(InvertedIndex.class.getName());
 
     // Number of documents per index iteration
-    private final static int DOCS_PER_ITERATION = 1000000;
+    private final static int DOCS_PER_ITERATION = 10000;
 
     private DocumentTypeStore docTypeStore;
     private TermDictionary dictionary;
@@ -97,8 +97,7 @@ public class InvertedIndex {
         ArrayList<ArrayList<Tuple<Term, Long>>> termIndices = new ArrayList<ArrayList<Tuple<Term, Long>>>();
         final HashMap<Term, TermDictionary.TermData> tempTermData = new HashMap<Term, TermDictionary.TermData>();
         // Mapping from term to document frequencies (per partial file)
-        ArrayList<HashMap<Term, Integer>> docFrequencies = new ArrayList<HashMap<Term, Integer>>();
-        docFrequencies.add(new HashMap<Term, Integer>());
+        HashMap<Term, List<Integer>> docFrequencies = new HashMap<Term, List<Integer>>(DOCS_PER_ITERATION);
         ArrayList<FieldNormsStore> fieldNormsStores = new ArrayList<FieldNormsStore>();
         FieldNormsStore normsStore = new FieldNormsStore(tmpDir + "/fns_" + fieldNormsStores.size(), 256, DOCS_PER_ITERATION);
         fieldNormsStores.add(normsStore);
@@ -144,13 +143,19 @@ public class InvertedIndex {
                                 termsInDoc.add(t.getValue());
 
                                 // Update document frequency
-                                if (!docFrequencies.get(partialFiles.size()).containsKey(t.getValue())) {
-                                    docFrequencies.get(partialFiles.size()).put(t.getValue(), 0);
+                                if (!docFrequencies.containsKey(t.getValue())) {
+                                    docFrequencies.put(t.getValue(), new ArrayList<Integer>(
+                                            Collections.nCopies(partialFiles.size() + 1, Integer.valueOf(0))));
+                                } else if (docFrequencies.get(t.getValue()).size() <= partialFiles.size()) {
+                                    List<Integer> termList = docFrequencies.get(t.getValue());
+                                    while (termList.size() <= partialFiles.size()) {
+                                        termList.add(0);
+                                    }
                                 }
 
                                 // Add new doc frequency
-                                int oldFreq = docFrequencies.get(partialFiles.size()).get(t.getValue());
-                                docFrequencies.get(partialFiles.size()).put(t.getValue(), oldFreq + 1);
+                                int oldFreq = docFrequencies.get(t.getValue()).get(partialFiles.size());
+                                docFrequencies.get(t.getValue()).set(partialFiles.size(), oldFreq + 1);
                             }
                         }
 
@@ -170,7 +175,6 @@ public class InvertedIndex {
                 String outputFile = new File(tmpDir, String.format("postings_%d.part", partialFiles.size())).getAbsolutePath();
                 termIndices.add(writePartialPostings(outputFile, partialIndex, tempTermData));
                 partialFiles.add(outputFile);
-                docFrequencies.add(new HashMap<Term, Integer>());
                 partialIndex.clear();
                 normsStore = new FieldNormsStore(tmpDir + File.separator + "fns_" + fieldNormsStores.size(), 256, DOCS_PER_ITERATION);
                 fieldNormsStores.add(normsStore);
