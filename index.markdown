@@ -111,13 +111,18 @@ The `TermQuery` ad `WildcardQuery` classes use length-normalized, smoothed [tf-i
 The main data stores of the PourMaster are the term dictionary, the postings lists, the document index and the field normalizations store.
 
 #### The Term Dictionary
-The term dictionary maps terms into an index corresponding to a [postings list](#the-postings-lists). It is implemented as a persistent B-tree from the [Apache Mavibot project](https://directory.apache.org/mavibot/){:target="_blank"}. If possible, the B-tree is kept in memory and regularly persisted on the disk. The term dictionary is created at index time and not changed afterwards. By default, PourMaster uses a single B-tree for all terms. If wildcard search is enabled, it will store an additional B-tree in which each term is stored in its reversed order (e.g. 'foo' is stored as 'oof').
+The term dictionary maps terms into an index corresponding to a [postings list](#the-postings-lists). It is implemented as a persistent B-tree from the [MapDB project](http://www.mapdb.org/){:target="_blank"}. If possible, the B-tree is kept in memory and regularly persisted on the disk. The term dictionary is created at index time and not changed afterwards. By default, PourMaster uses a single B-tree for all terms in stored fields. If wildcard search is enabled, it will store an additional B-tree in which each term is stored in its reversed order (e.g. 'foo' is stored as 'oof').
+
+In addition to an index in the postings list, the term dictionary also holds the document frequency in total and per field for each term.
 
 #### The Postings Lists
-A postings list is a list of occurrences of a specific term. It contains the id of every field the term occurs in, and the index(es) of the occurrence in each field. All postings lists are stored sequentially in a single file on the disk.
+A postings list is a list of occurrences of a specific term. It contains the id of every field the term occurs in, and the index(es) of the occurrence in each field. All postings lists are stored sequentially in a single file on the disk. The occurrence index of a term in a field is used to support phrase-queries and can potentially also be used to weight documents in which query terms occur close to each other higher.
+
+The following illustration shows the correlation between the dictionary and the postings lists. In the postings lists, the first number identifies the document id, the second number the field id, and the third number the position in the field. Notice that this illustration does not show the data stored in the term dictionary (i.e. the document frequencies).
+![Postings list](assets/dictionary.png)
 
 #### The Document Index
-The *document index* maps a document id to an actual document with its stored field values. The document index consists of three files. One file stores the number of indexed documents (at index 0) and, for each document in ascending order, an index in the second file (the *field data store*), which contains the actual field values.
+The *document index* maps a document id to an actual document with its stored field values. The document index consists of three files. One file stores the number of indexed documents (at index 0) and, for each document in ascending order, an index in the second file (the *field data store*), which contains the actual field values for stored fields.
 
 The third file, the *field info store*, contains general information about each field. This includes their names and ids as well as their type and whether they are stored and indexed. A mapping between field ids and field names is kept in memory for fast lookup.
 
@@ -127,4 +132,4 @@ When documents are scored in a search, the score is normalized by the length of 
 To reduce the number of disk accesses, a memory mapped buffer is used per field to cache part of the corresponding row in memory. Because the columns are sorted by ascending document id, which also tend to be the order in which documents are scored, it is reasonable to assume that most reads will be cache hits.
 
 ### Indexing
-TODO
+On the overall level, indexing is split into chunks of 10.000 documents. During indexing of a subset of the documents, most data is stored in main memory. For each 10.000 documents, the data is written to disk by inserting new terms into the persisted termm dictionary and by writing the postings lists into a separate partial postings file. These partial files are merged as the final step of indexing using multi-way merging.
