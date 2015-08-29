@@ -9,10 +9,9 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class Pipeline<U, V> {
 
-    private ArrayList<Stage<?, ?>> stages = new ArrayList<Stage<?, ?>>();
-    private BlockingQueue<U> sourceQueue = new LinkedBlockingQueue<U>();
-    private BlockingQueue<V> destinationQueue = new LinkedBlockingQueue<V>();
-    private boolean hasMore = true;
+    private final ArrayList<Stage<?, ?>> stages = new ArrayList<Stage<?, ?>>();
+    private final BlockingQueue<U> sourceQueue = new LinkedBlockingQueue<U>();
+    private final BlockingQueue<V> destinationQueue = new LinkedBlockingQueue<V>();
 
     public Pipeline(Stage<U, V> s) {
         stages.add(s);

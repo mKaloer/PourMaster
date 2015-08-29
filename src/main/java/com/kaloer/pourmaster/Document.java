@@ -1,5 +1,6 @@
 package com.kaloer.pourmaster;
 
+import com.google.common.collect.ImmutableList;
 import com.kaloer.pourmaster.fields.FieldData;
 
 import java.util.List;
@@ -11,12 +12,17 @@ public class Document {
 
     private static final int MAX_NUM_FIELDS = 255;
 
-    private List<FieldData> fields;
-    private long documentId;
-    private int documentType;
+    private final ImmutableList<FieldData> fields;
+    private final long documentId;
+    private final int documentType;
 
-    public Document() {
-
+    public Document(long documentId, int documentType, List<FieldData> fields) {
+        this.documentId = documentId;
+        this.documentType = documentType;
+        if (fields.size() > 255) {
+            throw new IllegalArgumentException(String.format("Too many fields in document. Maximum number of fields: %d", MAX_NUM_FIELDS));
+        }
+        this.fields = ImmutableList.copyOf(fields);
     }
 
     public List<FieldData> getFields() {
@@ -25,21 +31,6 @@ public class Document {
 
     public long getDocumentId() {
         return documentId;
-    }
-
-    public void setFields(List<FieldData> fields) {
-        if (fields.size() > 255) {
-            throw new IllegalArgumentException(String.format("Too many fields in document. Maximum number of fields: %d", MAX_NUM_FIELDS));
-        }
-        this.fields = fields;
-    }
-
-    public void setDocumentId(long documentId) {
-        this.documentId = documentId;
-    }
-
-    public void setDocumentType(int documentType) {
-        this.documentType = documentType;
     }
 
     public int getDocumentType() {

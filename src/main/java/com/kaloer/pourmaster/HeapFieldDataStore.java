@@ -15,8 +15,8 @@ import java.util.Random;
  */
 public class HeapFieldDataStore extends FieldDataStore {
 
-    private String filePath;
-    private FieldInfoStore fieldInfoStore;
+    private final String filePath;
+    private final FieldInfoStore fieldInfoStore;
 
     public HeapFieldDataStore(String filePath, String fieldInfoStorePath, String fieldTypeStorePath) throws IOException, ReflectiveOperationException {
         super();

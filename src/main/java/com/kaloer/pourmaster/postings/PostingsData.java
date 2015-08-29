@@ -9,8 +9,8 @@ import java.util.Collection;
  * Contains the data related to a specific document in the postings list.
  */
 public class PostingsData {
-    private long documentId;
-    private ArrayList<TermOccurrence> positions;
+    private final long documentId;
+    private final ArrayList<TermOccurrence> positions;
 
     public PostingsData(long docId, Collection<TermOccurrence> positions) {
         this.documentId = docId;

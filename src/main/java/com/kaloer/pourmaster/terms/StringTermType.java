@@ -16,8 +16,7 @@ public class StringTermType implements TermType {
         return instance;
     }
 
-    private StringTermType() {
-    }
+    private StringTermType() { }
 
     public byte[] getBytes(Object value) {
         return ((String) value).getBytes();

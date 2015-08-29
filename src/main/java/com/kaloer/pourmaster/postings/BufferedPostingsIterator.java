@@ -17,9 +17,9 @@ public class BufferedPostingsIterator implements IOIterator<PostingsData> {
     private final DataInputStream file;
     private final int docCount;
     private final SequentialPostings sequentialPostings;
+    private final int bufferLength;
+    private final Queue<PostingsData> buffer;
     private int index = 0;
-    private int bufferLength;
-    private Queue<PostingsData> buffer;
 
     public BufferedPostingsIterator(DataInputStream file, int docCount, SequentialPostings sequentialPostings) {
         this(file, docCount, sequentialPostings, 100);

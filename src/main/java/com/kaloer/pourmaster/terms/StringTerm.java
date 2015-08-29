@@ -12,4 +12,9 @@ public class StringTerm extends Term {
     public StringTerm(byte[] data) {
         super(data);
     }
+
+    @Override
+    public String toString() {
+        return getValue().toString();
+    }
 }

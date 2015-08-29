@@ -21,7 +21,7 @@ import java.util.PriorityQueue;
  */
 public class TermQuery extends FieldQuery {
 
-    private Term term;
+    private final Term term;
 
     public TermQuery(Term term, String fieldName) {
         super(fieldName);

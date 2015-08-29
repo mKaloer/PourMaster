@@ -13,7 +13,7 @@ import java.util.*;
 public class PartialIndexData {
 
     // Dictionary mapping terms to <docId, postingsData>
-    HashMap<Term, HashMap<Long, PostingsData>> dictionary;
+    private final HashMap<Term, HashMap<Long, PostingsData>> dictionary;
 
     public PartialIndexData() {
         dictionary = new HashMap<Term, HashMap<Long, PostingsData>>();
@@ -89,6 +89,10 @@ public class PartialIndexData {
      */
     public void clear() {
         dictionary.clear();
+    }
+
+    public int size() {
+        return dictionary.size();
     }
 
     /**

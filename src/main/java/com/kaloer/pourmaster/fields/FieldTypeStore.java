@@ -10,8 +10,8 @@ import java.util.ArrayList;
  */
 public class FieldTypeStore {
 
-    private String filePath;
-    private ArrayList<FieldType> fieldTypeMapping = new ArrayList<FieldType>();
+    private final String filePath;
+    private final ArrayList<FieldType> fieldTypeMapping = new ArrayList<FieldType>();
 
     public FieldTypeStore(String filePath) throws IOException, ReflectiveOperationException {
         this.filePath = filePath;

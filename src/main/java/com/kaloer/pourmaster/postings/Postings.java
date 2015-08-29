@@ -18,8 +18,6 @@ public interface Postings {
 
     IOIterator<PostingsData> getDocumentsForTerm(long index, int docCount) throws IOException;
 
-    long insertTerm(PostingsData[] docs) throws IOException;
-
     /**
      * Wrties a partial postings list to a file which is later merged with other similar files. Please note that this
      * may be called on any postings instance and thus it should not access the state of the object.

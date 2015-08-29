@@ -16,11 +16,11 @@ public class DocumentTypeStore {
 
 
     // Mapping from docType id to class
-    private ArrayList<Class> docId2TypeMapping = new ArrayList<Class>();
+    private final ArrayList<Class> docId2TypeMapping = new ArrayList<Class>();
     // Mapping from class to id
-    private HashMap<Class, Integer> type2DocIdMapping = new HashMap<Class, Integer>();
+    private final HashMap<Class, Integer> type2DocIdMapping = new HashMap<Class, Integer>();
 
-    private String filePath;
+    private final String filePath;
 
     public DocumentTypeStore(String docTypeStorePath) throws IOException, ReflectiveOperationException {
         this.filePath = docTypeStorePath;

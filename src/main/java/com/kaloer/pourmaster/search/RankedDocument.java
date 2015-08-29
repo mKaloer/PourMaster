@@ -5,8 +5,8 @@ package com.kaloer.pourmaster.search;
  */
 public class RankedDocument<T extends Object> implements Comparable<RankedDocument> {
 
-    private T document;
-    private double score;
+    private final T document;
+    private final double score;
 
     public RankedDocument(T document, double score) {
         this.document = document;
@@ -15,10 +15,6 @@ public class RankedDocument<T extends Object> implements Comparable<RankedDocume
 
     public double getScore() {
         return score;
-    }
-
-    public void setScore(double score) {
-        this.score = score;
     }
 
     public T getDocument() {

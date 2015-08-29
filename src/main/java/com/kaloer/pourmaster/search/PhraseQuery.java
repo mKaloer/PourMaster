@@ -18,8 +18,8 @@ import java.util.*;
  */
 public class PhraseQuery extends FieldQuery {
 
-    private ArrayList<Term> terms = new ArrayList<Term>();
-    private ArrayList<Integer> positions = new ArrayList<Integer>();
+    private final ArrayList<Term> terms = new ArrayList<Term>();
+    private final ArrayList<Integer> positions = new ArrayList<Integer>();
 
     /**
      * Adds a term to the end of the query.

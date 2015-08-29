@@ -3,14 +3,16 @@ package com.kaloer.pourmaster;
 import com.kaloer.pourmaster.terms.Term;
 
 import java.nio.ByteBuffer;
+import java.util.IllegalFormatException;
+import java.util.UnknownFormatConversionException;
 
 /**
  * Represents an atomic term. Every {@link Term} must consist of an atomic term.
  */
 public final class AtomicTerm implements Comparable<AtomicTerm> {
 
-    private DataType dataType;
-    private Object value;
+    private final DataType dataType;
+    private final Object value;
 
     public AtomicTerm(Object value, DataType dataType) {
         this.value = value;
@@ -34,6 +36,8 @@ public final class AtomicTerm implements Comparable<AtomicTerm> {
             value = (int) byteBuffer.get();
         } else if (dataType == AtomicTerm.DataType.DATA_TYPE_DOUBLE) {
             value = byteBuffer.getDouble();
+        } else {
+            throw new IllegalArgumentException("Error parsing input data: Unknown data type");
         }
     }
 

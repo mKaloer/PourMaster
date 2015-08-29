@@ -1,8 +1,5 @@
 package com.kaloer.pourmaster.fields;
 
-import com.kaloer.pourmaster.Token;
-import com.kaloer.pourmaster.pipeline.Pipeline;
-
 /**
  * A field in a document, such as 'content', 'author', etc. Each field has an associated data type.
  * @param <T> The data type of the field data.
@@ -15,8 +12,6 @@ public class Field<T, V extends FieldType<T>> {
     private boolean isStored;
     private boolean isIndexed;
     private String fieldName;
-    private Pipeline<T, Token> queryAnalysisPipeline;
-    private Pipeline<T, Token> indexAnalysisPipeline;
 
     public void setFieldName(String fieldName) {
         this.fieldName = fieldName;
@@ -40,22 +35,6 @@ public class Field<T, V extends FieldType<T>> {
 
     public void setFieldId(int fieldId) {
         this.fieldId = fieldId;
-    }
-
-    public void setIndexAnalysisPipeline(Pipeline<T, Token> indexAnalysisPipeline) {
-        this.indexAnalysisPipeline = indexAnalysisPipeline;
-    }
-
-    public Pipeline<T, Token> getIndexAnalysisPipeline() {
-        return indexAnalysisPipeline;
-    }
-
-    public void setQueryAnalysisPipeline(Pipeline<T, Token> queryAnalysisPipeline) {
-        this.queryAnalysisPipeline = queryAnalysisPipeline;
-    }
-
-    public Pipeline<T, Token> getQueryAnalysisPipeline() {
-        return queryAnalysisPipeline;
     }
 
     public FieldType getFieldType() {

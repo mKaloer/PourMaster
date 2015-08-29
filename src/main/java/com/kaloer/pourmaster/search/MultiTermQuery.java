@@ -10,7 +10,7 @@ import java.util.*;
  */
 public class MultiTermQuery extends Query {
 
-    private ArrayList<FieldQuery> subQueries = new ArrayList<FieldQuery>();
+    private final ArrayList<FieldQuery> subQueries = new ArrayList<FieldQuery>();
 
     public void add(FieldQuery query) {
         subQueries.add(query);

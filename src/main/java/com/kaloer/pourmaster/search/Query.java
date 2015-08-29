@@ -1,11 +1,9 @@
 package com.kaloer.pourmaster.search;
 
-import com.kaloer.pourmaster.Document;
 import com.kaloer.pourmaster.InvertedIndex;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
 
 /**
  * Base class for implementing a search query.

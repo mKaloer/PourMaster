@@ -35,12 +35,12 @@ public class InvertedIndex {
     // Number of documents per index iteration
     private final static int DOCS_PER_ITERATION = 10000;
 
-    private DocumentTypeStore docTypeStore;
-    private TermDictionary dictionary;
-    private DocumentIndex docIndex;
+    private final DocumentTypeStore docTypeStore;
+    private final TermDictionary dictionary;
+    private final DocumentIndex docIndex;
     private FieldNormsStore fieldNormsStore;
-    private Postings postings;
-    private IndexConfig config;
+    private final Postings postings;
+    private final IndexConfig config;
 
     public InvertedIndex(IndexConfig conf) throws IOException, ReflectiveOperationException {
         this.config = conf;
@@ -182,15 +182,13 @@ public class InvertedIndex {
             }
 
             // Add document to document index and field store
-            Document doc = new Document();
-            doc.setDocumentId(docId);
-            doc.setFields(fields);
-            doc.setDocumentType(this.docTypeStore.getOrCreateDocumentType(document.getClass()));
+            int docType = this.docTypeStore.getOrCreateDocumentType(document.getClass());
+            Document doc = new Document(docId, docType, fields);
             docIndex.addDocument(doc);
             docId++;
         }
         // Write remaining postings
-        if (partialIndex.dictionary.size() > 0) {
+        if (partialIndex.size() > 0) {
             String outputFile = new File(tmpDir, String.format("postings_%d.part", partialFiles.size())).getAbsolutePath();
             termIndices.add(writePartialPostings(outputFile, partialIndex, tempTermData));
             partialFiles.add(outputFile);

@@ -18,8 +18,8 @@ import java.util.*;
  */
 public class WildcardQuery extends FieldQuery {
 
-    private Term prefix;
-    private Term suffix;
+    private final Term prefix;
+    private final Term suffix;
 
     public WildcardQuery(Term prefix, Term suffix, String fieldName) {
         super(fieldName);

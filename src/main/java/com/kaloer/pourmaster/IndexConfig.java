@@ -21,7 +21,7 @@ public class IndexConfig {
     public static final String DOC_TYPE_FILE_PATH = "index.docTypeFilePath";
     public static final String FIELD_NORMS_FILE_PATH = "index.fieldNormsFilePath";
 
-    private Properties configMap; // Map of various configuration values
+    private final Properties configMap; // Map of various configuration values
 
     public IndexConfig() {
         configMap = new Properties();

@@ -7,7 +7,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 /**
- * Represents
+ * Represents the length and value of a field.
  */
 public class FieldData {
 

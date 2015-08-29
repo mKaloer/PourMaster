@@ -19,9 +19,9 @@ public class FieldNormsStore {
 
     private final long numDocs; // Size in number of documents.
     private final int numFields;
-    private String filePath;
+    private final String filePath;
     // MappedByteBuffer per field
-    private ArrayList<LargeMappedFloatBuffer> fieldBuffers;
+    private final ArrayList<LargeMappedFloatBuffer> fieldBuffers;
 
     public FieldNormsStore(String filePath, int numFields, long numDocuments) throws IOException {
         fieldBuffers = new ArrayList<LargeMappedFloatBuffer>(numFields);
@@ -73,7 +73,7 @@ public class FieldNormsStore {
     }
 
     public void deleteAll() throws IOException {
-        this.fieldBuffers = new ArrayList<LargeMappedFloatBuffer>(numFields);
+        this.fieldBuffers.clear();
         RandomAccessFile file = null;
         try {
             file = new RandomAccessFile(this.filePath, "rw");

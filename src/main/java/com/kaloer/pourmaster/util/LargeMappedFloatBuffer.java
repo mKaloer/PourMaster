@@ -12,13 +12,13 @@ public class LargeMappedFloatBuffer {
     // Float size in bytes
     private final static int FLOAT_SIZE = Float.SIZE / 8;
 
-    private MappedByteBuffer buffer;
-    private FileChannel channel;
-    private FileChannel.MapMode mapMode;
+    private final FileChannel channel;
+    private final FileChannel.MapMode mapMode;
     private final long size;
     private final long offset;
-    private int currentIndex = -1;
     private final int bufferSize;
+    private int currentIndex = -1;
+    private MappedByteBuffer buffer;
 
     /**
      *

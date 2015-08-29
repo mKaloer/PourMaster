@@ -15,10 +15,10 @@ public class FieldInfoStore {
     private static final int BIT_INDEX_INDEXED = 0;
     private static final int BIT_INDEX_STORED = 1;
 
-    private String filePath;
-    private ArrayList<Field> fieldIdMapping = new ArrayList<Field>();
-    private HashMap<String, Field> fieldNameMapping = new HashMap<String, Field>();
-    private FieldTypeStore fieldTypeStore;
+    private final String filePath;
+    private final ArrayList<Field> fieldIdMapping = new ArrayList<Field>();
+    private final HashMap<String, Field> fieldNameMapping = new HashMap<String, Field>();
+    private final FieldTypeStore fieldTypeStore;
 
     public FieldInfoStore(String fieldStorePath, String fieldTypeStorePath) throws IOException, ReflectiveOperationException {
         this.filePath = fieldStorePath;

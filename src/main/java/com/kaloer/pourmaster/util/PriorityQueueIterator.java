@@ -8,7 +8,7 @@ import java.util.PriorityQueue;
  */
 public class PriorityQueueIterator<E> implements Iterator<E> {
 
-    private PriorityQueue<E> queue;
+    private final PriorityQueue<E> queue;
 
     public PriorityQueueIterator(PriorityQueue<E> queue) {
         this.queue = queue;

@@ -5,11 +5,7 @@ package com.kaloer.pourmaster.search;
  */
 public abstract class FieldQuery extends Query {
 
-    private String field;
-
-    public FieldQuery() {
-        super();
-    }
+    private final String field;
 
     public FieldQuery(String field) {
         super();
@@ -20,7 +16,4 @@ public abstract class FieldQuery extends Query {
         return field;
     }
 
-    public void setField(String field) {
-        this.field = field;
-    }
 }

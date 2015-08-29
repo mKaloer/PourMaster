@@ -34,7 +34,6 @@ public class SequentialDocumentIndex extends DocumentIndex {
         String fieldInfoFileName = config.getFilePath(CONFIG_FIELD_INFO_PATH_ID, DEFAULT_FIELD_INFO_FILE_NAME);
         String fieldTypesFileName = config.getFilePath(CONFIG_FIELD_TYPES_PATH_ID, DEFAULT_FIELD_TYPES_FILE_NAME);
 
-        this.filePath = config.getFilePath(CONFIG_DOCS_FILE_PATH_ID, DEFAULT_DOCS_FILE_NAME);
         try {
             setFieldDataStore(new HeapFieldDataStore(fieldDataFileName, fieldInfoFileName, fieldTypesFileName));
         } catch (ReflectiveOperationException e) {
@@ -73,10 +72,7 @@ public class SequentialDocumentIndex extends DocumentIndex {
             long fieldIndex = file.readLong();
             // Read fields
             FieldList fields = getFieldDataStore().getFields(fieldIndex);
-            doc = new Document();
-            doc.setDocumentId(docId);
-            doc.setFields(fields.getFieldData());
-            doc.setDocumentType(fields.getDocTypeId());
+            doc = new Document(docId, fields.getDocTypeId(), fields.getFieldData());
         } finally {
             if (file != null) {
                 file.close();

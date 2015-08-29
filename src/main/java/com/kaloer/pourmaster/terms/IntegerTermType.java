@@ -18,8 +18,7 @@ public class IntegerTermType implements TermType {
         return instance;
     }
 
-    private IntegerTermType() {
-    }
+    private IntegerTermType() { }
 
     public byte[] getBytes(Object value) {
         return ByteBuffer.allocate(4).putInt((Integer) value).array();

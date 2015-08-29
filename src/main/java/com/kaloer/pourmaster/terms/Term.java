@@ -10,8 +10,8 @@ import java.nio.ByteBuffer;
  */
 public class Term implements Comparable<Term> {
 
-    private Object value;
-    private TermType termType;
+    private final Object value;
+    private final TermType termType;
 
     public Term(Object value, TermType termType) {
         this.value = value;

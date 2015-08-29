@@ -7,8 +7,8 @@ import com.kaloer.pourmaster.terms.Term;
  */
 public class Token<T extends Term> {
 
-    private T value;
-    private int position;
+    private final T value;
+    private final int position;
 
     public Token(T value, int position) {
         this.value = value;
