@@ -1,6 +1,7 @@
 package com.kaloer.pourmaster.example;
 
 import opennlp.tools.tokenize.SimpleTokenizer;
+import opennlp.tools.tokenize.TokenizerStream;
 import pourmaster.Analyzer;
 import pourmaster.Token;
 import pourmaster.annotations.Field;
@@ -61,7 +62,7 @@ public class WikiPage {
                 }
 
                 public Token next() {
-                    return new Token(new StringTerm(words[index]), index++);
+                    return new Token(new StringTerm(words[index].toLowerCase()), index++);
                 }
 
                 public void remove() {
