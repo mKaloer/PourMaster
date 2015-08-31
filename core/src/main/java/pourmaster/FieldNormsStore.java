@@ -68,6 +68,10 @@ public class FieldNormsStore {
         return buffer.get(documentId);
     }
 
+    public String getFile() {
+        return filePath;
+    }
+
     public void deleteAll() throws IOException {
         this.fieldBuffers.clear();
         RandomAccessFile file = null;

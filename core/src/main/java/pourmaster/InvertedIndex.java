@@ -3,6 +3,9 @@ package pourmaster;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.Files;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import pourmaster.exceptions.ConflictingFieldTypesException;
 import pourmaster.fields.Field;
 import pourmaster.fields.FieldData;
@@ -17,7 +20,6 @@ import pourmaster.util.Tuple;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.logging.Logger;
 
 /**
  * The main class for the inverted index used for lookup.
@@ -29,7 +31,7 @@ public class InvertedIndex {
     // TODO: Index compression
     // TODO: Query parser (see https://github.com/jparsec/jparsec )
 
-    private final static Logger LOGGER = Logger.getLogger(InvertedIndex.class.getName());
+    private final static Logger LOGGER = LogManager.getLogger(InvertedIndex.class);
 
     // Number of documents per index iteration
     private final static int DOCS_PER_ITERATION = 10000;
@@ -90,6 +92,7 @@ public class InvertedIndex {
         deleteAll();
 
         String tmpDir = config.getTmpDir();
+        ArrayList<String> tmpFiles = new ArrayList<>();
         PartialIndexData partialIndex = new PartialIndexData();
         ArrayList<String> partialFiles = new ArrayList<String>(); // Partial files paths
         // Term indices in (per partial file)
@@ -98,8 +101,10 @@ public class InvertedIndex {
         // Mapping from term to document frequencies (per partial file)
         HashMap<Term, List<Integer>> docFrequencies = new HashMap<Term, List<Integer>>(DOCS_PER_ITERATION);
         ArrayList<FieldNormsStore> fieldNormsStores = new ArrayList<FieldNormsStore>();
-        FieldNormsStore normsStore = new FieldNormsStore(tmpDir + "/fns_" + fieldNormsStores.size(), 256, DOCS_PER_ITERATION);
+        // Create first field normalization store
+        FieldNormsStore normsStore = createPartialNormsStore(tmpDir, fieldNormsStores.size());
         fieldNormsStores.add(normsStore);
+        tmpFiles.add(normsStore.getFile());
 
         HashMap<String, Field> fieldIds = new HashMap<String, Field>();
         long docId = 0;
@@ -169,15 +174,24 @@ public class InvertedIndex {
 
             }
             if ((docId + 1) % DOCS_PER_ITERATION == 0) {
-                LOGGER.info(String.format("Indexed %d documents", docId + 1));
+                // Write to disk
+                LOGGER.info("Indexed {} documents", docId + 1);
                 LOGGER.info("Writing partial file...");
+                // Create new partial index and stores
                 String outputFile = new File(tmpDir, String.format("postings_%d.part", partialFiles.size())).getAbsolutePath();
                 termIndices.add(writePartialPostings(outputFile, partialIndex, tempTermData));
                 partialFiles.add(outputFile);
+                tmpFiles.add(outputFile);
                 partialIndex.clear();
-                normsStore = new FieldNormsStore(tmpDir + File.separator + "fns_" + fieldNormsStores.size(), 256, DOCS_PER_ITERATION);
+
+                normsStore = createPartialNormsStore(tmpDir, fieldNormsStores.size());
                 fieldNormsStores.add(normsStore);
+                tmpFiles.add(normsStore.getFile());
                 LOGGER.info("Partial write successful.");
+                // Log memory usage
+                Runtime runtime = Runtime.getRuntime();
+                long memUsage = runtime.totalMemory() - runtime.freeMemory();
+                LOGGER.debug("Memory usage {} bytes", memUsage);
             }
 
             // Add document to document index and field store
@@ -191,6 +205,7 @@ public class InvertedIndex {
             String outputFile = new File(tmpDir, String.format("postings_%d.part", partialFiles.size())).getAbsolutePath();
             termIndices.add(writePartialPostings(outputFile, partialIndex, tempTermData));
             partialFiles.add(outputFile);
+            tmpFiles.add(outputFile);
         }
 
         LOGGER.info("Merging partial files...");
@@ -203,7 +218,7 @@ public class InvertedIndex {
                         new Function<Map.Entry<Term, TermDictionary.TermData>, Tuple<Term, TermDictionary.TermData>>() {
             public Tuple<Term, TermDictionary.TermData> apply(Map.Entry<Term, TermDictionary.TermData> termEntry) {
                 termEntry.getValue().setPostingsIndex(indices.get(termEntry.getKey()));
-                return new Tuple<Term, TermDictionary.TermData>(termEntry.getKey(), termEntry.getValue());
+                return new Tuple<>(termEntry.getKey(), termEntry.getValue());
             }
         })));
 
@@ -216,15 +231,28 @@ public class InvertedIndex {
             }
         }
 
-        // Delete tmp files
-        for (String tmpFileName : partialFiles) {
+        deleteTmpFiles(tmpDir, tmpFiles);
+        LOGGER.info("Indexed {} documents", docId + 1);
+        LOGGER.info("Indexing completed.");
+    }
+
+    private void deleteTmpFiles(String tmpDir, List<String> files) {
+        for (String tmpFileName : files) {
             File f = new File(tmpFileName);
             if (f.exists()) {
                 f.delete();
             }
         }
-        LOGGER.info(String.format("Indexed %d documents", docId + 1));
-        LOGGER.info("Indexing completed.");
+        // Delete tmp dir if empty
+        try {
+            new File(tmpDir).delete();
+        } catch (SecurityException e) {
+            LOGGER.warn("Could not delete tmp directory", e);
+        }
+    }
+
+    private FieldNormsStore createPartialNormsStore(String tmpDir, int index) throws IOException {
+        return new FieldNormsStore(tmpDir + "/fns_" + index, 256, DOCS_PER_ITERATION);
     }
 
     private ArrayList<Tuple<Term, Long>> writePartialPostings(String outputFile, PartialIndexData partialIndex, HashMap<Term,

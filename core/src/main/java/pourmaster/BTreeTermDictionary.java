@@ -183,7 +183,7 @@ public class BTreeTermDictionary extends TermDictionary {
 
     @Override
     void close() {
-
+        dictionary.close();
     }
 
     @Override
