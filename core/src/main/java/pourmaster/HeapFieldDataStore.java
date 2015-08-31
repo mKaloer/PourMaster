@@ -1,5 +1,6 @@
 package pourmaster;
 
+import pourmaster.exceptions.FieldNotFoundException;
 import pourmaster.fields.Field;
 import pourmaster.fields.FieldData;
 import pourmaster.fields.FieldList;
@@ -92,8 +93,12 @@ public class HeapFieldDataStore extends FieldDataStore {
     }
 
     @Override
-    public Field getField(String name) throws IOException {
-        return fieldInfoStore.getFieldByName(name);
+    public Field getField(String name) throws FieldNotFoundException {
+        Field field = fieldInfoStore.getFieldByName(name);
+        if (field == null) {
+            throw new FieldNotFoundException(String.format("Could not find field with name '%s'", name));
+        }
+        return field;
     }
 
     @Override

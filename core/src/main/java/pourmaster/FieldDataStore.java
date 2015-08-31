@@ -1,5 +1,6 @@
 package pourmaster;
 
+import pourmaster.exceptions.FieldNotFoundException;
 import pourmaster.fields.FieldList;
 import pourmaster.fields.Field;
 
@@ -14,7 +15,7 @@ public abstract class FieldDataStore {
 
     public abstract long appendFields(FieldList fields) throws IOException, ReflectiveOperationException;
 
-    public abstract Field getField(String name) throws IOException;
+    public abstract Field getField(String name) throws FieldNotFoundException;
 
     public abstract int getFieldCount() throws IOException;
 
